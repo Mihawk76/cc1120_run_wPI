@@ -287,6 +287,48 @@ int res_T_Watt_Var (char* location,	int32_t WattT[6], int32_t VarT[6], int nilai
 	curl_global_cleanup();
 	return 0;
 }
+int res_WattPrd_I (char* location,	int32_t WattPrdR[6],	int32_t WattPrdS[6],	int32_t WattPrdT[6],	
+														int32_t IR[6],	int32_t IS[6],	int32_t IT[6], int nilai ,int device, int gateway, int Channel)
+{
+	int i = 0;
+	snprintf(scoreData, sizeof scoreData, "[");
+	for(i=0;i<2;i++)
+	{
+		snprintf(temp, sizeof scoreData, "{\"Kwh_id\":%d,\"Gateway_id\":%d,\"WattPrdR\":%d,\"WattPrdS\":%d,\"WattPrdT\":%d,\"Channel\":%d,\"id\":0,", 
+		device, gateway, WattPrdR[Channel+i], WattPrdS[Channel+i], WattPrdT[Channel+i], Channel+i);
+		strcat(scoreData, temp);
+		snprintf(temp, sizeof scoreData, "\"IR\":%d, \"IS\":%d, \"IT\":%d}", 
+		WattPrdR[Channel+i], WattPrdS[Channel+i], WattPrdT[Channel+i]);
+		strcat(scoreData, temp);
+		if(i<1){
+		snprintf(temp, sizeof scoreData, ",");
+		strcat(scoreData, temp);
+		}
+	}
+	snprintf(temp, sizeof scoreData, "]");
+	strcat(scoreData, temp);
+	printf("%s\n", scoreData);
+	//printf("location %s\n", location);	
+	/*CURL *curl;
+	CURLcode res; 
+	curl_global_init(CURL_GLOBAL_ALL);
+	curl = curl_easy_init();
+  if(curl) {     
+	  curl_easy_setopt(curl, CURLOPT_URL, location);
+	  curl_easy_setopt(curl, CURLOPT_POSTFIELDS, scoreData);
+		struct curl_slist *headers = NULL;
+		headers = curl_slist_append(headers, "Accept: application/json");
+		headers = curl_slist_append(headers, "Content-Type: application/json");
+		headers = curl_slist_append(headers, "charsets: utf-8");
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers); 
+	  res = curl_easy_perform(curl);
+	  if(res != CURLE_OK)
+	  fprintf(stderr, "curl_easy_perform() failed: %s\n",curl_easy_strerror(res));
+	  curl_easy_cleanup(curl);
+	}   
+	curl_global_cleanup();
+	*/return 0;
+}
 int res_R_WattPrd_WattHour (char* location,	int32_t WattPrdR[6], int32_t WattHourR[6], int nilai ,int device, int gateway)
 {
 	int Channel = 0;

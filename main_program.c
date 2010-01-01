@@ -36,7 +36,8 @@ int main()
 								kwh, kwh, kwh, kwh, 
 								kwh, kwh, 14, 1002, gateway);*/
 	//res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, gateway);
-	res_R_WattPrd_WattHour(location_wattR, kwh, kwh, 14, cc1120_TH_ID, gateway);
+	//res_R_WattPrd_WattHour(location_wattR, kwh, kwh, 14, cc1120_TH_ID, gateway);
+	res_WattPrd_I(location_wattR, kwh, kwh, kwh, kwh, kwh, kwh, 14, cc1120_TH_ID, gateway, 3);
 	//res_S_WattPrd_WattHour(location_wattS, kwh, kwh, 14, cc1120_TH_ID, gateway);
 	//res_T_WattPrd_WattHour(location_wattT, kwh, kwh, 14, cc1120_TH_ID, gateway);
 	//res_T_I(location, kwh, 14, cc1120_TH_ID, gateway);
