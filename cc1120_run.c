@@ -43,6 +43,7 @@
 uint8_t txBuffer[136];
 uint8_t rxBuffer[136];
 uint16_t packetCounter = 0;
+int scan_key = 1;
 
 	
 /*******************************************************************************
@@ -828,10 +829,15 @@ void cc112x_run(void)
 					timeinfo->tm_sec,
 					//timeinfo->tm_ms,
 					rx_byte, (rx_byte>1) ? "bytes" : "byte",rxBuffer[rx_byte - 2]-102);
+					if ( rxBuffer[2] != 0x81 )
+					{
+						printf ("this is rxbuffer[1] %02X\n", rxBuffer[1]);
+					}
 					for (i=0;i<rx_byte;i++) {
 						printf("%02X ", rxBuffer[i]);
 					}
 					printf("\r\n");
+
 					//processPacket((uint8_t*)&rxBuffer[1], txBuffer, rx_byte-3);
 					
 				}
