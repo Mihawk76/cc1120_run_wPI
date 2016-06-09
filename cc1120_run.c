@@ -45,6 +45,7 @@ uint8_t rxBuffer[136];
 uint16_t packetCounter = 0;
 uint8_t scan_key = 0x01;
 uint16_t cc1120_TH_ID;
+uint8_t cc1120_TH_Node;
 
 	
 /*******************************************************************************
@@ -836,9 +837,11 @@ void cc112x_run(void)
 						if ( rxBuffer[7] != scan_key ){
 							printf(" Scan key is diffrent \n old : new , %02x : %02x \nCommencing scan command\n", rxBuffer[7], scan_key);
 							cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
-							printf("TH id is %04X \n",cc1120_TH_ID);
+							cc1120_TH_Node = rxBuffer[6];
+							printf("TH id is %04X \n Node is %02X \n",cc1120_TH_ID, cc1120_TH_Node);
 						} 
 					}
+					//txBuffer[0] = 0x00;
 					for (i=0;i<rx_byte;i++) {
 						printf("%02X ", rxBuffer[i]);
 					}
