@@ -43,7 +43,8 @@
 uint8_t txBuffer[136];
 uint8_t rxBuffer[136];
 uint16_t packetCounter = 0;
-int scan_key = 1;
+uint8_t scan_key = 0x01;
+uint16_t cc1120_TH_ID;
 
 	
 /*******************************************************************************
@@ -829,9 +830,14 @@ void cc112x_run(void)
 					timeinfo->tm_sec,
 					//timeinfo->tm_ms,
 					rx_byte, (rx_byte>1) ? "bytes" : "byte",rxBuffer[rx_byte - 2]-102);
-					if ( rxBuffer[2] != 0x81 )
+					if ( rxBuffer[1] == 0x81 )
 					{
-						printf ("this is rxbuffer[1] %02X\n", rxBuffer[1]);
+						printf ("Joint detected\n");
+						if ( rxBuffer[7] != scan_key ){
+							printf(" Scan key is diffrent \n old : new , %02x : %02x \nCommencing scan command\n", rxBuffer[7], scan_key);
+							cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
+							printf("TH id is %04X \n",cc1120_TH_ID);
+						} 
 					}
 					for (i=0;i<rx_byte;i++) {
 						printf("%02X ", rxBuffer[i]);
