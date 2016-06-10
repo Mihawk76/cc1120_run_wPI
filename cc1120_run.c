@@ -20,6 +20,7 @@
 #include <time.h>
 	
 #include "cc112x_easy_link_reg_config.h"
+#include "mac_address.c"
 	
 	#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 	
@@ -46,6 +47,7 @@ uint16_t packetCounter = 0;
 uint8_t scan_key = 0x01;
 uint16_t cc1120_TH_ID;
 uint8_t cc1120_TH_Node;
+uint16_t gateway_ID;
 
 	
 /*******************************************************************************
@@ -778,7 +780,7 @@ void cc112x_run(void)
 	uint8_t temp_byte;
 	int i;
 	uint8_t rx_byte = 0;
-	// Infinite loop
+		// Infinite loop
 	
 	cc112xSpiReadReg(CC112X_MARC_STATUS1, &temp_byte, 1);
 	if (( temp_byte == 0x07)||( temp_byte == 0x08)){
@@ -839,12 +841,18 @@ void cc112x_run(void)
 							cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
 							cc1120_TH_Node = rxBuffer[6];
 							printf("TH id is %04X \n Node is %02X \n",cc1120_TH_ID, cc1120_TH_Node);
+							// 
+							txBuffer[0] = 0x07; txBuffer[1] = 0x01; *(uint16_t*)&txBuffer[2] = cc1120_TH_ID; *(uint16_t*)&txBuffer[4] = gateway_ID;
 						} 
 					}
-					//txBuffer[0] = 0x00;
+					
 					for (i=0;i<rx_byte;i++) {
 						printf("%02X ", rxBuffer[i]);
 					}
+					for (i=0;i<7;i++) {
+						printf("txbuffer[%d] %02X ", i, txBuffer[i]);
+					}
+
 					printf("\r\n");
 
 					//processPacket((uint8_t*)&rxBuffer[1], txBuffer, rx_byte-3);
@@ -856,7 +864,7 @@ void cc112x_run(void)
 	else if( temp_byte == 0) {
 		//os_dly_wait (1);
 //		if (replyDly>0) return;
-		send_packet(txBuffer);
+		//send_packet(txBuffer);
 		return;
 	}
 	
@@ -878,7 +886,8 @@ void cc112x_run(void)
 int main(int argc, char *argv[]) {
   uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
   int ret = 0;
-  
+  gateway_ID = mac_address();
+ 
   //setup gpio pin to spi function
   wiringPiSetup();
   
