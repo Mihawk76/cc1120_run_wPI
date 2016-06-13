@@ -44,7 +44,7 @@
 uint8_t txBuffer[136];
 uint8_t rxBuffer[136];
 uint16_t packetCounter = 0;
-uint8_t scan_key = 0x01;
+uint8_t scan_key = 0x00;
 uint8_t add_type = 0x02; //add type as new node
 uint8_t index_node = 0x00; //temp index node
 uint8_t wakeup_hold = 0x05; //wake up hold in 100ms
@@ -851,7 +851,8 @@ void cc112x_run(void)
 							txBuffer[6] = cc1120_TH_Node; txBuffer[7] = scan_key; txBuffer[8] = 0x00; txBuffer[9] = 0x00; txBuffer[10] = 0x00;  
 						}
 						if ( rxBuffer[7] == scan_key ){
-							printf("Scan key is the same %02X:%02X\n", rxBuffer[7], scan_key);	
+							printf("Scan key is the same %02X:%02X\n", rxBuffer[7], scan_key);
+							printf("Commencing add command\n");
 							txBuffer[0] = 0x0A; txBuffer[1] = 0x06; *(uint16_t*)&txBuffer[2] =  gateway_ID; 
 							*(uint16_t*)&txBuffer[4] = cc1120_TH_ID; txBuffer[6] = cc1120_TH_Node; 
 							txBuffer[7] = add_type; txBuffer[8] = index_node; txBuffer[9] = scan_key; txBuffer[10] = wakeup_hold;  
