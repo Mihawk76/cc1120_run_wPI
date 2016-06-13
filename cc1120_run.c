@@ -852,8 +852,9 @@ void cc112x_run(void)
 						}
 						if ( rxBuffer[7] == scan_key ){
 							printf("Scan key is the same %02X:%02X\n", rxBuffer[7], scan_key);	
-							txBuffer[0] = 0x0A; txBuffer[1] = 0x06; *(uint16_t*)&txBuffer[2] =  gateway_ID; *(uint16_t*)&txBuffer[4] = cc1120_TH_ID;
-							txBuffer[6] = cc1120_TH_Node; txBuffer[7] = add_type; txBuffer[8] = index_node; txBuffer[9] = scan_key; txBuffer[10] = wakeup_hold;  
+							txBuffer[0] = 0x0A; txBuffer[1] = 0x06; *(uint16_t*)&txBuffer[2] =  gateway_ID; 
+							*(uint16_t*)&txBuffer[4] = cc1120_TH_ID; txBuffer[6] = cc1120_TH_Node; 
+							txBuffer[7] = add_type; txBuffer[8] = index_node; txBuffer[9] = scan_key; txBuffer[10] = wakeup_hold;  
 						} 
 					}
 					if ( rxBuffer[1] == 0x92 )
@@ -861,7 +862,11 @@ void cc112x_run(void)
 						printf("Th data detected\n");
 							cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
 							cc1120_TH_Node = rxBuffer[6];
-							printf("Hummidity : %04X Temp 1 : %04X Temp2 : %04X Temp 3 : %04X\n", *(uint16_t*)&rxBuffer[7], *(uint16_t*)&rxBuffer[9], *(uint16_t*)&rxBuffer[11], *(uint16_t*)&rxBuffer[13]); 
+							txBuffer[0] = 0x07; txBuffer[1] = 0x11; *(uint16_t*)&txBuffer[2] =  gateway_ID; 
+							*(uint16_t*)&txBuffer[4] = cc1120_TH_ID; txBuffer[6] = cc1120_TH_Node; 
+							txBuffer[7] = 0x00;  
+							printf("Hummidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d\n", 
+							*(uint16_t*)&rxBuffer[7], *(uint16_t*)&rxBuffer[9], *(uint16_t*)&rxBuffer[11], *(uint16_t*)&rxBuffer[13]); 
 					}
 					
 					for (i=0;i<rx_byte;i++) {
