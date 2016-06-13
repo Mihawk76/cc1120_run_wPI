@@ -45,6 +45,9 @@ uint8_t txBuffer[136];
 uint8_t rxBuffer[136];
 uint16_t packetCounter = 0;
 uint8_t scan_key = 0x01;
+uint8_t add_type = 0x02; //add type as new node
+uint8_t index_node = 0x00; //temp index node
+uint8_t wakeup_hold = 0x05; //wake up hold in 100ms
 uint16_t cc1120_TH_ID;
 uint8_t cc1120_TH_Node;
 uint16_t gateway_ID;
@@ -836,21 +839,37 @@ void cc112x_run(void)
 					if ( rxBuffer[1] == 0x81 )
 					{
 						printf ("Joint detected\n");
-						if ( rxBuffer[7] != scan_key ){
-							printf(" Scan key is diffrent \n old : new , %02x : %02x \nCommencing scan command\n", rxBuffer[7], scan_key);
 							cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
 							cc1120_TH_Node = rxBuffer[6];
+						if ( rxBuffer[7] != scan_key ){
+							printf(" Scan key is diffrent \n old : new , %02x : %02x \nCommencing scan command\n", rxBuffer[7], scan_key);
+							//cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
+							//cc1120_TH_Node = rxBuffer[6];
 							printf("TH id is %04X \n Node is %02X \n",cc1120_TH_ID, cc1120_TH_Node);
 							// 
-							txBuffer[0] = 0x07; txBuffer[1] = 0x01; *(uint16_t*)&txBuffer[2] = cc1120_TH_ID; *(uint16_t*)&txBuffer[4] = gateway_ID;
+							txBuffer[0] = 0x0A; txBuffer[1] = 0x01; *(uint16_t*)&txBuffer[2] =  gateway_ID; *(uint16_t*)&txBuffer[4] = cc1120_TH_ID;
+							txBuffer[6] = cc1120_TH_Node; txBuffer[7] = scan_key; txBuffer[8] = 0x00; txBuffer[9] = 0x00; txBuffer[10] = 0x00;  
+						}
+						if ( rxBuffer[7] == scan_key ){
+							printf("Scan key is the same %02X:%02X\n", rxBuffer[7], scan_key);	
+							txBuffer[0] = 0x0A; txBuffer[1] = 0x06; *(uint16_t*)&txBuffer[2] =  gateway_ID; *(uint16_t*)&txBuffer[4] = cc1120_TH_ID;
+							txBuffer[6] = cc1120_TH_Node; txBuffer[7] = add_type; txBuffer[8] = index_node; txBuffer[9] = scan_key; txBuffer[10] = wakeup_hold;  
 						} 
+					}
+					if ( rxBuffer[1] == 0x92 )
+					{
+						printf("Th data detected\n");
+							cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
+							cc1120_TH_Node = rxBuffer[6];
+							printf("Hummidity : %04X Temp 1 : %04X Temp2 : %04X Temp 3 : %04X\n", *(uint16_t*)&rxBuffer[7], *(uint16_t*)&rxBuffer[9], *(uint16_t*)&rxBuffer[11], *(uint16_t*)&rxBuffer[13]); 
 					}
 					
 					for (i=0;i<rx_byte;i++) {
 						printf("%02X ", rxBuffer[i]);
 					}
-					for (i=0;i<7;i++) {
-						printf("txbuffer[%d] %02X ", i, txBuffer[i]);
+					printf ("txbuffer ");
+					for (i=0;i<=11;i++) {
+						printf("%02X ", txBuffer[i]);
 					}
 
 					printf("\r\n");
@@ -864,7 +883,7 @@ void cc112x_run(void)
 	else if( temp_byte == 0) {
 		//os_dly_wait (1);
 //		if (replyDly>0) return;
-		//send_packet(txBuffer);
+		send_packet(txBuffer);
 		return;
 	}
 	
