@@ -49,6 +49,8 @@ uint8_t add_type = 0x02; //add type as new node
 uint8_t index_node = 0x00; //temp index node
 uint8_t wakeup_hold = 0x05; //wake up hold in 100ms
 uint16_t cc1120_TH_ID;
+uint16_t cc1120_TH_ID_Selected[10] = { 0x0000, 0x0926};
+int cc1120_TH_Listed = 2;
 uint8_t cc1120_TH_Node;
 uint16_t gateway_ID;
 
@@ -836,40 +838,45 @@ void cc112x_run(void)
 					timeinfo->tm_sec,
 					//timeinfo->tm_ms,
 					rx_byte, (rx_byte>1) ? "bytes" : "byte",rxBuffer[rx_byte - 2]-102);
-					if ( rxBuffer[1] == 0x81 )
+				  int counter = 0;
+					while ( counter < cc1120_TH_Listed )
 					{
-						printf ("Joint detected\n");
-							cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
-							cc1120_TH_Node = rxBuffer[6];
-						if ( rxBuffer[7] != scan_key ){
-							printf(" Scan key is diffrent \n old : new , %02x : %02x \nCommencing scan command\n", rxBuffer[7], scan_key);
-							//cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
-							//cc1120_TH_Node = rxBuffer[6];
-							printf("TH id is %04X \n Node is %02X \n",cc1120_TH_ID, cc1120_TH_Node);
-							// 
-							txBuffer[0] = 0x0A; txBuffer[1] = 0x01; *(uint16_t*)&txBuffer[2] =  gateway_ID; *(uint16_t*)&txBuffer[4] = cc1120_TH_ID;
-							txBuffer[6] = cc1120_TH_Node; txBuffer[7] = scan_key; txBuffer[8] = 0x00; txBuffer[9] = 0x00; txBuffer[10] = 0x00;  
-						}
-						if ( rxBuffer[7] == scan_key ){
-							printf("Scan key is the same %02X:%02X\n", rxBuffer[7], scan_key);
-							printf("Commencing add command\n");
-							txBuffer[0] = 0x0A; txBuffer[1] = 0x06; *(uint16_t*)&txBuffer[2] =  gateway_ID; 
-							*(uint16_t*)&txBuffer[4] = cc1120_TH_ID; txBuffer[6] = cc1120_TH_Node; 
-							txBuffer[7] = add_type; txBuffer[8] = index_node; txBuffer[9] = scan_key; txBuffer[10] = wakeup_hold;  
-						} 
-					}
-					if ( rxBuffer[1] == 0x92 )
-					{
-						printf("Th data detected\n");
-							cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
-							cc1120_TH_Node = rxBuffer[6];
-							txBuffer[0] = 0x07; txBuffer[1] = 0x11; *(uint16_t*)&txBuffer[2] =  gateway_ID; 
-							*(uint16_t*)&txBuffer[4] = cc1120_TH_ID; txBuffer[6] = cc1120_TH_Node; 
-							txBuffer[7] = 0x00;  
-							printf("Hummidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d\n", 
-							*(uint16_t*)&rxBuffer[7], *(uint16_t*)&rxBuffer[9], *(uint16_t*)&rxBuffer[11], *(uint16_t*)&rxBuffer[13]); 
-					}
-					
+						if ( cc1120_TH_ID_Selected[counter] == (*(uint16_t*)&rxBuffer[2]))
+						{	
+							printf( "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
+							if ( rxBuffer[1] == 0x81 )
+							{
+							printf ("Joint detected\n");
+								cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
+								printf("cc1120_TH_ID is %04X\n", cc1120_TH_ID);
+								cc1120_TH_Node = rxBuffer[6];
+							if ( rxBuffer[7] != scan_key ){
+								printf(" Scan key is diffrent \n old : new , %02x : %02x \nCommencing scan command\n", rxBuffer[7], scan_key);
+								//cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
+								//cc1120_TH_Node = rxBuffer[6];
+								printf("TH id is %04X \n Node is %02X \n",cc1120_TH_ID, cc1120_TH_Node);
+								txBuffer[0] = 0x0A; txBuffer[1] = 0x01; *(uint16_t*)&txBuffer[2] =  gateway_ID; *(uint16_t*)&txBuffer[4] = cc1120_TH_ID;
+								txBuffer[6] = cc1120_TH_Node; txBuffer[7] = scan_key; txBuffer[8] = 0x00; txBuffer[9] = 0x00; txBuffer[10] = 0x00;  
+								}
+								if ( rxBuffer[7] == scan_key ){
+									printf("Scan key is the same %02X:%02X\n", rxBuffer[7], scan_key);
+									printf("Commencing add command\n");
+									txBuffer[0] = 0x0A; txBuffer[1] = 0x06; *(uint16_t*)&txBuffer[2] =  gateway_ID; 
+									*(uint16_t*)&txBuffer[4] = cc1120_TH_ID; txBuffer[6] = cc1120_TH_Node; 
+									txBuffer[7] = add_type; txBuffer[8] = index_node; txBuffer[9] = scan_key; txBuffer[10] = wakeup_hold;  
+								} 
+							}
+							if ( rxBuffer[1] == 0x92 )
+							{
+								printf("Th data detected\n");
+								cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
+								cc1120_TH_Node = rxBuffer[6];
+								txBuffer[0] = 0x07; txBuffer[1] = 0x11; *(uint16_t*)&txBuffer[2] =  gateway_ID; 
+								*(uint16_t*)&txBuffer[4] = cc1120_TH_ID; txBuffer[6] = cc1120_TH_Node; 
+								txBuffer[7] = 0x00;  
+								printf("Hummidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d\n", 
+								*(uint16_t*)&rxBuffer[7], *(uint16_t*)&rxBuffer[9], *(uint16_t*)&rxBuffer[11], *(uint16_t*)&rxBuffer[13]); 
+							}
 					for (i=0;i<rx_byte;i++) {
 						printf("%02X ", rxBuffer[i]);
 					}
@@ -877,9 +884,15 @@ void cc112x_run(void)
 					for (i=0;i<=11;i++) {
 						printf("%02X ", txBuffer[i]);
 					}
-
 					printf("\r\n");
-
+						break;		
+					}
+						if ( cc1120_TH_ID_Selected[counter] != (*(uint16_t*)&rxBuffer[2])){
+							printf( "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
+							printf("TH_ID_selected:TH_Incoming_Id %04X:%04X different \n",cc1120_TH_ID_Selected[counter] ,(*(uint16_t*)&rxBuffer[2]));
+							}	
+						counter++;
+					}
 					//processPacket((uint8_t*)&rxBuffer[1], txBuffer, rx_byte-3);
 					
 				}
@@ -887,7 +900,7 @@ void cc112x_run(void)
 		}
 	}
 	else if( temp_byte == 0) {
-		//os_dly_wait (1);
+					//os_dly_wait (1);
 //		if (replyDly>0) return;
 		send_packet(txBuffer);
 		return;
