@@ -307,7 +307,7 @@ void cc112xregConfig(uint8_t freq) {
     uint8_t writeByte;
     uint16_t i;
 	uint32_t freq_code;
-	freq_code = CC112X_FREQ_BASE + ((uint16_t)freq * CC112X_FREQ_STEP);
+	freq_code = CC112X_FREQ_BASE + ((uint16_t)freq * CC112X_FREQ_STEP);// original code
 
     // Reset radio
     trxSpiCmdStrobe(CC112X_SRES);
@@ -841,7 +841,7 @@ void cc112x_run(void)
 				  int counter = 0;
 					while ( counter < cc1120_TH_Listed )
 					{
-						if ( cc1120_TH_ID_Selected[counter] == (*(uint16_t*)&rxBuffer[2]))
+						if ( 1/*cc1120_TH_ID_Selected[counter] == (*(uint16_t*)&rxBuffer[2])*/)
 						{	
 							printf( "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
 							if ( rxBuffer[1] == 0x81 )
@@ -940,9 +940,19 @@ int main(int argc, char *argv[]) {
   digitalWrite(CC1120_SSEL,  HIGH) ;
 
   cc112x_hw_rst();
-
+  cc112x_init(0,0);// freq 410 Mhz + (1 Mhz * 0)
+	memcpy(&txBuffer[1],DUMMY_BUF,10);
+	txBuffer[0]=10;
+	while (1)
+	{
+		/* communication handler */
+		cc112x_run();
+	}
+  /*int repeat;
+	for(repeat=0;repeat<=100;repeat++)
+	{
   // init cc112x radio
-  cc112x_init(0,0);
+  cc112x_init(repeat,0);// freq 410 Mhz + (1 Mhz * repeat)
 
   printf("Run CC1120..\r\n");
   //getchar();
@@ -951,13 +961,16 @@ int main(int argc, char *argv[]) {
     
 	memcpy(&txBuffer[1],DUMMY_BUF,10);
 	txBuffer[0]=10;
-	
-	while(1) {
+	int comm = 0;
+	while(comm<6) {
 				
-		/* communication handler */
 		cc112x_run();
-	}	
-
+		comm++;
+		sleep (60);
+	}
+	int frekuensi = (410 + repeat);
+	printf("No File found frek = %d\n", frekuensi);  	
+	}*/
   return ret;
-
+	
   }
