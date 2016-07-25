@@ -53,6 +53,7 @@ uint16_t cc1120_TH_ID_Selected[10] = { 0x0000, 0x0926};
 int cc1120_TH_Listed = 2;
 uint8_t cc1120_TH_Node;
 uint16_t gateway_ID;
+int freq_main;
 
 	
 /*******************************************************************************
@@ -785,6 +786,7 @@ void cc112x_run(void)
 	uint8_t temp_byte;
 	int i;
 	uint8_t rx_byte = 0;
+	uint8_t freq_th = 0x05;
 		// Infinite loop
 	
 	cc112xSpiReadReg(CC112X_MARC_STATUS1, &temp_byte, 1);
@@ -871,17 +873,27 @@ void cc112x_run(void)
 								printf("Th data detected\n");
 								cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
 								cc1120_TH_Node = rxBuffer[6];
-								txBuffer[0] = 0x07; txBuffer[1] = 0x11; *(uint16_t*)&txBuffer[2] =  gateway_ID; 
-								*(uint16_t*)&txBuffer[4] = cc1120_TH_ID; txBuffer[6] = cc1120_TH_Node; 
-								txBuffer[7] = 0x00;  
+								txBuffer[0] = 14; //length packet data
+								txBuffer[1] = 0x11; //command code 
+								*(uint16_t*)&txBuffer[2] =  gateway_ID; //(2 byte)
+								*(uint16_t*)&txBuffer[4] = cc1120_TH_ID; //(2 byte)
+								txBuffer[6] = cc1120_TH_Node; 
+								txBuffer[7] = 0x00; //rssi
+								txBuffer[8] = 12; //sensor number
+								txBuffer[9] = freq_th; //radio channel
+								txBuffer[10] = 0x06; //wake up cnt 2 send
+								txBuffer[11] = 10;//in sec wakeup (2 byte)
+								txBuffer[13] = 60;//in sec next wakeup (2 byte)
+								freq_main = freq_th;
 								printf("Hummidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d\n", 
 								*(uint16_t*)&rxBuffer[7], *(uint16_t*)&rxBuffer[9], *(uint16_t*)&rxBuffer[11], *(uint16_t*)&rxBuffer[13]); 
+  							//cc112x_init(0,freq_main);// freq 410 Mhz + (1 Mhz * 0)
 							}
 					for (i=0;i<rx_byte;i++) {
 						printf("%02X ", rxBuffer[i]);
 					}
 					printf ("txbuffer ");
-					for (i=0;i<=11;i++) {
+					for (i=0;i<=12;i++) {
 						printf("%02X ", txBuffer[i]);
 					}
 					printf("\r\n");
@@ -924,6 +936,7 @@ void cc112x_run(void)
 int main(int argc, char *argv[]) {
   uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
   int ret = 0;
+	freq_main = 0x05;
   gateway_ID = mac_address();
  
   //setup gpio pin to spi function
@@ -940,7 +953,7 @@ int main(int argc, char *argv[]) {
   digitalWrite(CC1120_SSEL,  HIGH) ;
 
   cc112x_hw_rst();
-  cc112x_init(0,0);// freq 410 Mhz + (1 Mhz * 0)
+  cc112x_init(freq_main,0);// freq 410 Mhz + (1 Mhz * freq_main)
 	memcpy(&txBuffer[1],DUMMY_BUF,10);
 	txBuffer[0]=10;
 	while (1)
