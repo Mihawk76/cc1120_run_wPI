@@ -953,7 +953,7 @@ int main(int argc, char *argv[]) {
   digitalWrite(CC1120_SSEL,  HIGH) ;
 
   cc112x_hw_rst();
-  cc112x_init(freq_main,0);// freq 410 Mhz + (1 Mhz * freq_main)
+  cc112x_init(23,0);// freq 410 Mhz + (1 Mhz * freq_main)
 	memcpy(&txBuffer[1],DUMMY_BUF,10);
 	txBuffer[0]=10;
 	while (1)
