@@ -21,6 +21,7 @@
 	
 #include "cc112x_easy_link_reg_config.h"
 #include "mac_address.c"
+#include "kwh_params.c"
 	
 	#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 	
@@ -50,11 +51,12 @@ uint8_t index_node = 0x00; //temp index node
 uint8_t wakeup_hold = 0x05; //wake up hold in 100ms
 uint16_t cc1120_TH_ID;
 uint16_t cc1120_TH_ID_Selected[10] = { 0x0000, 0x0926};
+uint32_t cc1120_KWH_ID;
 int cc1120_TH_Listed = 2;
 uint8_t cc1120_TH_Node;
 uint16_t gateway_ID;
 int freq_main;
-
+int kwh_loop = 0;
 	
 /*******************************************************************************
  * @fn          trxReadWriteBurstSingle
@@ -787,6 +789,30 @@ void cc112x_run(void)
 	int i;
 	uint8_t rx_byte = 0;
 	uint8_t freq_th = 0x05;
+	//scanning kwh and then adding them
+	if ( kwh_loop <= 10){
+		printf("Sending KWH data\n");
+		txBuffer[0] = 15; //length packet data
+		txBuffer[1] = 0x02; //command code 
+		*(uint16_t*)&txBuffer[2] =  gateway_ID; //(2 byte)
+		*(uint16_t*)&txBuffer[4] = 0x0000; //(2 byte) id harusnya cuman 4 
+		txBuffer[6] = 0xFF; 
+		txBuffer[7] = 0xFF; //rssi
+		txBuffer[8] = 0xFF; //sensor number
+		txBuffer[9] = 0xFF; //radio channel
+		txBuffer[10] = 0x14; //node type = ADE
+		txBuffer[11] = 0x07;//in sec wakeup (2 byte)
+		txBuffer[12] = 0x61;//in sec next wakeup (2 byte)
+		txBuffer[13] = 0x28;
+		txBuffer[14] = 0x1B;
+		txBuffer[15] = 0x01;
+		printf ("txbuffer ");
+		for (i=0;i<=15;i++) {
+			printf("%02X ", txBuffer[i]);
+		}
+		kwh_loop++;
+		sleep(1);
+	}
 		// Infinite loop
 	
 	cc112xSpiReadReg(CC112X_MARC_STATUS1, &temp_byte, 1);
@@ -841,6 +867,34 @@ void cc112x_run(void)
 					//timeinfo->tm_ms,
 					rx_byte, (rx_byte>1) ? "bytes" : "byte",rxBuffer[rx_byte - 2]-102);
 				  int counter = 0;
+					if ( rxBuffer[1] == 0x82 )
+					{
+						cc1120_KWH_ID = *(uint32_t*)&rxBuffer[2];
+						txBuffer[0] = 17; //length packet data
+						txBuffer[1] = 0x06; //command code 
+						*(uint16_t*)&txBuffer[2] =  gateway_ID; //(2 byte)
+						*(uint16_t*)&txBuffer[4] = 0x0000; //(2 byte)
+						*(uint32_t*)&txBuffer[6] = cc1120_KWH_ID;
+						txBuffer[10] = 0x14; 
+						*(uint32_t*)&txBuffer[11] = 0x00000000; //add type kwh 
+						txBuffer[15] = 0x01; //add type kwh 
+						txBuffer[16] = 0x01; //sensor number index number
+						txBuffer[17] = 0x00; //scan key 
+						//txBuffer[14] = 0x06; //*(uint16_t*)&txBuffer[14] = 0x0006; //wake up byte
+					}
+					if ( (rxBuffer[1] == 0x92) && (rxBuffer[10] == 0x14) )
+					{
+						printf("KWH data Detected\n");
+						cc1120_KWH_ID = *(uint32_t*)&rxBuffer[2];
+						get_params_value(&rxBuffer[12], rxBuffer[11], (rxBuffer[0]-11));
+							printf("PhaseSVoltChannels %d\n", PhaseSVoltChannels[0]);
+							printf("PhaseRVoltChannels %d\n", PhaseRVoltChannels[0]);	
+							printf("PhaseTVoltChannels %d\n", PhaseTVoltChannels[0]);
+							printf("PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[0]);
+							printf("PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[0]);
+							printf("PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[0]);
+						
+					}
 					while ( counter < cc1120_TH_Listed )
 					{
 						if ( 1/*cc1120_TH_ID_Selected[counter] == (*(uint16_t*)&rxBuffer[2])*/)
@@ -848,7 +902,7 @@ void cc112x_run(void)
 							printf( "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
 							if ( rxBuffer[1] == 0x81 )
 							{
-							printf ("Joint detected\n");
+								printf ("Joint detected\n");
 								cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
 								printf("cc1120_TH_ID is %04X\n", cc1120_TH_ID);
 								cc1120_TH_Node = rxBuffer[6];
@@ -857,18 +911,31 @@ void cc112x_run(void)
 								//cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
 								//cc1120_TH_Node = rxBuffer[6];
 								printf("TH id is %04X \n Node is %02X \n",cc1120_TH_ID, cc1120_TH_Node);
-								txBuffer[0] = 0x0A; txBuffer[1] = 0x01; *(uint16_t*)&txBuffer[2] =  gateway_ID; *(uint16_t*)&txBuffer[4] = cc1120_TH_ID;
-								txBuffer[6] = cc1120_TH_Node; txBuffer[7] = scan_key; txBuffer[8] = 0x00; txBuffer[9] = 0x00; txBuffer[10] = 0x00;  
+								txBuffer[0] = 0x0A; 
+								txBuffer[1] = 0x01; 
+								*(uint16_t*)&txBuffer[2] =  gateway_ID; 
+								*(uint16_t*)&txBuffer[4] = cc1120_TH_ID;
+								txBuffer[6] = cc1120_TH_Node; 
+								txBuffer[7] = scan_key; 
+								txBuffer[8] = 0x00; 
+								txBuffer[9] = 0x00; 
+								txBuffer[10] = 0x00;  
 								}
 								if ( rxBuffer[7] == scan_key ){
 									printf("Scan key is the same %02X:%02X\n", rxBuffer[7], scan_key);
 									printf("Commencing add command\n");
-									txBuffer[0] = 0x0A; txBuffer[1] = 0x06; *(uint16_t*)&txBuffer[2] =  gateway_ID; 
-									*(uint16_t*)&txBuffer[4] = cc1120_TH_ID; txBuffer[6] = cc1120_TH_Node; 
-									txBuffer[7] = add_type; txBuffer[8] = index_node; txBuffer[9] = scan_key; txBuffer[10] = wakeup_hold;  
+									txBuffer[0] = 0x0A; 
+									txBuffer[1] = 0x06; 
+									*(uint16_t*)&txBuffer[2] =  gateway_ID; 
+									*(uint16_t*)&txBuffer[4] = cc1120_TH_ID; 
+									txBuffer[6] = cc1120_TH_Node; 
+									txBuffer[7] = add_type; 
+									txBuffer[8] = index_node; 
+									txBuffer[9] = scan_key; 
+									txBuffer[10] = wakeup_hold;  
 								} 
 							}
-							if ( rxBuffer[1] == 0x92 )
+							if ( (rxBuffer[1] == 0x92) && (rxBuffer[10] == 0x11) )
 							{
 								printf("Th data detected\n");
 								cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
@@ -893,7 +960,7 @@ void cc112x_run(void)
 						printf("%02X ", rxBuffer[i]);
 					}
 					printf ("txbuffer ");
-					for (i=0;i<=12;i++) {
+					for (i=0;i<=txBuffer[0];i++) {
 						printf("%02X ", txBuffer[i]);
 					}
 					printf("\r\n");
