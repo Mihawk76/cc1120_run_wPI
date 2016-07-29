@@ -788,9 +788,9 @@ void cc112x_run(void)
 	uint8_t temp_byte;
 	int i;
 	uint8_t rx_byte = 0;
-	uint8_t freq_th = 0x05;
+	uint8_t freq_th = 23;
 	//scanning kwh and then adding them
-	if ( kwh_loop <= 10){
+	/*if ( kwh_loop <= 10){
 		printf("Sending KWH data\n");
 		txBuffer[0] = 15; //length packet data
 		txBuffer[1] = 0x02; //command code 
@@ -812,7 +812,7 @@ void cc112x_run(void)
 		}
 		kwh_loop++;
 		sleep(1);
-	}
+	}*/
 		// Infinite loop
 	
 	cc112xSpiReadReg(CC112X_MARC_STATUS1, &temp_byte, 1);
@@ -867,7 +867,7 @@ void cc112x_run(void)
 					//timeinfo->tm_ms,
 					rx_byte, (rx_byte>1) ? "bytes" : "byte",rxBuffer[rx_byte - 2]-102);
 				  int counter = 0;
-					if ( rxBuffer[1] == 0x82 )
+					if ( (rxBuffer[1] == 0x82) && (*(uint32_t*)&rxBuffer[2] == 0x553A67C9))
 					{
 						cc1120_KWH_ID = *(uint32_t*)&rxBuffer[2];
 						txBuffer[0] = 17; //length packet data
@@ -882,7 +882,7 @@ void cc112x_run(void)
 						txBuffer[17] = 0x00; //scan key 
 						//txBuffer[14] = 0x06; //*(uint16_t*)&txBuffer[14] = 0x0006; //wake up byte
 					}
-					if ( (rxBuffer[1] == 0x92) && (rxBuffer[10] == 0x14) )
+					if ( (rxBuffer[1] == 0x92) && (rxBuffer[10] == 0x14) && (*(uint32_t*)&rxBuffer[2] == 0x553A67C9))
 					{
 						printf("KWH data Detected\n");
 						cc1120_KWH_ID = *(uint32_t*)&rxBuffer[2];
@@ -935,7 +935,7 @@ void cc112x_run(void)
 									txBuffer[10] = wakeup_hold;  
 								} 
 							}
-							if ( (rxBuffer[1] == 0x92) && (rxBuffer[10] == 0x11) )
+							if ( (rxBuffer[1] == 0x92) && (rxBuffer[6] == 0x11) )
 							{
 								printf("Th data detected\n");
 								cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
@@ -1003,8 +1003,9 @@ void cc112x_run(void)
 int main(int argc, char *argv[]) {
   uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
   int ret = 0;
-	freq_main = 0x05;
-  gateway_ID = mac_address();
+	freq_main = 23;
+  gateway_ID = 0x1234;
+	mac_address();
  
   //setup gpio pin to spi function
   wiringPiSetup();
@@ -1020,7 +1021,8 @@ int main(int argc, char *argv[]) {
   digitalWrite(CC1120_SSEL,  HIGH) ;
 
   cc112x_hw_rst();
-  cc112x_init(23,0);// freq 410 Mhz + (1 Mhz * freq_main)
+  //cc112x_init(23,0);// freq 410 Mhz + (1 Mhz * freq_main)
+  cc112x_init(freq_main,0);// freq 410 Mhz + (1 Mhz * freq_main)
 	memcpy(&txBuffer[1],DUMMY_BUF,10);
 	txBuffer[0]=10;
 	while (1)
