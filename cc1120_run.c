@@ -57,6 +57,10 @@ uint8_t cc1120_TH_Node;
 uint16_t gateway_ID;
 int freq_main;
 int kwh_loop = 0;
+uint16_t humidity;
+uint16_t temp1;
+uint16_t temp2;
+uint16_t temp3;
 	
 /*******************************************************************************
  * @fn          trxReadWriteBurstSingle
@@ -952,8 +956,12 @@ void cc112x_run(void)
 								txBuffer[11] = 10;//in sec wakeup (2 byte)
 								txBuffer[13] = 60;//in sec next wakeup (2 byte)
 								freq_main = freq_th;
-								printf("Hummidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d\n", 
-								*(uint16_t*)&rxBuffer[7], *(uint16_t*)&rxBuffer[9], *(uint16_t*)&rxBuffer[11], *(uint16_t*)&rxBuffer[13]); 
+								humidity = *(uint16_t*)&rxBuffer[7]; 
+								temp1 = *(uint16_t*)&rxBuffer[9]; 
+								temp2 = *(uint16_t*)&rxBuffer[11]; 
+								temp3 = *(uint16_t*)&rxBuffer[13]; 
+								printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d\n", 
+								humidity, temp1, temp2, temp3); 
   							//cc112x_init(0,freq_main);// freq 410 Mhz + (1 Mhz * 0)
 							}
 					for (i=0;i<rx_byte;i++) {
