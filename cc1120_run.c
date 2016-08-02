@@ -22,6 +22,7 @@
 #include "cc112x_easy_link_reg_config.h"
 #include "mac_address.c"
 #include "kwh_params.c"
+#include "res_sensor.c"
 	
 	#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 	
@@ -891,6 +892,9 @@ void cc112x_run(void)
 						printf("KWH data Detected\n");
 						cc1120_KWH_ID = *(uint32_t*)&rxBuffer[2];
 						get_params_value(&rxBuffer[12], rxBuffer[11], (rxBuffer[0]-11));
+							res_kwh ("http://10.42.0.1/post.php", PhaseRVoltChannels[0], PhaseSVoltChannels[0], PhaseTVoltChannels[0]
+							, PhaseRCurrentChannels[0], PhaseSCurrentChannels[0], PhaseTCurrentChannels[0]
+							, 14, gateway_ID);
 							printf("PhaseSVoltChannels %d\n", PhaseSVoltChannels[0]);
 							printf("PhaseRVoltChannels %d\n", PhaseRVoltChannels[0]);	
 							printf("PhaseTVoltChannels %d\n", PhaseTVoltChannels[0]);
@@ -962,6 +966,7 @@ void cc112x_run(void)
 								temp3 = *(uint16_t*)&rxBuffer[13]; 
 								printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d\n", 
 								humidity, temp1, temp2, temp3); 
+								res_th ("http://10.42.0.1/post.php", temp1, temp2, temp3, humidity, 11, gateway_ID);
   							//cc112x_init(0,freq_main);// freq 410 Mhz + (1 Mhz * 0)
 							}
 					for (i=0;i<rx_byte;i++) {
