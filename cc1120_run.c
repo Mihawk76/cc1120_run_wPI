@@ -892,7 +892,7 @@ void cc112x_run(void)
 						printf("KWH data Detected\n");
 						cc1120_KWH_ID = *(uint32_t*)&rxBuffer[2];
 						get_params_value(&rxBuffer[12], rxBuffer[11], (rxBuffer[0]-11));
-							res_kwh ("http://192.168.10.107/post.php", PhaseRVoltChannels[0], PhaseSVoltChannels[0], PhaseTVoltChannels[0]
+							res_kwh ("http://192.168.10.125/post.php", PhaseRVoltChannels[0], PhaseSVoltChannels[0], PhaseTVoltChannels[0]
 							, PhaseRCurrentChannels[0], PhaseSCurrentChannels[0], PhaseTCurrentChannels[0]
 							, 14, gateway_ID);
 							printf("PhaseSVoltChannels %d\n", PhaseSVoltChannels[0]);
@@ -966,7 +966,7 @@ void cc112x_run(void)
 								temp3 = *(uint16_t*)&rxBuffer[13]; 
 								printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d\n", 
 								humidity, temp1, temp2, temp3); 
-								res_th ("http://192.168.10.107/post.php", temp1, temp2, temp3, humidity, 11, gateway_ID);
+								res_th ("http://192.168.10.125/post.php", temp1, temp2, temp3, humidity, 11, gateway_ID);
   							//cc112x_init(0,freq_main);// freq 410 Mhz + (1 Mhz * 0)
 							}
 					for (i=0;i<rx_byte;i++) {
