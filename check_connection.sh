@@ -1,7 +1,7 @@
 ((count = 10))                            # Maximum number to try.
 while [[ $count -ne 0 ]] ; do
 #while [[ 1 ]] ; do
-    ping -I eth0 -c 1 8.8.8.8                      # Try once.
+    ping -I eth1 -c 1 8.8.8.8                      # Try once.
     rc=$?
     if [[ $rc -eq 0 ]] ; then
     (
@@ -15,5 +15,6 @@ while [[ $count -ne 0 ]] ; do
 		)
     fi
     ((count = count - 1))                  # So we don't go forever.
+sleep 5
 done
 
