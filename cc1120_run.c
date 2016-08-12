@@ -1017,7 +1017,7 @@ void cc112x_run(void)
 int main(int argc, char *argv[]) {
   uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
   int ret = 0;
-	freq_main = 23;
+	freq_main = 30;
   gateway_ID = 0x1234;
 	mac_address();
  
