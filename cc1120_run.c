@@ -795,6 +795,57 @@ void cc112x_run(void)
 	int i;
 	uint8_t rx_byte = 0;
 	uint8_t freq_th = 23;
+	//Adding infrared capability
+	if ( kwh_loop <= 1){
+		printf("Sending KWH data\n");
+		txBuffer[0] = 37; //length packet data
+		txBuffer[1] = 0x11; //command code 
+		*(uint16_t*)&txBuffer[2] =  gateway_ID; //(2 byte)
+		//*(uint16_t*)&txBuffer[4] = 0xC445; //id 
+		*(uint16_t*)&txBuffer[4] = 0x3D42; //id 
+		txBuffer[6] = 0x15; //node type 
+		txBuffer[7] = 0x00; //reserved
+		txBuffer[8] = 0x00; //
+		txBuffer[9] = 0x1C; //data length
+		txBuffer[10] = 0x5E; //space
+		txBuffer[11] = 0x02;//
+		txBuffer[12] = 0x12;//low
+		txBuffer[13] = 0x02;//
+		txBuffer[14] = 0x71;// high
+		txBuffer[15] = 0x06;//
+		int index_array = 16;
+		txBuffer[index_array] = 0x38; index_array++; // start
+		txBuffer[index_array] = 0x23; index_array++; 
+		txBuffer[index_array] = 0x01; index_array++; // raw data
+		txBuffer[index_array] = 0x40; index_array++;
+		txBuffer[index_array] = 0x61; index_array++;
+		txBuffer[index_array] = 0x11; index_array++;
+		txBuffer[index_array] = 0x20; index_array++;
+		txBuffer[index_array] = 0xC0; index_array++;
+		txBuffer[index_array] = 0x20; index_array++;
+		txBuffer[index_array] = 0xDF; index_array++;
+		txBuffer[index_array] = 0x40; index_array++;
+		txBuffer[index_array] = 0xBF; index_array++;
+		txBuffer[index_array] = 0x05; index_array++;
+		txBuffer[index_array] = 0x80; index_array++;
+		txBuffer[index_array] = 0x84; index_array++;
+		txBuffer[index_array] = 0x9B; index_array++;
+		txBuffer[index_array] = 0x4D; index_array++;
+		txBuffer[index_array] = 0x23; index_array++;
+		txBuffer[index_array] = 0x01; index_array++;
+		txBuffer[index_array] = 0x40; index_array++;
+		txBuffer[index_array] = 0x93; index_array++;
+		txBuffer[index_array] = 0x08; index_array++;
+		txBuffer[index_array] = 0x11; index_array++;
+		txBuffer[index_array] = 0x91; index_array++;
+		printf ("txbuffer ");
+		for (i=0;i<=txBuffer[0];i++) {
+			printf("%02X ", txBuffer[i]);
+		}
+		kwh_loop++;
+		sleep(1);
+	}
+	
 	//scanning kwh and then adding them
 	/*if ( kwh_loop <= 10){
 		printf("Sending KWH data\n");
@@ -813,7 +864,7 @@ void cc112x_run(void)
 		txBuffer[14] = 0x1B;
 		txBuffer[15] = 0x01;
 		printf ("txbuffer ");
-		for (i=0;i<=15;i++) {
+		for (i=0;i<=txBuffer[0];i++) {
 			printf("%02X ", txBuffer[i]);
 		}
 		kwh_loop++;
@@ -1017,8 +1068,9 @@ void cc112x_run(void)
 int main(int argc, char *argv[]) {
   uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
   int ret = 0;
-	freq_main = 30;
-  gateway_ID = 0x1234;
+	freq_main = 0;
+  //gateway_ID = 0x1234;
+  gateway_ID = 0x0000;
 	mac_address();
  
   //setup gpio pin to spi function
