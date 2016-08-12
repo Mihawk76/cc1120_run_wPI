@@ -62,7 +62,7 @@ uint16_t humidity;
 uint16_t temp1;
 uint16_t temp2;
 uint16_t temp3;
-char location[] = "http://192.168.10.112/post.php";
+char location[] = "http://192.168.10.119/post.php";
 	
 /*******************************************************************************
  * @fn          trxReadWriteBurstSingle

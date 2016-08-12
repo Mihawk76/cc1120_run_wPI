@@ -6,12 +6,12 @@ while [[ 1 ]] ; do
     if [[ $rc -eq 0 ]] ; then
     (
 			echo "ping is succesfull"
-			curl --data "ethernet=1" http://192.168.10.112/post.php
+			curl --data "ethernet=1" http://192.168.10.119/post.php
 		)
 		else
 		(
 			echo "time out"
-			curl --data "ethernet=0" http://192.168.10.112/post.php
+			curl --data "ethernet=0" http://192.168.10.119/post.php
 		)
     fi
     ((count = count - 1))                  # So we don't go forever.
