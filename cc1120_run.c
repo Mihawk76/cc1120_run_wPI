@@ -796,7 +796,7 @@ void cc112x_run(void)
 	uint8_t rx_byte = 0;
 	uint8_t freq_th = 23;
 	//scanning kwh and then adding them
-	if ( kwh_loop == 0){
+	if ( kwh_loop <= 100){
 		printf("Sending KWH data\n");
 		txBuffer[0] = 15; //length packet data
 		txBuffer[1] = 0x02; //command code 
@@ -816,7 +816,7 @@ void cc112x_run(void)
 		for (i=0;i<=15;i++) {
 			printf("%02X ", txBuffer[i]);
 		}
-		kwh_loop++;
+		//kwh_loop++;
 		sleep(1);
 	}
 		// Infinite loop
