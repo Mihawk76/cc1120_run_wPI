@@ -796,7 +796,7 @@ void cc112x_run(void)
 	uint8_t rx_byte = 0;
 	uint8_t freq_th = 23;
 	//scanning kwh and then adding them
-	if ( kwh_loop <= 100){
+	/*if ( kwh_loop <= 100){
 		printf("Sending KWH data\n");
 		txBuffer[0] = 15; //length packet data
 		txBuffer[1] = 0x02; //command code 
@@ -818,7 +818,7 @@ void cc112x_run(void)
 		}
 		//kwh_loop++;
 		sleep(1);
-	}
+	}*/
 		// Infinite loop
 	
 	cc112xSpiReadReg(CC112X_MARC_STATUS1, &temp_byte, 1);
@@ -1018,6 +1018,7 @@ int main(int argc, char *argv[]) {
   uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
   int ret = 0;
 	freq_main = 23;
+	//freq_main = 0;
   gateway_ID = 0x1234;
 	mac_address();
  
