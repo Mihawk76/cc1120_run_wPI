@@ -56,6 +56,7 @@ uint32_t cc1120_KWH_ID;
 int cc1120_TH_Listed = 2;
 uint8_t cc1120_TH_Node;
 uint16_t gateway_ID;
+uint16_t mac_address_gateway;
 int freq_main;
 int kwh_loop = 0;
 uint16_t humidity;
@@ -895,7 +896,7 @@ void cc112x_run(void)
 						get_params_value(&rxBuffer[12], rxBuffer[11], (rxBuffer[0]-11));
 							res_kwh (location, PhaseRVoltChannels[0], PhaseSVoltChannels[0], PhaseTVoltChannels[0]
 							, PhaseRCurrentChannels[0], PhaseSCurrentChannels[0], PhaseTCurrentChannels[0]
-							, 14, gateway_ID);
+							, 14, mac_address_gateway);
 							printf("PhaseSVoltChannels %d\n", PhaseSVoltChannels[0]);
 							printf("PhaseRVoltChannels %d\n", PhaseRVoltChannels[0]);	
 							printf("PhaseTVoltChannels %d\n", PhaseTVoltChannels[0]);
@@ -967,7 +968,7 @@ void cc112x_run(void)
 								temp3 = *(uint16_t*)&rxBuffer[13]; 
 								printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d\n", 
 								humidity, temp1, temp2, temp3); 
-								res_th (location, temp1, temp2, temp3, humidity, 11, gateway_ID);
+								res_th (location, temp1, temp2, temp3, humidity, 11, mac_address_gateway);
   							//cc112x_init(0,freq_main);// freq 410 Mhz + (1 Mhz * 0)
 							}
 					for (i=0;i<rx_byte;i++) {
@@ -1020,7 +1021,7 @@ int main(int argc, char *argv[]) {
 	freq_main = 23;
 	//freq_main = 0;
   gateway_ID = 0x1234;
-	mac_address();
+	mac_address_gateway = mac_address();
  
   //setup gpio pin to spi function
   wiringPiSetup();
