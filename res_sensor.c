@@ -35,8 +35,64 @@ int trap_th_discovery (char* location, int uID, uint16_t gateway_ID, uint16_t th
 	// uID th keberapa yang konek ke si gateway
 	// thID dan Gateway ID sudah jelas
 	// sensorUsed id 4 bit, 1111 (kelembapan, suhu, suhu, suhu) 1 nyala 0 mati
+	// btw trap_th_connect sama dengan trap_th_discovery
 	snprintf(scoreData, sizeof scoreData, "trapVariable=18,0,3,0:%d;18,0,54,0:%d;18,%d,39,0:%d",
 					gateway_ID, th_ID, uID, sensorUsed); 
+	CURL *curl;
+	CURLcode res; 
+	curl_global_init(CURL_GLOBAL_ALL);
+	curl = curl_easy_init();
+	if(curl) { 
+    curl_easy_setopt(curl, CURLOPT_URL, location);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, scoreData);
+    res = curl_easy_perform(curl);
+    if(res != CURLE_OK)
+	    fprintf(stderr, "curl_easy_perform() failed: %s\n",curl_easy_strerror(res));
+	    curl_easy_cleanup(curl);
+	 	}   
+	  curl_global_cleanup();
+	return 0;
+}
+
+int trap_th_disconnect (char* location, int uID, uint16_t gateway_ID, uint16_t th_ID)
+{
+	// uID th keberapa yang konek ke si gateway
+	// thID dan Gateway ID sudah jelas
+	// sensorUsed id 4 bit, 1111 (kelembapan, suhu, suhu, suhu) 1 nyala 0 mati
+	// btw trap_th_connect sama dengan trap_th_discovery
+	snprintf(scoreData, sizeof scoreData, "trapVariable=18,0,3,0:%d;18,0,54,0:%d",
+					gateway_ID, th_ID); 
+	CURL *curl;
+	CURLcode res; 
+	curl_global_init(CURL_GLOBAL_ALL);
+	curl = curl_easy_init();
+	if(curl) { 
+    curl_easy_setopt(curl, CURLOPT_URL, location);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, scoreData);
+    res = curl_easy_perform(curl);
+    if(res != CURLE_OK)
+	    fprintf(stderr, "curl_easy_perform() failed: %s\n",curl_easy_strerror(res));
+	    curl_easy_cleanup(curl);
+	 	}   
+	  curl_global_cleanup();
+	return 0;
+}
+
+int trap_th (char* location, int uID, uint16_t gateway_ID, uint16_t th_ID, uint16_t dIn1, uint16_t dIn2
+						, uint16_t hummidity, uint16_t th1, uint16_t th2, uint16_t th3, int16_t rssi
+						)
+{
+	// uID th keberapa yang konek ke si gateway
+	// thID dan Gateway ID sudah jelas
+	// sensorUsed id 4 bit, 1111 (kelembapan, suhu, suhu, suhu) 1 nyala 0 mati
+	// btw trap_th_connect sama dengan trap_th_discovery
+	printf("rssi %d\n", rssi);
+	snprintf(scoreData, sizeof scoreData, "trapVariable=18,0,3,0:%d;18,%d,1,0:%d;18,%d,10,0:%d;18,%d,12,0:%d",
+					gateway_ID, uID, th_ID, uID, dIn1, uID, dIn2 ); 
+	snprintf(temp, sizeof scoreData,  ";18,%d,40,0:%d%d;18,%d,41,0:%d;18,%d,42,0:%d;18,%d,43,0:%d"
+					, uID, hummidity, th1, uID, th2, uID, th3, uID, rssi);
+	strcat(scoreData, temp);
+	printf("scoreData %s\n", scoreData);	
 	CURL *curl;
 	CURLcode res; 
 	curl_global_init(CURL_GLOBAL_ALL);

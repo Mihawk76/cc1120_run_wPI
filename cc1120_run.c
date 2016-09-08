@@ -59,12 +59,16 @@ uint16_t gateway_ID;
 uint16_t mac_address_gateway;
 int freq_main;
 int kwh_loop = 0;
+int16_t rssi;
 uint16_t humidity;
 uint16_t temp1;
 uint16_t temp2;
 uint16_t temp3;
-char location[] = "http://192.168.10.103/post.php";
-	
+uint16_t dIn1;
+uint16_t dIn2;
+char location[] = "http://192.168.10.117/post.php";
+char location_trap[] = "http://192.168.10.117/post_trap.php";
+//tes	
 /*******************************************************************************
  * @fn          trxReadWriteBurstSingle
  *
@@ -873,6 +877,7 @@ void cc112x_run(void)
 					timeinfo->tm_sec,
 					//timeinfo->tm_ms,
 					rx_byte, (rx_byte>1) ? "bytes" : "byte",rxBuffer[rx_byte - 2]-102);
+					rssi = rxBuffer[rx_byte - 2]-102;
 				  int counter = 0;
 					if ( (rxBuffer[1] == 0x82) && (*(uint32_t*)&rxBuffer[2] == 0x553A67C9))
 					{
@@ -966,9 +971,18 @@ void cc112x_run(void)
 								temp1 = *(uint16_t*)&rxBuffer[9]; 
 								temp2 = *(uint16_t*)&rxBuffer[11]; 
 								temp3 = *(uint16_t*)&rxBuffer[13]; 
-								printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d\n", 
-								humidity, temp1, temp2, temp3); 
-								res_th (location, temp1, temp2, temp3, humidity, 11, mac_address_gateway);
+								dIn1 = *(uint16_t*)&rxBuffer[14] & 0x40; 
+								if ( dIn1 != 0 ){
+									dIn1 = 1;
+								}
+								dIn2 = *(uint16_t*)&rxBuffer[14] & 0x80; 
+								if ( dIn2 != 0 ){
+									dIn1 = 1;
+								}
+								printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n", 
+								humidity, temp1, temp2, temp3, dIn1, dIn2, rssi); 
+								//res_th (location, temp1, temp2, temp3, humidity, 11, mac_address_gateway);
+								trap_th (location_trap, 1, mac_address_gateway, cc1120_TH_ID, dIn1, dIn2, humidity, temp1, temp2, temp3, rssi); 
   							//cc112x_init(0,freq_main);// freq 410 Mhz + (1 Mhz * 0)
 							}
 					for (i=0;i<rx_byte;i++) {
