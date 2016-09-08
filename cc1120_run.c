@@ -23,6 +23,7 @@
 #include "mac_address.c"
 #include "kwh_params.c"
 #include "res_sensor.c"
+#include "read_int.c"
 	
 	#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 	
@@ -1021,7 +1022,7 @@ int main(int argc, char *argv[]) {
 	freq_main = 23;
 	//freq_main = 0;
   gateway_ID = 0x1234;
-	mac_address_gateway = mac_address();
+	mac_address_gateway = read_ints();
  
   //setup gpio pin to spi function
   wiringPiSetup();
