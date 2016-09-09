@@ -9,7 +9,7 @@
 	* the Free Software Foundation; either version 2 of the License.
 	*
 	* Cross-compile with cross-gcc -I/path/to/cross-kernel/include
-	*/
+astaga	*/
 	
 #include <wiringPi.h>  
 #include <wiringPiSPI.h>  
@@ -397,7 +397,7 @@ static void manualCalibration(void) {
     uint8_t calResults_for_vcdac_start_mid[3];
     uint8_t marcstate;
     uint8_t writeByte;
-		FILE *writeFile = fopen("../data.log", "a");
+		FILE *writeFile = fopen("/home/data.log", "a");
 		if (writeFile == NULL)
 		{
     	printf("Error opening file!\n");
@@ -1089,7 +1089,7 @@ int main(int argc, char *argv[]) {
 	int datalog = 0;
 	while (1)
 	{
- 		f = fopen("../data.log", "a");
+ 		f = fopen("/home/data.log", "a");
 		if (f == NULL)
 		{
     	printf("Error opening file!\n");

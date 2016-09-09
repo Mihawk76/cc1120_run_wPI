@@ -2,9 +2,13 @@
 
 int read_ints ()
 {
-  FILE* file = fopen ("../id.txt", "r");
+  FILE* file = fopen ("/home/id.txt", "r");
   int i = 0;
-
+  if (file == NULL)
+{
+    printf("Error opening file!\n");
+    exit(1);
+}
   fscanf (file, "%d", &i);    
       printf ("%d\n", i);
       fscanf (file, "%d", &i);      
