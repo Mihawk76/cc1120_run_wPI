@@ -397,6 +397,12 @@ static void manualCalibration(void) {
     uint8_t calResults_for_vcdac_start_mid[3];
     uint8_t marcstate;
     uint8_t writeByte;
+		FILE *writeFile = fopen("../data.log", "a");
+		if (writeFile == NULL)
+		{
+    	printf("Error opening file!\n");
+    	exit(1);
+		}
 
     // 1) Set VCO cap-array to 0 (FS_VCO2 = 0x00)
     writeByte = 0x00;
@@ -414,6 +420,7 @@ static void manualCalibration(void) {
     do {
         cc112xSpiReadReg(CC112X_MARCSTATE, &marcstate, 1);
 		printf("marcstate: %02x\r\n", marcstate);
+		fprintf(writeFile, "marcstate: %02x\r\n", marcstate);
 
     } while (marcstate != 0x41);
 
@@ -442,6 +449,7 @@ static void manualCalibration(void) {
     do {
         cc112xSpiReadReg(CC112X_MARCSTATE, &marcstate, 1);
 		printf("marcstate: %02x\r\n", marcstate);
+		fprintf(writeFile, "marcstate: %02x\r\n", marcstate);
     } while (marcstate != 0x41);
 
     // 8) Read FS_VCO2, FS_VCO4 and FS_CHP register obtained 
@@ -471,6 +479,7 @@ static void manualCalibration(void) {
         writeByte = calResults_for_vcdac_start_mid[FS_CHP_INDEX];
         cc112xSpiWriteReg(CC112X_FS_CHP, &writeByte, 1);
     }
+		fclose(writeFile);
 }
 
 /*******************************************************************************
