@@ -65,6 +65,7 @@ uint16_t temp1;
 uint16_t temp2;
 uint16_t temp3;
 char location[] = "http://192.168.10.101/post.php";
+FILE *f;
 	
 /*******************************************************************************
  * @fn          trxReadWriteBurstSingle
@@ -874,6 +875,16 @@ void cc112x_run(void)
 					timeinfo->tm_sec,
 					//timeinfo->tm_ms,
 					rx_byte, (rx_byte>1) ? "bytes" : "byte",rxBuffer[rx_byte - 2]-102);
+					fprintf(f, "%05d: %04d-%02d-%02d %02d:%02d:%02d - Received %d %s RSSI=%d.\r\n", 
+					packetCounter,
+					timeinfo->tm_year+1900,
+					timeinfo->tm_mon+1,
+					timeinfo->tm_mday,
+					timeinfo->tm_hour,
+					timeinfo->tm_min,
+					timeinfo->tm_sec,
+					//timeinfo->tm_ms,
+					rx_byte, (rx_byte>1) ? "bytes" : "byte",rxBuffer[rx_byte - 2]-102);
 				  int counter = 0;
 					if ( (rxBuffer[1] == 0x82) && (*(uint32_t*)&rxBuffer[2] == 0x553A67C9))
 					{
@@ -893,6 +904,7 @@ void cc112x_run(void)
 					if ( (rxBuffer[1] == 0x92) && (rxBuffer[10] == 0x14) && (*(uint32_t*)&rxBuffer[2] == 0x553A67C9))
 					{
 						printf("KWH data Detected\n");
+						fprintf(f,"KWH data Detected\n");
 						cc1120_KWH_ID = *(uint32_t*)&rxBuffer[2];
 						get_params_value(&rxBuffer[12], rxBuffer[11], (rxBuffer[0]-11));
 							res_kwh (location, PhaseRVoltChannels[0], PhaseSVoltChannels[0], PhaseTVoltChannels[0]
@@ -904,6 +916,12 @@ void cc112x_run(void)
 							printf("PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[0]);
 							printf("PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[0]);
 							printf("PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[0]);
+							fprintf(f,"PhaseSVoltChannels %d\n", PhaseSVoltChannels[0]);
+							fprintf(f,"PhaseRVoltChannels %d\n", PhaseRVoltChannels[0]);	
+							fprintf(f,"PhaseTVoltChannels %d\n", PhaseTVoltChannels[0]);
+							fprintf(f,"PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[0]);
+							fprintf(f,"PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[0]);
+							fprintf(f,"PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[0]);
 						
 					}
 					while ( counter < cc1120_TH_Listed )
@@ -911,17 +929,22 @@ void cc112x_run(void)
 						if ( 1/*cc1120_TH_ID_Selected[counter] == (*(uint16_t*)&rxBuffer[2])*/)
 						{	
 							printf( "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
+							fprintf(f, "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
 							if ( rxBuffer[1] == 0x81 )
 							{
 								printf ("Joint detected\n");
+								fprintf(f,"Joint detected\n");
 								cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
 								printf("cc1120_TH_ID is %04X\n", cc1120_TH_ID);
+								fprintf(f, "cc1120_TH_ID is %04X\n", cc1120_TH_ID);
 								cc1120_TH_Node = rxBuffer[6];
 							if ( rxBuffer[7] != scan_key ){
 								printf(" Scan key is diffrent \n old : new , %02x : %02x \nCommencing scan command\n", rxBuffer[7], scan_key);
+								fprintf(f, " Scan key is diffrent \n old : new , %02x : %02x \nCommencing scan command\n", rxBuffer[7], scan_key);
 								//cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
 								//cc1120_TH_Node = rxBuffer[6];
 								printf("TH id is %04X \n Node is %02X \n",cc1120_TH_ID, cc1120_TH_Node);
+								fprintf(f, "TH id is %04X \n Node is %02X \n",cc1120_TH_ID, cc1120_TH_Node);
 								txBuffer[0] = 0x0A; 
 								txBuffer[1] = 0x01; 
 								*(uint16_t*)&txBuffer[2] =  gateway_ID; 
@@ -935,6 +958,8 @@ void cc112x_run(void)
 								if ( rxBuffer[7] == scan_key ){
 									printf("Scan key is the same %02X:%02X\n", rxBuffer[7], scan_key);
 									printf("Commencing add command\n");
+									fprintf(f, "Scan key is the same %02X:%02X\n", rxBuffer[7], scan_key);
+									fprintf(f, "Commencing add command\n");
 									txBuffer[0] = 0x0A; 
 									txBuffer[1] = 0x06; 
 									*(uint16_t*)&txBuffer[2] =  gateway_ID; 
@@ -949,6 +974,7 @@ void cc112x_run(void)
 							if ( (rxBuffer[1] == 0x92) && (rxBuffer[6] == 0x11) )
 							{
 								printf("Th data detected\n");
+								fprintf(f, "Th data detected\n");
 								cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
 								cc1120_TH_Node = rxBuffer[6];
 								txBuffer[0] = 14; //length packet data
@@ -970,21 +996,31 @@ void cc112x_run(void)
 								printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d\n", 
 								humidity, temp1, temp2, temp3); 
 								res_th (location, temp1, temp2, temp3, humidity, 11, mac_address_gateway);
+								fprintf(f, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d\n", 
+								humidity, temp1, temp2, temp3); 
+								res_th (location, temp1, temp2, temp3, humidity, 11, mac_address_gateway);
   							//cc112x_init(0,freq_main);// freq 410 Mhz + (1 Mhz * 0)
 							}
 					for (i=0;i<rx_byte;i++) {
 						printf("%02X ", rxBuffer[i]);
+						fprintf(f, "%02X ", rxBuffer[i]);
 					}
 					printf ("txbuffer ");
+					fprintf (f, "txbuffer ");
 					for (i=0;i<=txBuffer[0];i++) {
 						printf("%02X ", txBuffer[i]);
+						fprintf(f, "%02X ", txBuffer[i]);
 					}
 					printf("\r\n");
+					fprintf(f, "\r\n");
 						break;		
 					}
 						if ( cc1120_TH_ID_Selected[counter] != (*(uint16_t*)&rxBuffer[2])){
 							printf( "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
 							printf("TH_ID_selected:TH_Incoming_Id %04X:%04X different \n",cc1120_TH_ID_Selected[counter] ,(*(uint16_t*)&rxBuffer[2]));
+							fprintf(f,  "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
+							fprintf(f, "TH_ID_selected:TH_Incoming_Id %04X:%04X different \n"
+							,cc1120_TH_ID_Selected[counter] ,(*(uint16_t*)&rxBuffer[2]));
 							}	
 						counter++;
 					}
@@ -1023,7 +1059,6 @@ int main(int argc, char *argv[]) {
 	//freq_main = 0;
   gateway_ID = 0x1234;
 	mac_address_gateway = read_ints();
- 
   //setup gpio pin to spi function
   wiringPiSetup();
   
@@ -1042,10 +1077,23 @@ int main(int argc, char *argv[]) {
   cc112x_init(freq_main,0);// freq 410 Mhz + (1 Mhz * freq_main)
 	memcpy(&txBuffer[1],DUMMY_BUF,10);
 	txBuffer[0]=10;
+	int datalog = 0;
 	while (1)
 	{
+ 		f = fopen("../data.log", "a");
+		if (f == NULL)
+		{
+    	printf("Error opening file!\n");
+    	exit(1);
+		}
+
+		/* print some text */
+		/*const char *text = "Why the result are diffrent";
+		fprintf(f, "Some text: %s %d \n", text, datalog);*/
 		/* communication handler */
 		cc112x_run();
+		datalog++;
+		fclose(f);
 	}
   /*int repeat;
 	for(repeat=0;repeat<=100;repeat++)
