@@ -24,6 +24,7 @@ astaga	*/
 #include "kwh_params.c"
 #include "res_sensor.c"
 #include "read_int.c"
+#include "paring.c"
 	
 	#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 	
@@ -68,8 +69,9 @@ uint16_t temp3;
 uint16_t dIn1;
 uint16_t dIn2;
 char location[] = "http://192.168.10.101/post.php";
-char location_trap[] = "http://192.168.10.117/post_trap.php";
+char location_trap[] = "http://192.168.10.101/post_trap.php";
 FILE *f;
+int channel = 0;
 	
 /*******************************************************************************
  * @fn          trxReadWriteBurstSingle
@@ -923,6 +925,14 @@ void cc112x_run(void)
 							res_kwh (location, PhaseRVoltChannels[0], PhaseSVoltChannels[0], PhaseTVoltChannels[0]
 							, PhaseRCurrentChannels[0], PhaseSCurrentChannels[0], PhaseTCurrentChannels[0]
 							, 14, mac_address_gateway);
+							trap_kwh (location, channel, mac_address_gateway
+							, PhaseRVoltChannels[channel], PhaseSVoltChannels[channel], PhaseTVoltChannels[channel]
+							, PhaseRCurrentChannels[channel], PhaseSCurrentChannels[channel], PhaseTCurrentChannels[channel]
+							, PhaseRFrequencyChannels[channel], PhaseSFrequencyChannels[channel], PhaseTFrequencyChannels[channel]
+							, PhaseRPowerFactorChannels[channel], PhaseSPowerFactorChannels[channel], PhaseTPowerFactorChannels[channel]
+							, PhaseRwattChannels[channel], PhaseSwattChannels[channel], PhaseTwattChannels[channel]
+							, PhaseRkwh_tot_prdChannels[channel], PhaseSkwh_tot_prdChannels[channel], PhaseTkwh_tot_prdChannels[channel]
+							, kwh_totChannels[channel]);
 							printf("PhaseSVoltChannels %d\n", PhaseSVoltChannels[0]);
 							printf("PhaseRVoltChannels %d\n", PhaseRVoltChannels[0]);	
 							printf("PhaseTVoltChannels %d\n", PhaseTVoltChannels[0]);
@@ -1077,10 +1087,15 @@ void cc112x_run(void)
 int main(int argc, char *argv[]) {
   uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
   int ret = 0;
-	freq_main = 23;
+	int i; 
 	//freq_main = 0;
-  gateway_ID = 0x1234;
-	mac_address_gateway = read_ints();
+  gateway_ID = mac_address_gateway = read_ints();
+	get_id_pairing("localhost","root","satunol10","paring","th", gateway_ID);
+    for(i=0;i<=total_pairing;i++)
+    {   
+      printf("%02X\n", pairing_id[i]);
+    }   
+	freq_main = 23;
   //setup gpio pin to spi function
   wiringPiSetup();
   

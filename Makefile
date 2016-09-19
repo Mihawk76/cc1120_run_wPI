@@ -31,6 +31,8 @@ CFLAGS	= $(DEBUG) -Wall $(INCLUDE) -Winline -pipe
 
 LDFLAGS	= -L/usr/local/lib
 LDLIBS    = -lwiringPi -lwiringPiDev -lpthread -lm -lcurl
+MYSQL_LIBS := $(shell mysql_config --libs --cflags)
+
 
 ###############################################################################
 
@@ -44,11 +46,11 @@ all:	$(BINS)
 
 cc1120_run: cc1120_run.o
 	@echo [link]
-	@$(CC) -o $@ cc1120_run.o $(LDFLAGS) $(LDLIBS)
+	@$(CC) -o $@ cc1120_run.o $(LDFLAGS) $(LDLIBS) $(MYSQL_LIBS)
 	
 .c.o:
 	@echo [CC] $<
-	@$(CC) -c $(CFLAGS) $< -o $@
+	@$(CC) -c $(CFLAGS) $< -o $@ $(MYSQL_LIBS)
 
 clean:
 	@echo "[Clean]"
