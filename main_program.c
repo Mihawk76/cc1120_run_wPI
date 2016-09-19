@@ -20,7 +20,12 @@ int main()
 		get_id_pairing("localhost","root","satunol10","paring","th",1001);
 		for(i=0;i<=total_pairing;i++)
 		{
-			printf("%02X\n", pairing_id[i]);
+			printf("%02X %d %d\n", pairing_id[i], pairing_id[i], i+1);
+		}
+		get_id_pairing("localhost","root","satunol10","paring","th",1002);
+		for(i=0;i<=total_pairing;i++)
+		{
+			printf("%02X %d %d\n", pairing_id[i], pairing_id[i], i+1);
 		}
 		//printf("Gateway id is %d", gateway_ID);
 		return 0;
