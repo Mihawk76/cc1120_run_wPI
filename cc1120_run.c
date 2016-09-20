@@ -1091,21 +1091,23 @@ void cc112x_run(void)
 int main(int argc, char *argv[]) {
   uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
   int ret = 0;
-	int i; 
+	/*int i; 
 	//freq_main = 0;
   gateway_ID = mac_address_gateway = read_ints();
 	get_id_pairing("localhost","root","satunol10","paring","th", gateway_ID);
     for(i=0;i<=total_pairing;i++)
     {   
       printf("%02X\n", pairing_id[i]);
-    }   
+    }*/
+	freq_main = freq_th = 23;   
 	//freq_main = 12;
+	/*
 	if ( gateway_ID == 1001){
 		freq_th = freq_main = 22;
 	}
 	if ( gateway_ID == 1002){
 		freq_th = freq_main = 12;
-	}
+	}*/
 	// 22 = 1001
 	// 12 = 1002
   //setup gpio pin to spi function
