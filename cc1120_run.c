@@ -69,7 +69,7 @@ uint16_t temp2;
 uint16_t temp3;
 uint16_t dIn1;
 uint16_t dIn2;
-char location[] = "http://192.168.10.101/post.php";
+char location[] = "http://192.168.88.19:1616/dcms/rest/alfa";
 char location_trap[] = "http://192.168.10.101/post_trap.php";
 FILE *f;
 int channel = 0;
@@ -813,6 +813,24 @@ void cc112x_run(void)
 	uint8_t temp_byte;
 	int i;
 	uint8_t rx_byte = 0;
+	// deleting th node
+	/*if ( kwh_loop <= 10){
+		printf("Deleting Th data\n");
+		fprintf(f, "Deleting Th data\n");
+		cc1120_TH_Node = 0x11;
+		txBuffer[0] = 8; //length packet data
+		txBuffer[1] = 0x03; //command code 
+		*(uint16_t*)&txBuffer[2] =  gateway_ID; //(2 byte)
+		*(uint16_t*)&txBuffer[4] = 0x2B87; //(2 byte)
+		txBuffer[6] = cc1120_TH_Node; 
+		*(uint16_t*)&txBuffer[7] =  gateway_ID; //(2 byte)
+		for (i=0;i<=txBuffer[0];i++) {
+			printf("%02X ", txBuffer[i]);
+		}
+		kwh_loop++;
+		sleep(1);
+	}*/
+				//freq_main = freq_th;
 	//freq_th = 43;
 	//scanning kwh and then adding them
 	/*if ( kwh_loop <= 10){
@@ -997,7 +1015,21 @@ void cc112x_run(void)
 									txBuffer[10] = wakeup_hold;  
 								} 
 							}
-							if ( (rxBuffer[1] == 0x92) && (rxBuffer[6] == 0x11) )
+							if ( (rxBuffer[1] == 0x92) && (rxBuffer[6] == 0x11) && ((*(uint16_t*)&rxBuffer[2]) == 0x2B87 ))
+							{
+								/*printf("Deleting Th data\n");
+								fprintf(f, "Deleting Th data\n");
+								cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
+								cc1120_TH_Node = rxBuffer[6];
+								txBuffer[0] = 8; //length packet data
+								txBuffer[1] = 0x03; //command code 
+								*(uint16_t*)&txBuffer[2] =  gateway_ID; //(2 byte)
+								*(uint16_t*)&txBuffer[4] = cc1120_TH_ID; //(2 byte)
+								txBuffer[6] = cc1120_TH_Node; 
+								*(uint16_t*)&txBuffer[7] =  gateway_ID; //(2 byte)*/
+								//freq_main = freq_th;
+							}
+							if ( (rxBuffer[1] == 0x92) && (rxBuffer[6] == 0x11)/* && ((*(uint16_t*)&rxBuffer[2]) != 0x2B87 )*/)
 							{
 								printf("Th data detected\n");
 								fprintf(f, "Th data detected\n");
@@ -1030,7 +1062,7 @@ void cc112x_run(void)
                 printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n", 
                 humidity, temp1, temp2, temp3, dIn1, dIn2, rssi); 
 								printf("Gateway Id %d\n", gateway_ID);
-								//res_th (location, temp1, temp2, temp3, humidity, 11, mac_address_gateway);
+								res_th (location, temp1, temp2, temp3, humidity, 11, mac_address_gateway);
 								fprintf(f, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n", 
 								humidity, temp1, temp2, temp3, dIn1, dIn2, rssi); 
 								//res_th (location, temp1, temp2, temp3, humidity, 11, mac_address_gateway);
@@ -1091,23 +1123,23 @@ void cc112x_run(void)
 int main(int argc, char *argv[]) {
   uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
   int ret = 0;
-	/*int i; 
+	int i; 
 	//freq_main = 0;
   gateway_ID = mac_address_gateway = read_ints();
 	get_id_pairing("localhost","root","satunol10","paring","th", gateway_ID);
     for(i=0;i<=total_pairing;i++)
     {   
       printf("%02X\n", pairing_id[i]);
-    }*/
-	freq_main = freq_th = 23;   
+    }
+	//freq_main = freq_th = 23;   
 	//freq_main = 12;
-	/*
+	
 	if ( gateway_ID == 1001){
 		freq_th = freq_main = 22;
 	}
 	if ( gateway_ID == 1002){
 		freq_th = freq_main = 12;
-	}*/
+	}
 	// 22 = 1001
 	// 12 = 1002
   //setup gpio pin to spi function
