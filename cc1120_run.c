@@ -64,7 +64,7 @@ uint16_t humidity;
 uint16_t temp1;
 uint16_t temp2;
 uint16_t temp3;
-char location[] = "http://192.168.10.101/post.php";
+char location[] = "http://52.43.48.93/post.php";
 FILE *f;
 	
 /*******************************************************************************
@@ -1004,10 +1004,10 @@ void cc112x_run(void)
 								temp3 = *(uint16_t*)&rxBuffer[13]; 
 								printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d\n", 
 								humidity, temp1, temp2, temp3); 
-								res_th (location, temp1, temp2, temp3, humidity, 11, mac_address_gateway);
+								res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID);
 								fprintf(f, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d\n", 
 								humidity, temp1, temp2, temp3); 
-								res_th (location, temp1, temp2, temp3, humidity, 11, mac_address_gateway);
+								res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID);
   							//cc112x_init(0,freq_main);// freq 410 Mhz + (1 Mhz * 0)
 							}
 					for (i=0;i<rx_byte;i++) {
@@ -1066,7 +1066,7 @@ int main(int argc, char *argv[]) {
   int ret = 0;
 	freq_main = 23;
 	//freq_main = 0;
-  gateway_ID = 0x1234;
+  gateway_ID = 0x1001;
 	mac_address_gateway = read_ints();
   //setup gpio pin to spi function
   wiringPiSetup();
