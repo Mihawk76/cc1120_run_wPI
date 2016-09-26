@@ -11,7 +11,8 @@ int main()
 	uint16_t temp2 = 3100;
 	uint16_t temp3 = 3300;
 	uint16_t cc1120_TH_ID = 1234;
+	int channel = 10;
 	printf("Gateway id is %d", gateway_ID);
-	res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID);
+	res_kwh (location, 1003, 4004, 2000, 1003, 4004, 2000, 14, cc1120_TH_ID, channel);
 	return 0;
 	}

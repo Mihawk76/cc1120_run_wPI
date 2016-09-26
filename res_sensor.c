@@ -1,14 +1,14 @@
 #include <stdio.h>
 #include <curl/curl.h>
 int  res_kwh (char* location,uint16_t VoltR,uint16_t VoltS,uint16_t VoltT,uint16_t CurrentR,
-								uint16_t CurrentS,uint16_t CurrentT, int nilai,int device)
+								uint16_t CurrentS,uint16_t CurrentT, int nilai,int device, int Channel)
 
 {
    char scoreData[128];
    snprintf(scoreData, sizeof scoreData, "location=%s",location);
 	{
-		snprintf(scoreData, sizeof scoreData, "VoltR=%d&VoltS=%d&VoltT=%d&CurrentR=%d&CurrentS=%d&CurrentT=%d&device=%d&nilai=%d",
-		VoltR, VoltS, VoltT, CurrentR, CurrentS, CurrentT, device, nilai);
+		snprintf(scoreData, sizeof scoreData, "VoltR=%d&VoltS=%d&VoltT=%d&CurrentR=%d&CurrentS=%d&CurrentT=%d&device=%d&nilai=%d&Channel=%d",
+		VoltR, VoltS, VoltT, CurrentR, CurrentS, CurrentT, device, nilai, Channel);
 		  CURL *curl;
 		  CURLcode res; 
 		  curl_global_init(CURL_GLOBAL_ALL);

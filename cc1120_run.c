@@ -916,22 +916,25 @@ void cc112x_run(void)
 						fprintf(f,"KWH data Detected\n");
 						cc1120_KWH_ID = *(uint32_t*)&rxBuffer[2];
 						get_params_value(&rxBuffer[12], rxBuffer[11], (rxBuffer[0]-11));
-							res_kwh (location, PhaseRVoltChannels[0], PhaseSVoltChannels[0], PhaseTVoltChannels[0]
-							, PhaseRCurrentChannels[0], PhaseSCurrentChannels[0], PhaseTCurrentChannels[0]
-							, 14, mac_address_gateway);
-							printf("PhaseSVoltChannels %d\n", PhaseSVoltChannels[0]);
-							printf("PhaseRVoltChannels %d\n", PhaseRVoltChannels[0]);	
-							printf("PhaseTVoltChannels %d\n", PhaseTVoltChannels[0]);
-							printf("PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[0]);
-							printf("PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[0]);
-							printf("PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[0]);
-							fprintf(f,"PhaseSVoltChannels %d\n", PhaseSVoltChannels[0]);
-							fprintf(f,"PhaseRVoltChannels %d\n", PhaseRVoltChannels[0]);	
-							fprintf(f,"PhaseTVoltChannels %d\n", PhaseTVoltChannels[0]);
-							fprintf(f,"PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[0]);
-							fprintf(f,"PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[0]);
-							fprintf(f,"PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[0]);
-						
+						int channel;
+						for (channel=0;channel<19;channel++)
+						{
+							res_kwh (location, PhaseRVoltChannels[channel], PhaseSVoltChannels[channel], PhaseTVoltChannels[channel]
+							, PhaseRCurrentChannels[channel], PhaseSCurrentChannels[channel], PhaseTCurrentChannels[channel]
+							, 14, mac_address_gateway, channel);
+							printf("PhaseSVoltChannels %d\n", PhaseSVoltChannels[channel]);
+							printf("PhaseRVoltChannels %d\n", PhaseRVoltChannels[channel]);	
+							printf("PhaseTVoltChannels %d\n", PhaseTVoltChannels[channel]);
+							printf("PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[channel]);
+							printf("PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[channel]);
+							printf("PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[channel]);
+							fprintf(f,"PhaseSVoltChannels %d\n", PhaseSVoltChannels[channel]);
+							fprintf(f,"PhaseRVoltChannels %d\n", PhaseRVoltChannels[channel]);	
+							fprintf(f,"PhaseTVoltChannels %d\n", PhaseTVoltChannels[channel]);
+							fprintf(f,"PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[channel]);
+							fprintf(f,"PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[channel]);
+							fprintf(f,"PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[channel]);
+						}
 					}
 					while ( counter < cc1120_TH_Listed )
 					{
