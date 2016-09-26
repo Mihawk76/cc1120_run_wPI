@@ -69,7 +69,7 @@ uint16_t temp2;
 uint16_t temp3;
 uint16_t dIn1;
 uint16_t dIn2;
-char location[] = "http://192.168.88.19:1616/dcms/rest/alfa";
+char location[] = "http://52.43.48.93/post.php";
 char location_trap[] = "http://192.168.10.101/post_trap.php";
 FILE *f;
 int channel = 0;
@@ -920,7 +920,7 @@ void cc112x_run(void)
 					//timeinfo->tm_ms,
 					rx_byte, (rx_byte>1) ? "bytes" : "byte",rxBuffer[rx_byte - 2]-102);
 				  int counter = 0;
-					if ( (rxBuffer[1] == 0x82) && (*(uint32_t*)&rxBuffer[2] == 0x553A67C9))
+					if ( (rxBuffer[1] == 0x82) )
 					{
 						cc1120_KWH_ID = *(uint32_t*)&rxBuffer[2];
 						txBuffer[0] = 17; //length packet data
@@ -928,43 +928,46 @@ void cc112x_run(void)
 						*(uint16_t*)&txBuffer[2] =  gateway_ID; //(2 byte)
 						*(uint16_t*)&txBuffer[4] = 0x0000; //(2 byte)
 						*(uint32_t*)&txBuffer[6] = cc1120_KWH_ID;
-						txBuffer[10] = 0x14; 
+						txBuffer[10] = 0x14; // node type 
 						*(uint32_t*)&txBuffer[11] = 0x00000000; //add type kwh 
 						txBuffer[15] = 0x01; //add type kwh 
 						txBuffer[16] = 0x01; //sensor number index number
 						txBuffer[17] = 0x00; //scan key 
 						//txBuffer[14] = 0x06; //*(uint16_t*)&txBuffer[14] = 0x0006; //wake up byte
 					}
-					if ( (rxBuffer[1] == 0x92) && (rxBuffer[10] == 0x14) && (*(uint32_t*)&rxBuffer[2] == 0x553A67C9))
+					if ( (rxBuffer[1] == 0x92) && (rxBuffer[10] == 0x14) )
 					{
 						printf("KWH data Detected\n");
 						fprintf(f,"KWH data Detected\n");
 						cc1120_KWH_ID = *(uint32_t*)&rxBuffer[2];
 						get_params_value(&rxBuffer[12], rxBuffer[11], (rxBuffer[0]-11));
-							res_kwh (location, PhaseRVoltChannels[0], PhaseSVoltChannels[0], PhaseTVoltChannels[0]
-							, PhaseRCurrentChannels[0], PhaseSCurrentChannels[0], PhaseTCurrentChannels[0]
+						int i; 
+						for(i = 0;i<18;i++)
+						{
+							res_kwh (location, PhaseRVoltChannels[i], PhaseSVoltChannels[i], PhaseTVoltChannels[i]
+							, PhaseRCurrentChannels[i], PhaseSCurrentChannels[i], PhaseTCurrentChannels[i]
 							, 14, mac_address_gateway);
-							trap_kwh (location, channel, mac_address_gateway
+							/*trap_kwh (location, channel, mac_address_gateway
 							, PhaseRVoltChannels[channel], PhaseSVoltChannels[channel], PhaseTVoltChannels[channel]
 							, PhaseRCurrentChannels[channel], PhaseSCurrentChannels[channel], PhaseTCurrentChannels[channel]
 							, PhaseRFrequencyChannels[channel], PhaseSFrequencyChannels[channel], PhaseTFrequencyChannels[channel]
 							, PhaseRPowerFactorChannels[channel], PhaseSPowerFactorChannels[channel], PhaseTPowerFactorChannels[channel]
 							, PhaseRwattChannels[channel], PhaseSwattChannels[channel], PhaseTwattChannels[channel]
 							, PhaseRkwh_tot_prdChannels[channel], PhaseSkwh_tot_prdChannels[channel], PhaseTkwh_tot_prdChannels[channel]
-							, kwh_totChannels[channel]);
-							printf("PhaseSVoltChannels %d\n", PhaseSVoltChannels[0]);
-							printf("PhaseRVoltChannels %d\n", PhaseRVoltChannels[0]);	
-							printf("PhaseTVoltChannels %d\n", PhaseTVoltChannels[0]);
-							printf("PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[0]);
-							printf("PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[0]);
-							printf("PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[0]);
-							fprintf(f,"PhaseSVoltChannels %d\n", PhaseSVoltChannels[0]);
-							fprintf(f,"PhaseRVoltChannels %d\n", PhaseRVoltChannels[0]);	
-							fprintf(f,"PhaseTVoltChannels %d\n", PhaseTVoltChannels[0]);
-							fprintf(f,"PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[0]);
-							fprintf(f,"PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[0]);
-							fprintf(f,"PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[0]);
-						
+							, kwh_totChannels[channel]);*/
+							printf("PhaseSVoltChannels %d\n", PhaseSVoltChannels[i]);
+							printf("PhaseRVoltChannels %d\n", PhaseRVoltChannels[i]);	
+							printf("PhaseTVoltChannels %d\n", PhaseTVoltChannels[i]);
+							printf("PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[i]);
+							printf("PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[i]);
+							printf("PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[i]);
+							fprintf(f,"PhaseSVoltChannels %d\n", PhaseSVoltChannels[i]);
+							fprintf(f,"PhaseRVoltChannels %d\n", PhaseRVoltChannels[i]);	
+							fprintf(f,"PhaseTVoltChannels %d\n", PhaseTVoltChannels[i]);
+							fprintf(f,"PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[i]);
+							fprintf(f,"PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[i]);
+							fprintf(f,"PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[i]);
+						}
 					}
 					//while ( counter < cc1120_TH_Listed )
 					while ( counter < total_pairing )
@@ -1124,22 +1127,23 @@ int main(int argc, char *argv[]) {
   uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
   int ret = 0;
 	int i; 
-	//freq_main = 0;
+	freq_main = 0;
   gateway_ID = mac_address_gateway = read_ints();
 	get_id_pairing("localhost","root","satunol10","paring","th", gateway_ID);
     for(i=0;i<=total_pairing;i++)
     {   
       printf("%02X\n", pairing_id[i]);
     }
-	//freq_main = freq_th = 23;   
+	//freq_main = freq_th = 23; 
+	freq_main = freq_th = 23;    
 	//freq_main = 12;
-	
-	if ( gateway_ID == 1001){
-		freq_th = freq_main = 22;
+		
+	/*if ( gateway_ID == 1001){
+		freq_main = 22;
 	}
 	if ( gateway_ID == 1002){
-		freq_th = freq_main = 12;
-	}
+		freq_main = 12;
+	}*/
 	// 22 = 1001
 	// 12 = 1002
   //setup gpio pin to spi function
