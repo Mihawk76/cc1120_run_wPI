@@ -64,7 +64,7 @@ uint16_t humidity;
 uint16_t temp1;
 uint16_t temp2;
 uint16_t temp3;
-char location[] = "http://52.43.48.93/post.php";
+char location[] = "http://52.43.48.93/post2.php";
 FILE *f;
 	
 /*******************************************************************************
