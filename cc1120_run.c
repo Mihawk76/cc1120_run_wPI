@@ -64,7 +64,7 @@ uint16_t humidity;
 uint16_t temp1;
 uint16_t temp2;
 uint16_t temp3;
-char location[] = "http://52.43.48.93/post2.php";
+char* location = "http://52.43.48.93/post.php";
 FILE *f;
 	
 /*******************************************************************************
@@ -916,18 +916,29 @@ void cc112x_run(void)
 						fprintf(f,"KWH data Detected\n");
 						cc1120_KWH_ID = *(uint32_t*)&rxBuffer[2];
 						get_params_value(&rxBuffer[12], rxBuffer[11], (rxBuffer[0]-11));
+						res_kwh_array(location
+													, PhaseRkwh_totChannels, PhaseSkwh_totChannels, PhaseTkwh_totChannels
+													, PhaseRVoltChannels, PhaseSVoltChannels, PhaseTVoltChannels
+													, PhaseRCurrentChannels, PhaseSCurrentChannels, PhaseTCurrentChannels
+													, 14, mac_address_gateway);
 						int channel;
 						for (channel=0;channel<19;channel++)
 						{
-							res_kwh (location, PhaseRVoltChannels[channel], PhaseSVoltChannels[channel], PhaseTVoltChannels[channel]
+							/*res_kwh (location, PhaseRVoltChannels[channel], PhaseSVoltChannels[channel], PhaseTVoltChannels[channel]
 							, PhaseRCurrentChannels[channel], PhaseSCurrentChannels[channel], PhaseTCurrentChannels[channel]
-							, 14, mac_address_gateway, channel);
+							, 14, mac_address_gateway, channel);*/
+							printf("PhaseSkwh_totChannels %d\n", PhaseSkwh_totChannels[channel]);
+							printf("PhaseRkwh_totChannels %d\n", PhaseRkwh_totChannels[channel]);	
+							printf("PhaseTkwh_totChannels %d\n", PhaseTkwh_totChannels[channel]);
 							printf("PhaseSVoltChannels %d\n", PhaseSVoltChannels[channel]);
 							printf("PhaseRVoltChannels %d\n", PhaseRVoltChannels[channel]);	
 							printf("PhaseTVoltChannels %d\n", PhaseTVoltChannels[channel]);
 							printf("PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[channel]);
 							printf("PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[channel]);
 							printf("PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[channel]);
+							fprintf(f,"PhaseSkwh_totChannels %d\n", PhaseSkwh_totChannels[channel]);
+							fprintf(f,"PhaseRkwh_totChannels %d\n", PhaseRkwh_totChannels[channel]);
+							fprintf(f,"PhaseTkwh_totChannels %d\n", PhaseTkwh_totChannels[channel]);	
 							fprintf(f,"PhaseSVoltChannels %d\n", PhaseSVoltChannels[channel]);
 							fprintf(f,"PhaseRVoltChannels %d\n", PhaseRVoltChannels[channel]);	
 							fprintf(f,"PhaseTVoltChannels %d\n", PhaseTVoltChannels[channel]);

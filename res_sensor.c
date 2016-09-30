@@ -10,8 +10,9 @@ int test (int kwh[])
 	}
 	return 0;
 }
-int res_kwh_array (char* location,uint16_t VoltR[18],uint16_t VoltS[18],uint16_t VoltT[18],uint16_t CurrentR[18],
-								uint16_t CurrentS[18],uint16_t CurrentT[18], int nilai,int device)
+int res_kwh_array (char* location,int32_t KwhR[18],int32_t KwhS[18],int32_t KwhT[18],
+								int32_t VoltR[18],int32_t VoltS[18],int32_t VoltT[18],int32_t CurrentR[18],
+								int32_t CurrentS[18],int32_t CurrentT[18], int nilai,int device)
 
 {
   char scoreData[10000];
@@ -21,15 +22,15 @@ int res_kwh_array (char* location,uint16_t VoltR[18],uint16_t VoltS[18],uint16_t
 		snprintf(scoreData, sizeof scoreData, "data=");
 		for(Channel=0;Channel<18;Channel++)
 		{
-			snprintf(temp, sizeof scoreData, "VoltR%d=%d VoltS%d=%d VoltT%d=%d CurrentR%d=%d CurrentS%d=%d CurrentT%d=%d\n",
-			Channel, VoltR[Channel], Channel, VoltS[Channel], Channel, VoltT[Channel], Channel, CurrentR[Channel], 
-			Channel, VoltR[Channel], Channel, VoltS[Channel], Channel, VoltT[Channel], Channel, CurrentR[Channel], 
-			Channel,CurrentS[Channel], Channel, CurrentT[Channel]);
+			snprintf(temp, sizeof scoreData, "KwhR%d=%d KwhS%d=%d KwhT%d=%d VoltR%d=%d VoltS%d=%d VoltT%d=%d CurrentR%d=%d CurrentS%d=%d CurrentT%d=%d\n",
+			Channel, KwhR[Channel], Channel, KwhS[Channel], Channel, KwhT[Channel], 
+			Channel, VoltR[Channel], Channel, VoltS[Channel], Channel, VoltT[Channel], 
+			Channel, CurrentR[Channel], Channel,CurrentS[Channel], Channel, CurrentT[Channel]);
 			strcat(scoreData, temp);
 		}
 		snprintf(temp, sizeof scoreData, "&device=%d&nilai=%d&Channel=%d", device, nilai, Channel);
 		strcat(scoreData, temp);
-		//printf("%s\n", scoreData);
+		printf("%s\n", scoreData);
 		//printf("location %s\n", location);	
 		  CURL *curl;
 		  CURLcode res; 
