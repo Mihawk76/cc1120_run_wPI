@@ -1021,7 +1021,6 @@ void cc112x_run(void)
 								res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID);
 								fprintf(f, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d\n", 
 								humidity, temp1, temp2, temp3); 
-								res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID);
   							//cc112x_init(0,freq_main);// freq 410 Mhz + (1 Mhz * 0)
 							}
 					for (i=0;i<rx_byte;i++) {
