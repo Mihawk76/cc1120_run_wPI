@@ -12,7 +12,7 @@ int test (int kwh[])
 }
 int res_kwh_array (char* location,int32_t KwhR[18],int32_t KwhS[18],int32_t KwhT[18],
 								int32_t VoltR[18],int32_t VoltS[18],int32_t VoltT[18],int32_t CurrentR[18],
-								int32_t CurrentS[18],int32_t CurrentT[18], int nilai,int device)
+								int32_t CurrentS[18],int32_t CurrentT[18], int nilai ,int device, int gateway)
 
 {
   char scoreData[10000];
@@ -28,9 +28,9 @@ int res_kwh_array (char* location,int32_t KwhR[18],int32_t KwhS[18],int32_t KwhT
 			Channel, CurrentR[Channel], Channel,CurrentS[Channel], Channel, CurrentT[Channel]);
 			strcat(scoreData, temp);
 		}
-		snprintf(temp, sizeof scoreData, "&device=%d&nilai=%d&Channel=%d", device, nilai, Channel);
+		snprintf(temp, sizeof scoreData, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
 		strcat(scoreData, temp);
-		printf("%s\n", scoreData);
+		//printf("%s\n", scoreData);
 		//printf("location %s\n", location);	
 		  CURL *curl;
 		  CURLcode res; 
@@ -107,7 +107,34 @@ int  res_kwh (char* location,uint16_t VoltR,uint16_t VoltS,uint16_t VoltT,uint16
 	}
 	return 0;
 }
-int  res_th (char* location,uint16_t Th1,uint16_t Th2,uint16_t Th3,uint16_t Humidity, int nilai,int device)
+int  res_th (char* location,uint16_t Th1,uint16_t Th2,uint16_t Th3,uint16_t Humidity, int nilai,int device, int gateway)
+
+{
+   char scoreData[128];
+   snprintf(scoreData, sizeof scoreData, "location=%s",location);
+	{
+		snprintf(scoreData, sizeof scoreData, "Th1=%d&Th2=%d&Th3=%d&Humidity=%d&device=%d&nilai=%d&gateway=%d",
+		Th1, Th2, Th3, Humidity, device, nilai, gateway);
+		//printf("%s\n", scoreData);
+		  CURL *curl;
+		  CURLcode res; 
+		  curl_global_init(CURL_GLOBAL_ALL);
+		  curl = curl_easy_init();
+		  if(curl) { 
+		     
+			    curl_easy_setopt(curl, CURLOPT_URL, location);
+			    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, scoreData);
+			    res = curl_easy_perform(curl);
+			    if(res != CURLE_OK)
+			    fprintf(stderr, "curl_easy_perform() failed: %s\n",curl_easy_strerror(res));
+			    curl_easy_cleanup(curl);
+		  	}   
+		  curl_global_cleanup();
+		
+	}
+	return 0;
+}
+int  res_th_2 (char* location,uint16_t Th1,uint16_t Th2,uint16_t Th3,uint16_t Humidity, int nilai,int device)
 
 {
    char scoreData[128];
@@ -115,6 +142,7 @@ int  res_th (char* location,uint16_t Th1,uint16_t Th2,uint16_t Th3,uint16_t Humi
 	{
 		snprintf(scoreData, sizeof scoreData, "Th1=%d&Th2=%d&Th3=%d&Humidity=%d&device=%d&nilai=%d",
 		Th1, Th2, Th3, Humidity, device, nilai);
+		printf("%s\n", scoreData);
 		  CURL *curl;
 		  CURLcode res; 
 		  curl_global_init(CURL_GLOBAL_ALL);

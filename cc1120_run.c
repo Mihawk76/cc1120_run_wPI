@@ -907,7 +907,7 @@ void cc112x_run(void)
 						*(uint32_t*)&txBuffer[11] = 0x00000000; //add type kwh 
 						txBuffer[15] = 0x01; //add type kwh 
 						txBuffer[16] = 0x01; //sensor number index number
-						txBuffer[17] = 0x00; //scan key 
+						txBuffer[17] = 0x00; //scan key a 
 						//txBuffer[14] = 0x06; //*(uint16_t*)&txBuffer[14] = 0x0006; //wake up byte
 					}
 					if ( (rxBuffer[1] == 0x92) && (rxBuffer[10] == 0x14) && (*(uint32_t*)&rxBuffer[2] == 0x553A67C9))
@@ -920,7 +920,7 @@ void cc112x_run(void)
 													, PhaseRkwh_totChannels, PhaseSkwh_totChannels, PhaseTkwh_totChannels
 													, PhaseRVoltChannels, PhaseSVoltChannels, PhaseTVoltChannels
 													, PhaseRCurrentChannels, PhaseSCurrentChannels, PhaseTCurrentChannels
-													, 14, mac_address_gateway);
+													, 14, mac_address_gateway, mac_address_gateway);
 						int channel;
 						for (channel=0;channel<19;channel++)
 						{
@@ -1018,7 +1018,7 @@ void cc112x_run(void)
 								temp3 = *(uint16_t*)&rxBuffer[13]; 
 								printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d\n", 
 								humidity, temp1, temp2, temp3); 
-								res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID);
+								res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, mac_address_gateway);
 								fprintf(f, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d\n", 
 								humidity, temp1, temp2, temp3); 
   							//cc112x_init(0,freq_main);// freq 410 Mhz + (1 Mhz * 0)
