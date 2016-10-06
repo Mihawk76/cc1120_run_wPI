@@ -64,7 +64,12 @@ uint16_t humidity;
 uint16_t temp1;
 uint16_t temp2;
 uint16_t temp3;
-char* location = "http://52.43.48.93/post.php";
+uint16_t dIn1;
+uint16_t dIn2;
+int16_t rssi = 0;
+//char* location = "http://52.43.48.93/post.php";
+char* location = "http://192.168.88.19:1616/dcms/rest/alfa";
+char* gateway_trap_id = "EM24010101";
 FILE *f;
 	
 /*******************************************************************************
@@ -1016,11 +1021,23 @@ void cc112x_run(void)
 								temp1 = *(uint16_t*)&rxBuffer[9]; 
 								temp2 = *(uint16_t*)&rxBuffer[11]; 
 								temp3 = *(uint16_t*)&rxBuffer[13]; 
-								printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d\n", 
-								humidity, temp1, temp2, temp3); 
-								res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, mac_address_gateway);
-								fprintf(f, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d\n", 
-								humidity, temp1, temp2, temp3); 
+								dIn1 = *(uint16_t*)&rxBuffer[14] & 0x40; 
+                if ( dIn1 != 0 ){ 
+                  dIn1 = 1; 
+                }
+                dIn2 = *(uint16_t*)&rxBuffer[14] & 0x80; 
+                if ( dIn2 != 0 ){ 
+                  dIn1 = 1; 
+                }
+								//res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, mac_address_gateway);
+								trap_th(location, 10, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, temp1 , temp2, temp3, rssi);
+								printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
+                humidity, temp1, temp2, temp3, dIn1, dIn2, rssi);
+                printf("Gateway Id %d\n", gateway_ID);
+                //res_th (location, temp1, temp2, temp3, humidity, 11, mac_address_gateway);
+                fprintf(f, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
+                humidity, temp1, temp2, temp3, dIn1, dIn2, rssi);
+
   							//cc112x_init(0,freq_main);// freq 410 Mhz + (1 Mhz * 0)
 							}
 					for (i=0;i<rx_byte;i++) {
