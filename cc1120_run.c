@@ -24,6 +24,7 @@ astaga	*/
 #include "kwh_params.c"
 #include "res_sensor.c"
 #include "read_int.c"
+#include "paring.c"
 	
 	#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 	
@@ -59,6 +60,7 @@ uint8_t cc1120_TH_Node;
 uint16_t gateway_ID;
 uint16_t mac_address_gateway;
 int freq_main;
+uint8_t freq_th;
 int kwh_loop = 0;
 int16_t rssi;
 uint16_t humidity;
@@ -68,8 +70,9 @@ uint16_t temp3;
 uint16_t dIn1;
 uint16_t dIn2;
 char location[] = "http://192.168.10.101/post.php";
-char location_trap[] = "http://192.168.10.117/post_trap.php";
+char location_trap[] = "http://192.168.10.101/post_trap.php";
 FILE *f;
+int channel = 0;
 	
 /*******************************************************************************
  * @fn          trxReadWriteBurstSingle
@@ -810,7 +813,7 @@ void cc112x_run(void)
 	uint8_t temp_byte;
 	int i;
 	uint8_t rx_byte = 0;
-	uint8_t freq_th = 23;
+	//freq_th = 43;
 	//scanning kwh and then adding them
 	/*if ( kwh_loop <= 10){
 		printf("Sending KWH data\n");
@@ -923,6 +926,14 @@ void cc112x_run(void)
 							res_kwh (location, PhaseRVoltChannels[0], PhaseSVoltChannels[0], PhaseTVoltChannels[0]
 							, PhaseRCurrentChannels[0], PhaseSCurrentChannels[0], PhaseTCurrentChannels[0]
 							, 14, mac_address_gateway);
+							trap_kwh (location, channel, mac_address_gateway
+							, PhaseRVoltChannels[channel], PhaseSVoltChannels[channel], PhaseTVoltChannels[channel]
+							, PhaseRCurrentChannels[channel], PhaseSCurrentChannels[channel], PhaseTCurrentChannels[channel]
+							, PhaseRFrequencyChannels[channel], PhaseSFrequencyChannels[channel], PhaseTFrequencyChannels[channel]
+							, PhaseRPowerFactorChannels[channel], PhaseSPowerFactorChannels[channel], PhaseTPowerFactorChannels[channel]
+							, PhaseRwattChannels[channel], PhaseSwattChannels[channel], PhaseTwattChannels[channel]
+							, PhaseRkwh_tot_prdChannels[channel], PhaseSkwh_tot_prdChannels[channel], PhaseTkwh_tot_prdChannels[channel]
+							, kwh_totChannels[channel]);
 							printf("PhaseSVoltChannels %d\n", PhaseSVoltChannels[0]);
 							printf("PhaseRVoltChannels %d\n", PhaseRVoltChannels[0]);	
 							printf("PhaseTVoltChannels %d\n", PhaseTVoltChannels[0]);
@@ -937,12 +948,14 @@ void cc112x_run(void)
 							fprintf(f,"PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[0]);
 						
 					}
-					while ( counter < cc1120_TH_Listed )
+					//while ( counter < cc1120_TH_Listed )
+					while ( counter < total_pairing )
 					{
-						if ( 1/*cc1120_TH_ID_Selected[counter] == (*(uint16_t*)&rxBuffer[2])*/)
+						//if ( 1/*cc1120_TH_ID_Selected[counter] == (*(uint16_t*)&rxBuffer[2])*/)
+						if ( pairing_id[counter] == (*(uint16_t*)&rxBuffer[2]))
 						{	
-							printf( "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
-							fprintf(f, "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
+							printf( "counter:%d TH_ID_Selected:%04X\n", counter, pairing_id[counter]);
+							fprintf(f, "counter:%d TH_ID_Selected:%04X\n", counter, pairing_id[counter]);
 							if ( rxBuffer[1] == 0x81 )
 							{
 								printf ("Joint detected\n");
@@ -1001,7 +1014,7 @@ void cc112x_run(void)
 								txBuffer[10] = 0x06; //wake up cnt 2 send
 								txBuffer[11] = 10;//in sec wakeup (2 byte)
 								txBuffer[13] = 60;//in sec next wakeup (2 byte)
-								freq_main = freq_th;
+								//freq_main = freq_th;
 								humidity = *(uint16_t*)&rxBuffer[7]; 
 								temp1 = *(uint16_t*)&rxBuffer[9]; 
 								temp2 = *(uint16_t*)&rxBuffer[11]; 
@@ -1016,11 +1029,12 @@ void cc112x_run(void)
                 }
                 printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n", 
                 humidity, temp1, temp2, temp3, dIn1, dIn2, rssi); 
+								printf("Gateway Id %d\n", gateway_ID);
 								//res_th (location, temp1, temp2, temp3, humidity, 11, mac_address_gateway);
 								fprintf(f, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n", 
 								humidity, temp1, temp2, temp3, dIn1, dIn2, rssi); 
-								res_th (location, temp1, temp2, temp3, humidity, 11, mac_address_gateway);
-								trap_th (location_trap, 1, mac_address_gateway, cc1120_TH_ID, dIn1, dIn2, humidity, temp1, temp2, temp3, rssi);
+								//res_th (location, temp1, temp2, temp3, humidity, 11, mac_address_gateway);
+								//trap_th (location_trap, 1, mac_address_gateway, cc1120_TH_ID, dIn1, dIn2, humidity, temp1, temp2, temp3, rssi);
   							//cc112x_init(0,freq_main);// freq 410 Mhz + (1 Mhz * 0)
 							}
 					for (i=0;i<rx_byte;i++) {
@@ -1037,12 +1051,12 @@ void cc112x_run(void)
 					fprintf(f, "\r\n");
 						break;		
 					}
-						if ( cc1120_TH_ID_Selected[counter] != (*(uint16_t*)&rxBuffer[2])){
-							printf( "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
-							printf("TH_ID_selected:TH_Incoming_Id %04X:%04X different \n",cc1120_TH_ID_Selected[counter] ,(*(uint16_t*)&rxBuffer[2]));
-							fprintf(f,  "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
+						if ( pairing_id[counter] != (*(uint16_t*)&rxBuffer[2])){
+							printf( "counter:%d TH_ID_Selected:%04X\n", counter, pairing_id[counter]);
+							printf("TH_ID_selected:TH_Incoming_Id %04X:%04X different \n",pairing_id[counter] ,(*(uint16_t*)&rxBuffer[2]));
+							fprintf(f,  "counter:%d TH_ID_Selected:%04X\n", counter, pairing_id[counter]);
 							fprintf(f, "TH_ID_selected:TH_Incoming_Id %04X:%04X different \n"
-							,cc1120_TH_ID_Selected[counter] ,(*(uint16_t*)&rxBuffer[2]));
+							,pairing_id[counter] ,(*(uint16_t*)&rxBuffer[2]));
 							}	
 						counter++;
 					}
@@ -1077,10 +1091,23 @@ void cc112x_run(void)
 int main(int argc, char *argv[]) {
   uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
   int ret = 0;
-	freq_main = 23;
+	int i; 
 	//freq_main = 0;
-  gateway_ID = 0x1234;
-	mac_address_gateway = read_ints();
+  gateway_ID = mac_address_gateway = read_ints();
+	get_id_pairing("localhost","root","satunol10","paring","th", gateway_ID);
+    for(i=0;i<=total_pairing;i++)
+    {   
+      printf("%02X\n", pairing_id[i]);
+    }   
+	//freq_main = 12;
+	if ( gateway_ID == 1001){
+		freq_th = freq_main = 22;
+	}
+	if ( gateway_ID == 1002){
+		freq_th = freq_main = 12;
+	}
+	// 22 = 1001
+	// 12 = 1002
   //setup gpio pin to spi function
   wiringPiSetup();
   
