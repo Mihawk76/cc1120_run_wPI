@@ -140,7 +140,7 @@ int trap_kwh (char* location, int channel, uint16_t id,uint16_t VoltR,uint16_t V
 						, channelTrap, WattR, channelTrap, WattS, channelTrap, WattT);
 		strcat(scoreData, temp);
 		printf("scoreData %s\n", scoreData);	
-		snprintf(temp, sizeof scoreData,  ";21.%d.27.0:%d;21.%d.28.0:%d;21.%d.29.0:%d;21.%d.30.0:%d"
+		snprintf(temp, sizeof scoreData,  ";21.%d.23.0:%d;21.%d.24.0:%d;21.%d.25.0:%d;21.%d.30.0:%d"
 						,channelTrap, KwhPrdR, channelTrap, KwhPrdS, channelTrap, KwhPrdT, channelTrap, TotalKwhPrd);
 		strcat(scoreData, temp);
 		printf("scoreData %s\n", scoreData);	
