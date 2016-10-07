@@ -144,8 +144,8 @@ int trap_th (char* location, int uID, char* gateway_ID, uint16_t th_ID, uint16_t
   printf("rssi %d\n", rssi); 
   snprintf(scoreData, sizeof scoreData, "18.0.3.0:%s;18.%d.1.0:%d;18.%d.10.0:%d;18.%d.12.0:%d",
           gateway_ID, uID, th_ID, uID, dIn1, uID, dIn2 ); 
-  snprintf(temp, sizeof scoreData,  ";18.%d.40.0:%d%d;18.%d.41.0:%d;18.%d.42.0:%d;18.%d.43.0:%d"
-          , uID, hummidity, th1, uID, th2, uID, th3, uID, rssi);
+  snprintf(temp, sizeof scoreData,  ";18.%d.40.0:%d;18.%d.41.0:%d;18.%d.42.0:%d;18.%d.43.0:%d"
+          , uID, th1, uID, th2, uID, th3, uID, rssi);
   strcat(scoreData, temp); 
   printf("scoreData %s\n", scoreData);
   CURL *curl;

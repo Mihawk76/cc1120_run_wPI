@@ -52,7 +52,7 @@ uint8_t add_type = 0x02; //add type as new node
 uint8_t index_node = 0x00; //temp index node
 uint8_t wakeup_hold = 0x05; //wake up hold in 100ms
 uint16_t cc1120_TH_ID;
-uint16_t cc1120_TH_ID_Selected[10] = { 0x0000, 0x0926};
+uint16_t cc1120_TH_ID_Selected[10] = { 0x1DE3, 0x18D9, 0x1D31, 0x18BA, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000};
 uint32_t cc1120_KWH_ID;
 int cc1120_TH_Listed = 2;
 uint8_t cc1120_TH_Node;
@@ -68,7 +68,8 @@ uint16_t dIn1;
 uint16_t dIn2;
 int16_t rssi = 0;
 //char* location = "http://52.43.48.93/post.php";
-char* location = "http://192.168.88.19:1616/dcms/rest/alfa";
+char* location = "http://52.43.48.93/dcms/rest/alfa";
+//char* location = "http://192.168.88.19:1616/dcms/rest/alfa";
 char* gateway_trap_id = "EM24010101";
 FILE *f;
 	
@@ -812,6 +813,7 @@ void cc112x_run(void)
 	int i;
 	uint8_t rx_byte = 0;
 	uint8_t freq_th = 23;
+	int Oid = 0;
 	//scanning kwh and then adding them
 	/*if ( kwh_loop <= 10){
 		printf("Sending KWH data\n");
@@ -956,8 +958,6 @@ void cc112x_run(void)
 					{
 						if ( 1/*cc1120_TH_ID_Selected[counter] == (*(uint16_t*)&rxBuffer[2])*/)
 						{	
-							printf( "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
-							fprintf(f, "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
 							if ( rxBuffer[1] == 0x81 )
 							{
 								printf ("Joint detected\n");
@@ -1022,6 +1022,18 @@ void cc112x_run(void)
 								temp2 = *(uint16_t*)&rxBuffer[11]; 
 								temp3 = *(uint16_t*)&rxBuffer[13]; 
 								dIn1 = *(uint16_t*)&rxBuffer[14] & 0x40; 
+								int i;
+								for(i=0;i<=sizeof(cc1120_TH_ID_Selected);i++)
+								{
+									if( cc1120_TH_ID_Selected[i] == cc1120_TH_ID )
+									{
+										Oid = 1+i;
+										printf("Nilai Oid %d\n", Oid);
+								
+										printf( "TH ID: %04X TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
+										fprintf(f, "counter:%d TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
+									}
+								}
                 if ( dIn1 != 0 ){ 
                   dIn1 = 1; 
                 }
@@ -1030,11 +1042,10 @@ void cc112x_run(void)
                   dIn1 = 1; 
                 }
 								//res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, mac_address_gateway);
-								trap_th(location, 10, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, temp1 , temp2, temp3, rssi);
+								trap_th(location, Oid, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, temp1 , temp2, temp3, rssi);
 								printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
                 humidity, temp1, temp2, temp3, dIn1, dIn2, rssi);
                 printf("Gateway Id %d\n", gateway_ID);
-                //res_th (location, temp1, temp2, temp3, humidity, 11, mac_address_gateway);
                 fprintf(f, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
                 humidity, temp1, temp2, temp3, dIn1, dIn2, rssi);
 
