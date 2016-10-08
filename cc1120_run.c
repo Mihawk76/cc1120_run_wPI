@@ -1128,14 +1128,14 @@ int main(int argc, char *argv[]) {
 	memcpy(&txBuffer[1],DUMMY_BUF,10);
 	txBuffer[0]=10;
 	int datalog = 0;
-	while (1)
-	{
  		f = fopen("/home/data.log", "a");
 		if (f == NULL)
 		{
     	printf("Error opening file!\n");
     	exit(1);
 		}
+	while (1)
+	{
 
 		/* print some text */
 		/*const char *text = "Why the result are diffrent";
@@ -1143,8 +1143,8 @@ int main(int argc, char *argv[]) {
 		/* communication handler */
 		cc112x_run();
 		datalog++;
-		fclose(f);
 	}
+		fclose(f);
   /*int repeat;
 	for(repeat=0;repeat<=100;repeat++)
 	{
