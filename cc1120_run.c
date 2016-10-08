@@ -22,7 +22,7 @@ astaga	*/
 #include "cc112x_easy_link_reg_config.h"
 #include "mac_address.c"
 #include "kwh_params.c"
-#include "res_sensor.c"
+//#include "res_sensor.c"
 #include "read_int.c"
 	
 	#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
