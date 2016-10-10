@@ -23,7 +23,7 @@ astaga	*/
 #include "mac_address.c"
 #include "kwh_params.c"
 //#include "res_sensor.c"
-#include "read_int.c"
+//#include "read_int.c"
 	
 	#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 	
@@ -814,6 +814,7 @@ void cc112x_run(void)
 	uint8_t rx_byte = 0;
 	uint8_t freq_th = 23;
 	int Oid = 0;
+	fprintf(f,"The start of the loop\n");
 	//scanning kwh and then adding them
 	/*if ( kwh_loop <= 10){
 		printf("Sending KWH data\n");
@@ -840,34 +841,41 @@ void cc112x_run(void)
 	}*/
 		// Infinite loop
 	
+	fprintf(f,"Before spi read reg\n");
 	cc112xSpiReadReg(CC112X_MARC_STATUS1, &temp_byte, 1);
 	if (( temp_byte == 0x07)||( temp_byte == 0x08)){
 		// Flush TX FIFO
 		trxSpiCmdStrobe(CC112X_SFTX);
+		fprintf(f,"trxspicmdstrobe is excecuted\n");
 	}
 	else if (( temp_byte == 0x09)||( temp_byte == 0x0a)){
 		// Flush RX FIFO
 		trxSpiCmdStrobe(CC112X_SFRX);
+		fprintf(f,"trxspicmdstrobe is excecuted\n");
 	}
 	else if( temp_byte&0x80 ) {
 		// Read number of bytes in RX FIFO
 		cc112xSpiReadReg(CC112X_NUM_RXBYTES, &rx_byte, 1);
+		fprintf(f,"cc112xspireadreg excecuted\n");
 
 		// Check that we have bytes in FIFO
 		if(rx_byte != 0) {
 
 			// Read MARCSTATE to check for RX FIFO error
 			cc112xSpiReadReg(CC112X_MARCSTATE, &temp_byte, 1);
+			fprintf(f,"cc112xspireadreg excecuted\n");
 
 			// Mask out MARCSTATE bits and check if we have a RX FIFO error
 			if((temp_byte & 0x1F) == RX_FIFO_ERROR) {
 				// Flush RX FIFO
 				trxSpiCmdStrobe(CC112X_SFRX);
+				fprintf(f,"trxspicmdstrobe is excecuted\n");
 			} 
 			else {
 				rx_byte &= 0x7F;
 				// Read n bytes from RX FIFO
 				cc112xSpiReadRxFifo(rxBuffer, rx_byte);
+				fprintf(f,"After cc112xspireadrxfifo\n");
 
 				// Check CRC ok (CRC_OK: bit7 in second status byte)
 				// This assumes status bytes are appended in RX_FIFO
@@ -875,6 +883,7 @@ void cc112x_run(void)
 				// If CRC is disabled the CRC_OK field will read 1
 				temp_byte = 0;
 				if(rxBuffer[rx_byte - 1] & 0x80) {
+					fprintf(f,"After there is data on rx buffer \n");
 					// Update packet counter
 					time_t t;
 					time (&t);
@@ -1079,21 +1088,26 @@ void cc112x_run(void)
 				}
 			}
 		}
+		fprintf(f,"After the whole data is processed\n");
 	}
 	else if( temp_byte == 0) {
 					//os_dly_wait (1);
 //		if (replyDly>0) return;
 		send_packet(txBuffer);
+		fprintf(f,"After send packet buffer\n");
 		return;
 	}
 	
 	trxSpiCmdStrobe(CC112X_SIDLE);
+	fprintf(f,"after spicmdstrobe bottom\n");
 	
 	wait_exp_val(CC112X_MARCSTATE, 0x41);
+	fprintf(f,"after wait exp val\n");
 		
 			
     // Set radio back in RX
     trxSpiCmdStrobe(CC112X_SRX);
+		fprintf(f,"after spi cmd strobe bottom\n");
 
 }
 
@@ -1108,7 +1122,7 @@ int main(int argc, char *argv[]) {
 	freq_main = 23;
 	//freq_main = 0;
   gateway_ID = 0x1001;
-	mac_address_gateway = read_ints();
+	//mac_address_gateway = read_ints();
   //setup gpio pin to spi function
   wiringPiSetup();
   
@@ -1128,23 +1142,22 @@ int main(int argc, char *argv[]) {
 	memcpy(&txBuffer[1],DUMMY_BUF,10);
 	txBuffer[0]=10;
 	int datalog = 0;
+	while (1)
+	{
  		f = fopen("/home/data.log", "a");
 		if (f == NULL)
 		{
     	printf("Error opening file!\n");
     	exit(1);
 		}
-	while (1)
-	{
-
 		/* print some text */
 		/*const char *text = "Why the result are diffrent";
 		fprintf(f, "Some text: %s %d \n", text, datalog);*/
 		/* communication handler */
 		cc112x_run();
 		datalog++;
-	}
 		fclose(f);
+	}
   /*int repeat;
 	for(repeat=0;repeat<=100;repeat++)
 	{
