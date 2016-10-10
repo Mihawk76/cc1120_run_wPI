@@ -25,7 +25,14 @@ int main()
 		kwh[i]=t;
 		t=t-1;
 	}
-  trap_th(location, 10, gateway_ID, 1245,1,2,1356,3005,5,6,7);
+  //trap_th(location, 10, gateway_ID, 1245,1,2,1356,3005,5,6,7);
+    trap_kwh_array(location, gateway_ID
+                , kwh, kwh, kwh 
+                , kwh, kwh, kwh 
+                , kwh, kwh, kwh 
+                , kwh, kwh, kwh 
+                , kwh, kwh, kwh 
+                , kwh, kwh, kwh, kwh);
 	//res_kwh_2 (location, kwh, 4004, 2000, 1003, 4004, 2000, 14, cc1120_TH_ID, channel);
 	/*res_kwh_array(location, kwh, kwh, kwh, 
 								kwh, kwh, kwh, kwh, 

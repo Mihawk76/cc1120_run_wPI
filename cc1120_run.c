@@ -923,11 +923,19 @@ void cc112x_run(void)
 						fprintf(f,"KWH data Detected\n");
 						cc1120_KWH_ID = *(uint32_t*)&rxBuffer[2];
 						get_params_value(&rxBuffer[12], rxBuffer[11], (rxBuffer[0]-11));
-						res_kwh_array(location
+						trap_kwh_array(location, gateway_trap_id 
+              , PhaseRVoltChannels, PhaseSVoltChannels, PhaseTVoltChannels
+              , PhaseRCurrentChannels, PhaseSCurrentChannels, PhaseTCurrentChannels
+              , PhaseRFrequencyChannels, PhaseSFrequencyChannels, PhaseTFrequencyChannels
+              , PhaseRPowerFactorChannels, PhaseSPowerFactorChannels, PhaseTPowerFactorChannels
+              , PhaseRwattChannels, PhaseSwattChannels, PhaseTwattChannels
+              , PhaseRkwh_tot_prdChannels, PhaseSkwh_tot_prdChannels, PhaseTkwh_tot_prdChannels
+              , kwh_totChannels);
+						/*res_kwh_array(location
 													, PhaseRkwh_totChannels, PhaseSkwh_totChannels, PhaseTkwh_totChannels
 													, PhaseRVoltChannels, PhaseSVoltChannels, PhaseTVoltChannels
 													, PhaseRCurrentChannels, PhaseSCurrentChannels, PhaseTCurrentChannels
-													, 14, mac_address_gateway, mac_address_gateway);
+													, 14, mac_address_gateway, mac_address_gateway);*/
 						int channel;
 						for (channel=0;channel<19;channel++)
 						{
