@@ -814,7 +814,10 @@ void cc112x_run(void)
 	uint8_t rx_byte = 0;
 	uint8_t freq_th = 23;
 	int Oid = 0;
-	fprintf(f,"The start of the loop\n");
+	//fprintf(f,"The start of the loop\n");
+	time_t t;
+	time (&t);
+	struct tm * timeinfo = localtime (&t);
 	//scanning kwh and then adding them
 	/*if ( kwh_loop <= 10){
 		printf("Sending KWH data\n");
@@ -841,41 +844,100 @@ void cc112x_run(void)
 	}*/
 		// Infinite loop
 	
-	fprintf(f,"Before spi read reg\n");
+	//fprintf(f,"Before spi read reg\n");
+	/*	fprintf(f, "Before spi read reg %04d-%02d-%02d %02d:%02d:%02d\n", 
+		timeinfo->tm_year+1900,
+		timeinfo->tm_mon+1,
+		timeinfo->tm_mday,
+		timeinfo->tm_hour,
+		timeinfo->tm_min,
+		timeinfo->tm_sec
+		);*/
 	cc112xSpiReadReg(CC112X_MARC_STATUS1, &temp_byte, 1);
 	if (( temp_byte == 0x07)||( temp_byte == 0x08)){
 		// Flush TX FIFO
 		trxSpiCmdStrobe(CC112X_SFTX);
-		fprintf(f,"trxspicmdstrobe is excecuted\n");
+		
+		fprintf(f, "trxspicmdstrobe is excecuted %04d-%02d-%02d %02d:%02d:%02d", 
+		timeinfo->tm_year+1900,
+		timeinfo->tm_mon+1,
+		timeinfo->tm_mday,
+		timeinfo->tm_hour,
+		timeinfo->tm_min,
+		timeinfo->tm_sec
+		);
+		printf("trxspicmdstrobe is excecuted %04d-%02d-%02d %02d:%02d:%02d", 
+		timeinfo->tm_year+1900,
+		timeinfo->tm_mon+1,
+		timeinfo->tm_mday,
+		timeinfo->tm_hour,
+		timeinfo->tm_min,
+		timeinfo->tm_sec
+		);
 	}
 	else if (( temp_byte == 0x09)||( temp_byte == 0x0a)){
 		// Flush RX FIFO
 		trxSpiCmdStrobe(CC112X_SFRX);
-		fprintf(f,"trxspicmdstrobe is excecuted\n");
+		/*fprintf(f, "trxspicmdstrobe is excecuted %04d-%02d-%02d %02d:%02d:%02d", 
+		timeinfo->tm_year+1900,
+		timeinfo->tm_mon+1,
+		timeinfo->tm_mday,
+		timeinfo->tm_hour,
+		timeinfo->tm_min,
+		timeinfo->tm_sec
+		);*/
 	}
 	else if( temp_byte&0x80 ) {
 		// Read number of bytes in RX FIFO
 		cc112xSpiReadReg(CC112X_NUM_RXBYTES, &rx_byte, 1);
-		fprintf(f,"cc112xspireadreg excecuted\n");
+		/*fprintf(f, "cc112xspireadreg excecuted %04d-%02d-%02d %02d:%02d:%02d", 
+		timeinfo->tm_year+1900,
+		timeinfo->tm_mon+1,
+		timeinfo->tm_mday,
+		timeinfo->tm_hour,
+		timeinfo->tm_min,
+		timeinfo->tm_sec
+		);*/
 
 		// Check that we have bytes in FIFO
 		if(rx_byte != 0) {
 
 			// Read MARCSTATE to check for RX FIFO error
 			cc112xSpiReadReg(CC112X_MARCSTATE, &temp_byte, 1);
-			fprintf(f,"cc112xspireadreg excecuted\n");
+			/*fprintf(f, "cc112xspireadreg excecuted %04d-%02d-%02d %02d:%02d:%02d", 
+			timeinfo->tm_year+1900,
+			timeinfo->tm_mon+1,
+			timeinfo->tm_mday,
+			timeinfo->tm_hour,
+			timeinfo->tm_min,
+			timeinfo->tm_sec
+			);*/
 
 			// Mask out MARCSTATE bits and check if we have a RX FIFO error
 			if((temp_byte & 0x1F) == RX_FIFO_ERROR) {
 				// Flush RX FIFO
 				trxSpiCmdStrobe(CC112X_SFRX);
-				fprintf(f,"trxspicmdstrobe is excecuted\n");
+				/*fprintf(f, "trxspicmdstrobe is excecuted %04d-%02d-%02d %02d:%02d:%02d", 
+				timeinfo->tm_year+1900,
+				timeinfo->tm_mon+1,
+				timeinfo->tm_mday,
+				timeinfo->tm_hour,
+				timeinfo->tm_min,
+				timeinfo->tm_sec
+				);*/
 			} 
 			else {
 				rx_byte &= 0x7F;
 				// Read n bytes from RX FIFO
 				cc112xSpiReadRxFifo(rxBuffer, rx_byte);
-				fprintf(f,"After cc112xspireadrxfifo\n");
+				/*fprintf(f, "after cc112xspireadrxfifo excecuted %04d-%02d-%02d %02d:%02d:%02d", 
+				timeinfo->tm_year+1900,
+				timeinfo->tm_mon+1,
+				timeinfo->tm_mday,
+				timeinfo->tm_hour,
+				timeinfo->tm_min,
+				timeinfo->tm_sec
+				);*/
 
 				// Check CRC ok (CRC_OK: bit7 in second status byte)
 				// This assumes status bytes are appended in RX_FIFO
@@ -883,11 +945,24 @@ void cc112x_run(void)
 				// If CRC is disabled the CRC_OK field will read 1
 				temp_byte = 0;
 				if(rxBuffer[rx_byte - 1] & 0x80) {
-					fprintf(f,"After there is data on rx buffer \n");
+					cc112xSpiReadReg(CC112X_MARCSTATE, &temp_byte, 1);
+					/*fprintf(f, "After there is data on rx buffer %04d-%02d-%02d %02d:%02d:%02d", 
+					timeinfo->tm_year+1900,
+					timeinfo->tm_mon+1,
+					timeinfo->tm_mday,
+					timeinfo->tm_hour,
+					timeinfo->tm_min,
+					timeinfo->tm_sec
+					);*/
+					printf("After there is data on rx buffer %04d-%02d-%02d %02d:%02d:%02d\n", 
+					timeinfo->tm_year+1900,
+					timeinfo->tm_mon+1,
+					timeinfo->tm_mday,
+					timeinfo->tm_hour,
+					timeinfo->tm_min,
+					timeinfo->tm_sec
+					);
 					// Update packet counter
-					time_t t;
-					time (&t);
-					struct tm * timeinfo = localtime (&t);
 					//struct tm * timeinfo = gmtime (&t);
 					packetCounter++;
 					printf("%05d: %04d-%02d-%02d %02d:%02d:%02d - Received %d %s RSSI=%d.\r\n", 
@@ -1088,26 +1163,47 @@ void cc112x_run(void)
 				}
 			}
 		}
-		fprintf(f,"After the whole data is processed\n");
+		//fprintf(f,"After the whole data is processed\n");
 	}
 	else if( temp_byte == 0) {
 					//os_dly_wait (1);
 //		if (replyDly>0) return;
 		send_packet(txBuffer);
-		fprintf(f,"After send packet buffer\n");
+		//fprintf(f,"After send packet buffer\n");
 		return;
 	}
 	
 	trxSpiCmdStrobe(CC112X_SIDLE);
-	fprintf(f,"after spicmdstrobe bottom\n");
+	/*fprintf(f, "after spicmdstrobe bottom %04d-%02d-%02d %02d:%02d:%02d", 
+	timeinfo->tm_year+1900,
+	timeinfo->tm_mon+1,
+	timeinfo->tm_mday,
+	timeinfo->tm_hour,
+	timeinfo->tm_min,
+	timeinfo->tm_sec
+	);*/
 	
 	wait_exp_val(CC112X_MARCSTATE, 0x41);
-	fprintf(f,"after wait exp val\n");
+	/*fprintf(f, "after wait exp val %04d-%02d-%02d %02d:%02d:%02d", 
+	timeinfo->tm_year+1900,
+	timeinfo->tm_mon+1,
+	timeinfo->tm_mday,
+	timeinfo->tm_hour,
+	timeinfo->tm_min,
+	timeinfo->tm_sec
+	);*/
 		
 			
     // Set radio back in RX
     trxSpiCmdStrobe(CC112X_SRX);
-		fprintf(f,"after spi cmd strobe bottom\n");
+		/*fprintf(f, "after spi cmd strobe bottom %04d-%02d-%02d %02d:%02d:%02d", 
+		timeinfo->tm_year+1900,
+		timeinfo->tm_mon+1,
+		timeinfo->tm_mday,
+		timeinfo->tm_hour,
+		timeinfo->tm_min,
+		timeinfo->tm_sec
+		);*/
 
 }
 
