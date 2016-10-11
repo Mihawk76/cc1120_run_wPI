@@ -107,20 +107,20 @@ int  res_kwh (char* location,uint16_t VoltR,uint16_t VoltS,uint16_t VoltT,uint16
 	}
 	return 0;
 }
+
 int  res_th (char* location,uint16_t Th1,uint16_t Th2,uint16_t Th3,uint16_t Humidity, int nilai,int device, int gateway)
 
 {
-   snprintf(scoreData, sizeof scoreData, "location=%s",location);
-	{
 		snprintf(scoreData, sizeof scoreData, "Th1=%d&Th2=%d&Th3=%d&Humidity=%d&device=%d&nilai=%d&gateway=%d",
 		Th1, Th2, Th3, Humidity, device, nilai, gateway);
+		printf("%d\n", sizeof scoreData);
 		printf("%s\n", scoreData);
 		  CURL *curl;
 		  CURLcode res; 
 		  curl_global_init(CURL_GLOBAL_ALL);
 		  curl = curl_easy_init();
 		  if(curl) { 
-		     	//curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
+		     	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
 			    curl_easy_setopt(curl, CURLOPT_URL, location);
 			    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, scoreData);
 			    res = curl_easy_perform(curl);
@@ -129,10 +129,9 @@ int  res_th (char* location,uint16_t Th1,uint16_t Th2,uint16_t Th3,uint16_t Humi
 			    curl_easy_cleanup(curl);
 		  	}   
 		  curl_global_cleanup();
-		
-	}
 	return 0;
 }
+
 int trap_th (char* location, int uID, char* gateway_ID, uint16_t th_ID, uint16_t dIn1, uint16_t dIn2
             , uint16_t hummidity, uint16_t th1, uint16_t th2, uint16_t th3, int16_t rssi
             )

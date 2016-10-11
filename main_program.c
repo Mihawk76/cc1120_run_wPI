@@ -20,7 +20,8 @@ int main()
 	int32_t kwh[18];
 	int i;
 	int32_t t = 50;
-	for (i=0;i<=18;i++)
+	printf("%d\n", sizeof kwh);
+	for (i=0;i<18;i++)
 	{
 		kwh[i]=t;
 		t=t-1;
@@ -30,7 +31,7 @@ int main()
 	/*res_kwh_array(location, kwh, kwh, kwh, 
 								kwh, kwh, kwh, kwh, 
 								kwh, kwh, 14, 1002, gateway);*/
-	//res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, gateway);
-	res_th_2 (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID);
+	res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, gateway);
+	//res_th_2 (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID);
 	return 0;
 	}
