@@ -114,13 +114,13 @@ int  res_th (char* location,uint16_t Th1,uint16_t Th2,uint16_t Th3,uint16_t Humi
 	{
 		snprintf(scoreData, sizeof scoreData, "Th1=%d&Th2=%d&Th3=%d&Humidity=%d&device=%d&nilai=%d&gateway=%d",
 		Th1, Th2, Th3, Humidity, device, nilai, gateway);
-		//printf("%s\n", scoreData);
+		printf("%s\n", scoreData);
 		  CURL *curl;
 		  CURLcode res; 
 		  curl_global_init(CURL_GLOBAL_ALL);
 		  curl = curl_easy_init();
 		  if(curl) { 
-		     
+		     	//curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
 			    curl_easy_setopt(curl, CURLOPT_URL, location);
 			    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, scoreData);
 			    res = curl_easy_perform(curl);
