@@ -128,7 +128,7 @@ int trap_kwh_array (char* location, char* id
 						, 
 						);*/
 		//snprintf(scoreData, sizeof scoreData, " ");
-		for (channel=0;channel <= 17;channel++)
+		for (channel=0;channel <= 5;channel++)
 		{
 			channelTrap = channel+2;
 			//strcpy(temp, "");
