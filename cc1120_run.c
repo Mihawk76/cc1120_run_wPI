@@ -52,7 +52,7 @@ uint8_t add_type = 0x02; //add type as new node
 uint8_t index_node = 0x00; //temp index node
 uint8_t wakeup_hold = 0x05; //wake up hold in 100ms
 uint16_t cc1120_TH_ID;
-uint16_t cc1120_TH_ID_Selected[10] = { 0x1DE3, 0x18D9, 0x1D31, 0x18BA, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000};
+uint16_t cc1120_TH_ID_Selected[10] = { 0x28A1, 0x2B86, 0x2B87,  0X1955, 0X18F0, 0X2989, 0X2915, 0X188C};
 uint32_t cc1120_KWH_ID;
 int cc1120_TH_Listed = 2;
 uint8_t cc1120_TH_Node;
