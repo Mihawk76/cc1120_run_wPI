@@ -52,6 +52,76 @@ int res_kwh_array (char* location,int32_t KwhR[18],int32_t KwhS[18],int32_t KwhT
 	}
 	return 0;
 }
+int trap_kwh_array (char* location, char* id
+            ,int32_t VoltR[18],int32_t VoltS[18],int32_t VoltT[18]
+            ,int32_t CurrentR[18],int32_t CurrentS[18],int32_t CurrentT[18]
+            ,int32_t FrequencyR[18],int32_t FrequencyS[18],int32_t FrequencyT[18]
+            ,int32_t PowerFactorR[18],int32_t PowerFactorS[18],int32_t PowerFactorT[18]
+            ,int32_t WattR[18],int32_t WattS[18],int32_t WattT[18]
+            ,int32_t KwhPrdR[18],int32_t KwhPrdS[18],int32_t KwhPrdT[18],uint32_t TotalKwhPrd[18])
+
+{
+    int channel = 0;
+    int channelTrap;
+    printf("%s\n", location);
+    /*snprintf(scoreData, sizeof scoreData, "",
+            , channel
+            , channel
+            , channel
+            ,  channel
+            , 
+            );*/
+    //snprintf(scoreData, sizeof scoreData, " ");
+    for (channel=0;channel < 6;channel++)
+    {
+      channelTrap = channel+2;
+      //strcpy(temp, "");
+      snprintf(temp, sizeof temp, "21.0.3.0:%s;21.%d.5.0:%d;21.%d.6.0:%d;21.%d.7.0:%d;",
+          id, channelTrap, VoltR[channel], channelTrap, VoltS[channel], channelTrap, VoltT[channel]);
+      //snprintf(scoreData, sizeof scoreData, "%s", temp);
+      strcat(scoreData, temp);
+      snprintf(temp, sizeof scoreData,  "21.%d.8.0:%d;21.%d.9.0:%d;21.%d.10.0:%d;"
+            , channelTrap, CurrentR[channel], channelTrap, CurrentS[channel], channelTrap, CurrentT[channel]);
+      strcat(scoreData, temp);
+      //printf("scoreData %s\n", scoreData);  
+      snprintf(temp, sizeof scoreData,  "21.%d.11.0:%d;21.%d.12.0:%d;21.%d.13.0:%d;"
+            , channelTrap, FrequencyR[channel], channelTrap, FrequencyS[channel], channelTrap, FrequencyT[channel]);
+      strcat(scoreData, temp);
+      //printf("scoreData %s\n", scoreData);  
+      snprintf(temp, sizeof scoreData,  "21.%d.14.0:%d;21.%d.15.0:%d;21.%d.16.0:%d;"
+            , channelTrap, PowerFactorR[channel], channelTrap, PowerFactorS[channel], channelTrap, PowerFactorT[channel]);
+      strcat(scoreData, temp);
+      //printf("scoreData %s\n", scoreData);  
+      snprintf(temp, sizeof scoreData,  "21.%d.17.0:%d;21.%d.18.0:%d;21.%d.19.0:%d;" 
+            , channelTrap, WattR[channel], channelTrap, WattS[channel], channelTrap, WattT[channel]);
+      strcat(scoreData, temp);
+      //printf("scoreData %s\n", scoreData);  
+      snprintf(temp, sizeof scoreData,  "21.%d.23.0:%d;21.%d.24.0:%d;21.%d.25.0:%d;21.%d.30.0:%d;"
+            ,channelTrap, KwhPrdR[channel], channelTrap, KwhPrdS[channel], channelTrap, KwhPrdT[channel]
+            , channelTrap, TotalKwhPrd[channel]);
+      strcat(scoreData, temp);
+      //channel++;
+      //printf("scoreData \n%s\n\n\n ganti channel \n\n", scoreData); 
+    }
+    printf("scoreData \n%s\n", scoreData);
+      CURL *curl;
+      CURLcode res; 
+      curl_global_init(CURL_GLOBAL_ALL);
+      curl = curl_easy_init();
+      if(curl) {
+		     	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
+          curl_easy_setopt(curl, CURLOPT_URL, location);
+          curl_easy_setopt(curl, CURLOPT_POSTFIELDS, scoreData);
+          res = curl_easy_perform(curl);
+          if(res != CURLE_OK)
+          fprintf(stderr, "curl_easy_perform() failed: %s\n",curl_easy_strerror(res));
+          curl_easy_cleanup(curl);
+        }   
+      curl_global_cleanup();
+
+
+  return 0;
+}
 int  res_kwh_2 (char* location,uint16_t* VoltR,uint16_t VoltS,uint16_t VoltT,uint16_t CurrentR,
 								uint16_t CurrentS,uint16_t CurrentT, int nilai,int device, int Channel)
 
