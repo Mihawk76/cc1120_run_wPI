@@ -22,7 +22,7 @@ astaga	*/
 #include "cc112x_easy_link_reg_config.h"
 #include "mac_address.c"
 #include "kwh_params.c"
-//#include "res_sensor.c"
+#include "res_sensor.c"
 //#include "read_int.c"
 	
 	#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
@@ -52,7 +52,7 @@ uint8_t add_type = 0x02; //add type as new node
 uint8_t index_node = 0x00; //temp index node
 uint8_t wakeup_hold = 0x05; //wake up hold in 100ms
 uint16_t cc1120_TH_ID;
-uint16_t cc1120_TH_ID_Selected[10] = { 0x1DE3, 0x18D9, 0x1D31, 0x18BA, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000};
+uint16_t cc1120_TH_ID_Selected[10] = { 0x1DE3, 0x18D9, 0x1D31, 0x18BA, 0x2740, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000};
 uint32_t cc1120_KWH_ID;
 int cc1120_TH_Listed = 2;
 uint8_t cc1120_TH_Node;
@@ -67,10 +67,12 @@ uint16_t temp3;
 uint16_t dIn1;
 uint16_t dIn2;
 int16_t rssi = 0;
+//char* location = "http://10.42.0.1/post.php";
 //char* location = "http://52.43.48.93/post.php";
 char* location = "http://52.43.48.93/dcms/rest/alfa";
 //char* location = "http://192.168.88.19:1616/dcms/rest/alfa";
-char* gateway_trap_id = "EM24010101";
+//char* gateway_trap_id = "EM24010101"; // di alfamidi pp
+char* gateway_trap_id = "EM24010103"; // di rumah pp
 FILE *f;
 	
 /*******************************************************************************
@@ -819,7 +821,7 @@ void cc112x_run(void)
 	time (&t);
 	struct tm * timeinfo = localtime (&t);
 	//scanning kwh and then adding them
-	/*if ( kwh_loop <= 10){
+	if ( kwh_loop <= 10){
 		printf("Sending KWH data\n");
 		txBuffer[0] = 15; //length packet data
 		txBuffer[1] = 0x02; //command code 
@@ -841,7 +843,7 @@ void cc112x_run(void)
 		}
 		kwh_loop++;
 		sleep(1);
-	}*/
+	}
 		// Infinite loop
 	
 	//fprintf(f,"Before spi read reg\n");
@@ -1102,21 +1104,26 @@ void cc112x_run(void)
 								txBuffer[13] = 60;//in sec next wakeup (2 byte)
 								freq_main = freq_th;
 								humidity = *(uint16_t*)&rxBuffer[7]; 
-								temp1 = *(uint16_t*)&rxBuffer[9]; 
-								temp2 = *(uint16_t*)&rxBuffer[11]; 
-								temp3 = *(uint16_t*)&rxBuffer[13]; 
+								if ( *(uint16_t*)&rxBuffer[9] != 12900){
+								temp1 = *(uint16_t*)&rxBuffer[9]; }
+								if ( *(uint16_t*)&rxBuffer[11] != 12900){
+								temp1 = *(uint16_t*)&rxBuffer[11];} 
+								if ( *(uint16_t*)&rxBuffer[13] != 12900){
+								temp1 = *(uint16_t*)&rxBuffer[13];} 
 								dIn1 = *(uint16_t*)&rxBuffer[14] & 0x40; 
 								int i;
 								for(i=0;i<=sizeof(cc1120_TH_ID_Selected);i++)
 								{
 									if( cc1120_TH_ID_Selected[i] == cc1120_TH_ID )
 									{
-										Oid = 1+i;
-										printf("Nilai Oid %d\n", Oid);
+										Oid = 2+i;
 								
-										printf( "TH ID: %04X TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
-										fprintf(f, "counter:%d TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
+										printf( "OID %d TH ID: %04X TH_ID_Selected:%04X\n", Oid, cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
+										fprintf(f, "OID %d counter:%d TH_ID_Selected:%04X\n", Oid, cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
 									}
+								}
+								if ( Oid == 0){
+										printf("Nilai Oid %d, TH ID: %04X\n", Oid, cc1120_TH_ID);
 								}
                 if ( dIn1 != 0 ){ 
                   dIn1 = 1; 
@@ -1126,7 +1133,7 @@ void cc112x_run(void)
                   dIn1 = 1; 
                 }
 								//res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, mac_address_gateway);
-								//trap_th(location, Oid, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, temp1 , temp2, temp3, rssi);
+								trap_th(location, Oid, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, temp1 , temp2, temp3, rssi);
 								printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
                 humidity, temp1, temp2, temp3, dIn1, dIn2, rssi);
                 printf("Gateway Id %d\n", gateway_ID);
@@ -1215,7 +1222,8 @@ void cc112x_run(void)
 int main(int argc, char *argv[]) {
   uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
   int ret = 0;
-	freq_main = 23;
+	//freq_main = 23;
+	freq_main = 30; // freq receiver ir
 	//freq_main = 0;
   gateway_ID = 0x1001;
 	//mac_address_gateway = read_ints();
