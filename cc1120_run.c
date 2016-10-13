@@ -65,20 +65,6 @@ uint8_t Panasonic_on[] = {0x40 ,0x11 ,0x00 ,0x00 ,0x42 ,0x3D ,0x15 ,0x00 ,0x00 ,
                           0x01 ,0x40 ,0x9F ,0x06 ,0x98 ,0xC0 ,0x40 ,0x04 ,0x07 ,0x20 ,
                           0x00 ,0x9C ,0x64 ,0x01 ,0xFE ,0x00 ,0x00 ,0x70 ,0x07 ,0x00 ,
                           0x00 ,0x81 ,0x00 ,0x00 ,0xCB ,0x3B ,0x81};
-uint8_t Panasonic_temp[][100] = { {0x40 ,0x11 ,0x00 ,0x00 ,0x42 ,0x3D ,0x15 ,0x00 ,0x00 ,0x37 ,
-                          0xDF ,0x01 ,0x9B ,0x01 ,0xE3 ,0x04 ,0xBF ,0x0D ,0x01 ,0x40 ,
-                          0x9D ,0x06 ,0x40 ,0xC0 ,0x40 ,0x04 ,0x07 ,0x20 ,0x00 ,0x00 ,
-                          0x00 ,0x60 ,0x09 ,0x80 ,0xB6 ,0x2A ,0x01 ,0x00 ,0xF2 ,0x0D ,
-                          0x01 ,0x40 ,0x9F ,0x06 ,0x98 ,0xC0 ,0x40 ,0x04 ,0x07 ,0x20 ,
-                          0x00 ,0x9C ,0x64 ,0x01 ,0xFE ,0x00 ,0x00 ,0x70 ,0x07 ,0x00 ,
-                          0x00 ,0x81 ,0x00 ,0x00 ,0xCB ,0x3B ,0x81},
-													{0x40 ,0x11 ,0x00 ,0x00 ,0x42 ,0x3D ,0x15 ,0x00 ,0x00 ,0x37 ,
-                          0xA1 ,0x01 ,0xD3 ,0x01 ,0x23 ,0x05 ,0x78 ,0x0D ,0x01 ,0x40 ,
-                          0xE5 ,0x06 ,0x40 ,0xC0 ,0x40 ,0x04 ,0x07 ,0x20 ,0x00 ,0x00 ,
-                          0x00 ,0x60 ,0x09 ,0x80 ,0xE3 ,0x2A ,0x01 ,0x00 ,0xC3 ,0x0D ,
-                          0x01 ,0x40 ,0xD0 ,0x06 ,0x98 ,0xC0 ,0x40 ,0x04 ,0x07 ,0x20 ,
-                          0x00 ,0x1C ,0x64 ,0x01 ,0xFE ,0x00 ,0x00 ,0x70 ,0x07 ,0x00 ,
-                          0x00 ,0x81 ,0x00 ,0x00 ,0x4B ,0x28 ,0x81}};
 uint8_t Panasonic_16[] = {0x40 ,0x11 ,0x00 ,0x00 ,0x42 ,0x3D ,0x15 ,0x00 ,0x00 ,0x37 ,
                           0xBF ,0x01 ,0xA2 ,0x01 ,0x08 ,0x05 ,0xA2 ,0x0D ,0x01 ,0x40 ,
                           0xBB ,0x06 ,0x40 ,0xC0 ,0x40 ,0x04 ,0x07 ,0x20 ,0x00 ,0x00 ,
@@ -185,7 +171,7 @@ uint8_t Panasonic_30[] = {0x40 ,0x11 ,0x00 ,0x00 ,0x42 ,0x3D ,0x15 ,0x00 ,0x00 ,
                           0x00 ,0x9C ,0x3C ,0x01 ,0xFE ,0x00 ,0x00 ,0x70 ,0x07 ,0x00 ,
                           0x00 ,0x81 ,0x00 ,0x00 ,0x97 ,0x2E ,0x81};
 //all suhu 0 = 16, 1 = 17
-uint8_t Panasonic_suhu[][100] = { 
+uint8_t Panasonic_temp[][100] = { 
 {0x40 ,0x11 ,0x00 ,0x00 ,0x42 ,0x3D ,0x15 ,0x00 ,0x00 ,0x37 ,
                           0xBF ,0x01 ,0xA2 ,0x01 ,0x08 ,0x05 ,0xA2 ,0x0D ,0x01 ,0x40 ,
                           0xBB ,0x06 ,0x40 ,0xC0 ,0x40 ,0x04 ,0x07 ,0x20 ,0x00 ,0x00 ,
@@ -300,6 +286,7 @@ uint16_t gateway_ID;
 uint16_t mac_address_gateway;
 int freq_main;
 int kwh_loop = 0;
+int ir_loop = 0;
 uint16_t humidity;
 uint16_t temp1;
 uint16_t temp2;
@@ -314,6 +301,11 @@ char* location = "http://52.43.48.93/dcms/rest/alfa";
 //char* gateway_trap_id = "EM24010101"; // di alfamidi pp
 char* gateway_trap_id = "EM24010103"; // di rumah pp
 FILE *f;
+uint16_t past_temp=0;
+int past_time=0;
+uint16_t max_temp=3000;
+uint16_t min_temp=2800;
+int set_temp = 30;
 	
 /*******************************************************************************
  * @fn          trxReadWriteBurstSingle
@@ -1085,17 +1077,8 @@ void cc112x_run(void)
 		sleep(1);
 	}*/
 		// Infinite loop
-	//fprintf(f,"Before spi read reg\n");
-	/*	fprintf(f, "Before spi read reg %04d-%02d-%02d %02d:%02d:%02d\n", 
-		timeinfo->tm_year+1900,
-		timeinfo->tm_mon+1,
-		timeinfo->tm_mday,
-		timeinfo->tm_hour,
-		timeinfo->tm_min,
-		timeinfo->tm_sec
-		);*/
-	if ( kwh_loop <= 4){
-		int suhu = 26;
+	if ( ir_loop <= 4){
+		int suhu = set_temp;
 		int suhu_code = 0;
 		if ( suhu >= 16 && suhu <=30 )
 		{
@@ -1104,11 +1087,11 @@ void cc112x_run(void)
 		}
 		for(i=0;i<=100;i++)
 		{
-			txBuffer[i] = Panasonic_suhu[1][i];
+			txBuffer[i] = Panasonic_temp[1][i];
 			printf("%02X ", txBuffer[i]);
 		}
 		printf("\n");
-		kwh_loop++;
+		ir_loop++;
 		sleep(1);
 	}	
 	cc112xSpiReadReg(CC112X_MARC_STATUS1, &temp_byte, 1);
@@ -1136,66 +1119,26 @@ void cc112x_run(void)
 	else if (( temp_byte == 0x09)||( temp_byte == 0x0a)){
 		// Flush RX FIFO
 		trxSpiCmdStrobe(CC112X_SFRX);
-		/*fprintf(f, "trxspicmdstrobe is excecuted %04d-%02d-%02d %02d:%02d:%02d", 
-		timeinfo->tm_year+1900,
-		timeinfo->tm_mon+1,
-		timeinfo->tm_mday,
-		timeinfo->tm_hour,
-		timeinfo->tm_min,
-		timeinfo->tm_sec
-		);*/
 	}
 	else if( temp_byte&0x80 ) {
 		// Read number of bytes in RX FIFO
 		cc112xSpiReadReg(CC112X_NUM_RXBYTES, &rx_byte, 1);
-		/*fprintf(f, "cc112xspireadreg excecuted %04d-%02d-%02d %02d:%02d:%02d", 
-		timeinfo->tm_year+1900,
-		timeinfo->tm_mon+1,
-		timeinfo->tm_mday,
-		timeinfo->tm_hour,
-		timeinfo->tm_min,
-		timeinfo->tm_sec
-		);*/
 
 		// Check that we have bytes in FIFO
 		if(rx_byte != 0) {
 
 			// Read MARCSTATE to check for RX FIFO error
 			cc112xSpiReadReg(CC112X_MARCSTATE, &temp_byte, 1);
-			/*fprintf(f, "cc112xspireadreg excecuted %04d-%02d-%02d %02d:%02d:%02d", 
-			timeinfo->tm_year+1900,
-			timeinfo->tm_mon+1,
-			timeinfo->tm_mday,
-			timeinfo->tm_hour,
-			timeinfo->tm_min,
-			timeinfo->tm_sec
-			);*/
 
 			// Mask out MARCSTATE bits and check if we have a RX FIFO error
 			if((temp_byte & 0x1F) == RX_FIFO_ERROR) {
 				// Flush RX FIFO
 				trxSpiCmdStrobe(CC112X_SFRX);
-				/*fprintf(f, "trxspicmdstrobe is excecuted %04d-%02d-%02d %02d:%02d:%02d", 
-				timeinfo->tm_year+1900,
-				timeinfo->tm_mon+1,
-				timeinfo->tm_mday,
-				timeinfo->tm_hour,
-				timeinfo->tm_min,
-				timeinfo->tm_sec
-				);*/
 			} 
 			else {
 				rx_byte &= 0x7F;
 				// Read n bytes from RX FIFO
 				cc112xSpiReadRxFifo(rxBuffer, rx_byte);
-				/*fprintf(f, "after cc112xspireadrxfifo excecuted %04d-%02d-%02d %02d:%02d:%02d", 
-				timeinfo->tm_year+1900,
-				timeinfo->tm_mon+1,
-				timeinfo->tm_mday,
-				timeinfo->tm_hour,
-				timeinfo->tm_min,
-				timeinfo->tm_sec
-				);*/
 
 				// Check CRC ok (CRC_OK: bit7 in second status byte)
 				// This assumes status bytes are appended in RX_FIFO
@@ -1204,14 +1147,6 @@ void cc112x_run(void)
 				temp_byte = 0;
 				if(rxBuffer[rx_byte - 1] & 0x80) {
 					cc112xSpiReadReg(CC112X_MARCSTATE, &temp_byte, 1);
-					/*fprintf(f, "After there is data on rx buffer %04d-%02d-%02d %02d:%02d:%02d", 
-					timeinfo->tm_year+1900,
-					timeinfo->tm_mon+1,
-					timeinfo->tm_mday,
-					timeinfo->tm_hour,
-					timeinfo->tm_min,
-					timeinfo->tm_sec
-					);*/
 					printf("After there is data on rx buffer %04d-%02d-%02d %02d:%02d:%02d\n", 
 					timeinfo->tm_year+1900,
 					timeinfo->tm_mon+1,
@@ -1399,6 +1334,31 @@ void cc112x_run(void)
 								if ( *(uint16_t*)&rxBuffer[13] != 12900){
 								temp1 = *(uint16_t*)&rxBuffer[13];} 
 								dIn1 = *(uint16_t*)&rxBuffer[14] & 0x40; 
+								// check if the temp is on specification
+								if(temp1 > max_temp){
+									if(past_temp == 0 && past_time == 0){
+										past_temp = temp1;
+										past_time = (int)time(NULL);
+									}
+									if(past_temp != 0 && past_time != 0){
+										if( (past_time + 60) < (int)time(NULL) ){
+											set_temp--;
+											ir_loop = 0;
+										}
+									}
+								}	
+								if(temp1 < min_temp){
+									if(past_temp == 0 && past_time == 0){
+										past_temp = temp1;
+										past_time = (int)time(NULL);
+									}
+									if(past_temp != 0 && past_time != 0){
+										if( (past_time + 60) < (int)time(NULL) ){
+											set_temp++;
+											ir_loop = 0;
+										}
+									}
+								}	
 								int i;
 								for(i=0;i<=sizeof(cc1120_TH_ID_Selected);i++)
 								{
