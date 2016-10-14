@@ -22,8 +22,8 @@ astaga	*/
 #include "cc112x_easy_link_reg_config.h"
 #include "mac_address.c"
 #include "kwh_params.c"
-#include "res_sensor.c"
-#include "read_int.c"
+//#include "res_sensor.c"
+//#include "read_int.c"
 	
 	#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 	
@@ -52,7 +52,7 @@ uint8_t add_type = 0x02; //add type as new node
 uint8_t index_node = 0x00; //temp index node
 uint8_t wakeup_hold = 0x05; //wake up hold in 100ms
 uint16_t cc1120_TH_ID;
-uint16_t cc1120_TH_ID_Selected[10] = { 0x0000, 0x0926};
+uint16_t cc1120_TH_ID_Selected[10] = { 0x1DE3, 0x18D9, 0x1D31, 0x18BA, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000};
 uint32_t cc1120_KWH_ID;
 int cc1120_TH_Listed = 2;
 uint8_t cc1120_TH_Node;
@@ -60,15 +60,17 @@ uint16_t gateway_ID;
 uint16_t mac_address_gateway;
 int freq_main;
 int kwh_loop = 0;
-int16_t rssi;
 uint16_t humidity;
 uint16_t temp1;
 uint16_t temp2;
 uint16_t temp3;
 uint16_t dIn1;
 uint16_t dIn2;
-char location[] = "http://192.168.10.101/post.php";
-char location_trap[] = "http://192.168.10.117/post_trap.php";
+int16_t rssi = 0;
+//char* location = "http://52.43.48.93/post.php";
+char* location = "http://52.43.48.93/dcms/rest/alfa";
+//char* location = "http://192.168.88.19:1616/dcms/rest/alfa";
+char* gateway_trap_id = "EM24010101";
 FILE *f;
 	
 /*******************************************************************************
@@ -424,7 +426,7 @@ static void manualCalibration(void) {
     do {
         cc112xSpiReadReg(CC112X_MARCSTATE, &marcstate, 1);
 		printf("marcstate: %02x\r\n", marcstate);
-		fprintf(writeFile, "marcstate: %02x\r\n", marcstate);
+		//fprintf(writeFile, "marcstate: %02x\r\n", marcstate);
 
     } while (marcstate != 0x41);
 
@@ -453,7 +455,7 @@ static void manualCalibration(void) {
     do {
         cc112xSpiReadReg(CC112X_MARCSTATE, &marcstate, 1);
 		printf("marcstate: %02x\r\n", marcstate);
-		fprintf(writeFile, "marcstate: %02x\r\n", marcstate);
+		//fprintf(writeFile, "marcstate: %02x\r\n", marcstate);
     } while (marcstate != 0x41);
 
     // 8) Read FS_VCO2, FS_VCO4 and FS_CHP register obtained 
@@ -811,6 +813,11 @@ void cc112x_run(void)
 	int i;
 	uint8_t rx_byte = 0;
 	uint8_t freq_th = 23;
+	int Oid = 0;
+	//fprintf(f,"The start of the loop\n");
+	time_t t;
+	time (&t);
+	struct tm * timeinfo = localtime (&t);
 	//scanning kwh and then adding them
 	/*if ( kwh_loop <= 10){
 		printf("Sending KWH data\n");
@@ -837,34 +844,100 @@ void cc112x_run(void)
 	}*/
 		// Infinite loop
 	
+	//fprintf(f,"Before spi read reg\n");
+	/*	fprintf(f, "Before spi read reg %04d-%02d-%02d %02d:%02d:%02d\n", 
+		timeinfo->tm_year+1900,
+		timeinfo->tm_mon+1,
+		timeinfo->tm_mday,
+		timeinfo->tm_hour,
+		timeinfo->tm_min,
+		timeinfo->tm_sec
+		);*/
 	cc112xSpiReadReg(CC112X_MARC_STATUS1, &temp_byte, 1);
 	if (( temp_byte == 0x07)||( temp_byte == 0x08)){
 		// Flush TX FIFO
 		trxSpiCmdStrobe(CC112X_SFTX);
+		
+		/*fprintf(f, "trxspicmdstrobe is excecuted %04d-%02d-%02d %02d:%02d:%02d", 
+		timeinfo->tm_year+1900,
+		timeinfo->tm_mon+1,
+		timeinfo->tm_mday,
+		timeinfo->tm_hour,
+		timeinfo->tm_min,
+		timeinfo->tm_sec
+		);*/
+		printf("trxspicmdstrobe is excecuted %04d-%02d-%02d %02d:%02d:%02d", 
+		timeinfo->tm_year+1900,
+		timeinfo->tm_mon+1,
+		timeinfo->tm_mday,
+		timeinfo->tm_hour,
+		timeinfo->tm_min,
+		timeinfo->tm_sec
+		);
 	}
 	else if (( temp_byte == 0x09)||( temp_byte == 0x0a)){
 		// Flush RX FIFO
 		trxSpiCmdStrobe(CC112X_SFRX);
+		/*fprintf(f, "trxspicmdstrobe is excecuted %04d-%02d-%02d %02d:%02d:%02d", 
+		timeinfo->tm_year+1900,
+		timeinfo->tm_mon+1,
+		timeinfo->tm_mday,
+		timeinfo->tm_hour,
+		timeinfo->tm_min,
+		timeinfo->tm_sec
+		);*/
 	}
 	else if( temp_byte&0x80 ) {
 		// Read number of bytes in RX FIFO
 		cc112xSpiReadReg(CC112X_NUM_RXBYTES, &rx_byte, 1);
+		/*fprintf(f, "cc112xspireadreg excecuted %04d-%02d-%02d %02d:%02d:%02d", 
+		timeinfo->tm_year+1900,
+		timeinfo->tm_mon+1,
+		timeinfo->tm_mday,
+		timeinfo->tm_hour,
+		timeinfo->tm_min,
+		timeinfo->tm_sec
+		);*/
 
 		// Check that we have bytes in FIFO
 		if(rx_byte != 0) {
 
 			// Read MARCSTATE to check for RX FIFO error
 			cc112xSpiReadReg(CC112X_MARCSTATE, &temp_byte, 1);
+			/*fprintf(f, "cc112xspireadreg excecuted %04d-%02d-%02d %02d:%02d:%02d", 
+			timeinfo->tm_year+1900,
+			timeinfo->tm_mon+1,
+			timeinfo->tm_mday,
+			timeinfo->tm_hour,
+			timeinfo->tm_min,
+			timeinfo->tm_sec
+			);*/
 
 			// Mask out MARCSTATE bits and check if we have a RX FIFO error
 			if((temp_byte & 0x1F) == RX_FIFO_ERROR) {
 				// Flush RX FIFO
 				trxSpiCmdStrobe(CC112X_SFRX);
+				/*fprintf(f, "trxspicmdstrobe is excecuted %04d-%02d-%02d %02d:%02d:%02d", 
+				timeinfo->tm_year+1900,
+				timeinfo->tm_mon+1,
+				timeinfo->tm_mday,
+				timeinfo->tm_hour,
+				timeinfo->tm_min,
+				timeinfo->tm_sec
+				);*/
 			} 
 			else {
 				rx_byte &= 0x7F;
 				// Read n bytes from RX FIFO
 				cc112xSpiReadRxFifo(rxBuffer, rx_byte);
+				/*fprintf(f, "after cc112xspireadrxfifo excecuted %04d-%02d-%02d %02d:%02d:%02d", 
+				timeinfo->tm_year+1900,
+				timeinfo->tm_mon+1,
+				timeinfo->tm_mday,
+				timeinfo->tm_hour,
+				timeinfo->tm_min,
+				timeinfo->tm_sec
+				);*/
 
 				// Check CRC ok (CRC_OK: bit7 in second status byte)
 				// This assumes status bytes are appended in RX_FIFO
@@ -872,10 +945,24 @@ void cc112x_run(void)
 				// If CRC is disabled the CRC_OK field will read 1
 				temp_byte = 0;
 				if(rxBuffer[rx_byte - 1] & 0x80) {
+					cc112xSpiReadReg(CC112X_MARCSTATE, &temp_byte, 1);
+					/*fprintf(f, "After there is data on rx buffer %04d-%02d-%02d %02d:%02d:%02d", 
+					timeinfo->tm_year+1900,
+					timeinfo->tm_mon+1,
+					timeinfo->tm_mday,
+					timeinfo->tm_hour,
+					timeinfo->tm_min,
+					timeinfo->tm_sec
+					);*/
+					printf("After there is data on rx buffer %04d-%02d-%02d %02d:%02d:%02d\n", 
+					timeinfo->tm_year+1900,
+					timeinfo->tm_mon+1,
+					timeinfo->tm_mday,
+					timeinfo->tm_hour,
+					timeinfo->tm_min,
+					timeinfo->tm_sec
+					);
 					// Update packet counter
-					time_t t;
-					time (&t);
-					struct tm * timeinfo = localtime (&t);
 					//struct tm * timeinfo = gmtime (&t);
 					packetCounter++;
 					printf("%05d: %04d-%02d-%02d %02d:%02d:%02d - Received %d %s RSSI=%d.\r\n", 
@@ -888,7 +975,7 @@ void cc112x_run(void)
 					timeinfo->tm_sec,
 					//timeinfo->tm_ms,
 					rx_byte, (rx_byte>1) ? "bytes" : "byte",rxBuffer[rx_byte - 2]-102);
-					fprintf(f, "%05d: %04d-%02d-%02d %02d:%02d:%02d - Received %d %s RSSI=%d.\r\n", 
+					/*fprintf(f, "%05d: %04d-%02d-%02d %02d:%02d:%02d - Received %d %s RSSI=%d.\r\n", 
 					packetCounter,
 					timeinfo->tm_year+1900,
 					timeinfo->tm_mon+1,
@@ -897,7 +984,7 @@ void cc112x_run(void)
 					timeinfo->tm_min,
 					timeinfo->tm_sec,
 					//timeinfo->tm_ms,
-					rx_byte, (rx_byte>1) ? "bytes" : "byte",rxBuffer[rx_byte - 2]-102);
+					rx_byte, (rx_byte>1) ? "bytes" : "byte",rxBuffer[rx_byte - 2]-102);*/
 				  int counter = 0;
 					if ( (rxBuffer[1] == 0x82) && (*(uint32_t*)&rxBuffer[2] == 0x553A67C9))
 					{
@@ -911,45 +998,57 @@ void cc112x_run(void)
 						*(uint32_t*)&txBuffer[11] = 0x00000000; //add type kwh 
 						txBuffer[15] = 0x01; //add type kwh 
 						txBuffer[16] = 0x01; //sensor number index number
-						txBuffer[17] = 0x00; //scan key 
+						txBuffer[17] = 0x00; //scan key a 
 						//txBuffer[14] = 0x06; //*(uint16_t*)&txBuffer[14] = 0x0006; //wake up byte
 					}
 					if ( (rxBuffer[1] == 0x92) && (rxBuffer[10] == 0x14) && (*(uint32_t*)&rxBuffer[2] == 0x553A67C9))
 					{
 						printf("KWH data Detected\n");
-						fprintf(f,"KWH data Detected\n");
+						//fprintf(f,"KWH data Detected\n");
 						cc1120_KWH_ID = *(uint32_t*)&rxBuffer[2];
 						get_params_value(&rxBuffer[12], rxBuffer[11], (rxBuffer[0]-11));
-							res_kwh (location, PhaseRVoltChannels[0], PhaseSVoltChannels[0], PhaseTVoltChannels[0]
-							, PhaseRCurrentChannels[0], PhaseSCurrentChannels[0], PhaseTCurrentChannels[0]
-							, 14, mac_address_gateway);
-							printf("PhaseSVoltChannels %d\n", PhaseSVoltChannels[0]);
-							printf("PhaseRVoltChannels %d\n", PhaseRVoltChannels[0]);	
-							printf("PhaseTVoltChannels %d\n", PhaseTVoltChannels[0]);
-							printf("PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[0]);
-							printf("PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[0]);
-							printf("PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[0]);
-							fprintf(f,"PhaseSVoltChannels %d\n", PhaseSVoltChannels[0]);
-							fprintf(f,"PhaseRVoltChannels %d\n", PhaseRVoltChannels[0]);	
-							fprintf(f,"PhaseTVoltChannels %d\n", PhaseTVoltChannels[0]);
-							fprintf(f,"PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[0]);
-							fprintf(f,"PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[0]);
-							fprintf(f,"PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[0]);
-						
+						/*res_kwh_array(location
+													, PhaseRkwh_totChannels, PhaseSkwh_totChannels, PhaseTkwh_totChannels
+													, PhaseRVoltChannels, PhaseSVoltChannels, PhaseTVoltChannels
+													, PhaseRCurrentChannels, PhaseSCurrentChannels, PhaseTCurrentChannels
+													, 14, mac_address_gateway, mac_address_gateway);*/
+						int channel;
+						for (channel=0;channel<19;channel++)
+						{
+							/*res_kwh (location, PhaseRVoltChannels[channel], PhaseSVoltChannels[channel], PhaseTVoltChannels[channel]
+							, PhaseRCurrentChannels[channel], PhaseSCurrentChannels[channel], PhaseTCurrentChannels[channel]
+							, 14, mac_address_gateway, channel);*/
+							printf("PhaseSkwh_totChannels %d\n", PhaseSkwh_totChannels[channel]);
+							printf("PhaseRkwh_totChannels %d\n", PhaseRkwh_totChannels[channel]);	
+							printf("PhaseTkwh_totChannels %d\n", PhaseTkwh_totChannels[channel]);
+							printf("PhaseSVoltChannels %d\n", PhaseSVoltChannels[channel]);
+							printf("PhaseRVoltChannels %d\n", PhaseRVoltChannels[channel]);	
+							printf("PhaseTVoltChannels %d\n", PhaseTVoltChannels[channel]);
+							printf("PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[channel]);
+							printf("PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[channel]);
+							printf("PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[channel]);
+							/*fprintf(f,"PhaseSkwh_totChannels %d\n", PhaseSkwh_totChannels[channel]);
+							fprintf(f,"PhaseRkwh_totChannels %d\n", PhaseRkwh_totChannels[channel]);
+							fprintf(f,"PhaseTkwh_totChannels %d\n", PhaseTkwh_totChannels[channel]);	
+							fprintf(f,"PhaseSVoltChannels %d\n", PhaseSVoltChannels[channel]);
+							fprintf(f,"PhaseRVoltChannels %d\n", PhaseRVoltChannels[channel]);	
+							fprintf(f,"PhaseTVoltChannels %d\n", PhaseTVoltChannels[channel]);
+							fprintf(f,"PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[channel]);
+							fprintf(f,"PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[channel]);
+							fprintf(f,"PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[channel]);*/
+						}
 					}
 					while ( counter < cc1120_TH_Listed )
 					{
 						if ( 1/*cc1120_TH_ID_Selected[counter] == (*(uint16_t*)&rxBuffer[2])*/)
 						{	
-							printf( "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
-							fprintf(f, "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
 							if ( rxBuffer[1] == 0x81 )
 							{
 								printf ("Joint detected\n");
-								fprintf(f,"Joint detected\n");
+								//fprintf(f,"Joint detected\n");
 								cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
 								printf("cc1120_TH_ID is %04X\n", cc1120_TH_ID);
-								fprintf(f, "cc1120_TH_ID is %04X\n", cc1120_TH_ID);
+								//fprintf(f, "cc1120_TH_ID is %04X\n", cc1120_TH_ID);
 								cc1120_TH_Node = rxBuffer[6];
 							if ( rxBuffer[7] != scan_key ){
 								printf(" Scan key is diffrent \n old : new , %02x : %02x \nCommencing scan command\n", rxBuffer[7], scan_key);
@@ -972,7 +1071,7 @@ void cc112x_run(void)
 									printf("Scan key is the same %02X:%02X\n", rxBuffer[7], scan_key);
 									printf("Commencing add command\n");
 									fprintf(f, "Scan key is the same %02X:%02X\n", rxBuffer[7], scan_key);
-									fprintf(f, "Commencing add command\n");
+									//fprintf(f, "Commencing add command\n");
 									txBuffer[0] = 0x0A; 
 									txBuffer[1] = 0x06; 
 									*(uint16_t*)&txBuffer[2] =  gateway_ID; 
@@ -987,7 +1086,7 @@ void cc112x_run(void)
 							if ( (rxBuffer[1] == 0x92) && (rxBuffer[6] == 0x11) )
 							{
 								printf("Th data detected\n");
-								fprintf(f, "Th data detected\n");
+								//fprintf(f, "Th data detected\n");
 								cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
 								cc1120_TH_Node = rxBuffer[6];
 								txBuffer[0] = 14; //length packet data
@@ -1007,6 +1106,18 @@ void cc112x_run(void)
 								temp2 = *(uint16_t*)&rxBuffer[11]; 
 								temp3 = *(uint16_t*)&rxBuffer[13]; 
 								dIn1 = *(uint16_t*)&rxBuffer[14] & 0x40; 
+								int i;
+								for(i=0;i<=sizeof(cc1120_TH_ID_Selected);i++)
+								{
+									if( cc1120_TH_ID_Selected[i] == cc1120_TH_ID )
+									{
+										Oid = 1+i;
+										printf("Nilai Oid %d\n", Oid);
+								
+										printf( "TH ID: %04X TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
+										//fprintf(f, "counter:%d TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
+									}
+								}
                 if ( dIn1 != 0 ){ 
                   dIn1 = 1; 
                 }
@@ -1014,35 +1125,36 @@ void cc112x_run(void)
                 if ( dIn2 != 0 ){ 
                   dIn1 = 1; 
                 }
-                printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n", 
-                humidity, temp1, temp2, temp3, dIn1, dIn2, rssi); 
-								//res_th (location, temp1, temp2, temp3, humidity, 11, mac_address_gateway);
-								fprintf(f, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n", 
-								humidity, temp1, temp2, temp3, dIn1, dIn2, rssi); 
-								res_th (location, temp1, temp2, temp3, humidity, 11, mac_address_gateway);
-								trap_th (location_trap, 1, mac_address_gateway, cc1120_TH_ID, dIn1, dIn2, humidity, temp1, temp2, temp3, rssi);
+								//res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, mac_address_gateway);
+								//trap_th(location, Oid, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, temp1 , temp2, temp3, rssi);
+								printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
+                humidity, temp1, temp2, temp3, dIn1, dIn2, rssi);
+                printf("Gateway Id %d\n", gateway_ID);
+                //fprintf(f, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
+                //humidity, temp1, temp2, temp3, dIn1, dIn2, rssi);
+
   							//cc112x_init(0,freq_main);// freq 410 Mhz + (1 Mhz * 0)
 							}
 					for (i=0;i<rx_byte;i++) {
 						printf("%02X ", rxBuffer[i]);
-						fprintf(f, "%02X ", rxBuffer[i]);
+						//fprintf(f, "%02X ", rxBuffer[i]);
 					}
 					printf ("txbuffer ");
-					fprintf (f, "txbuffer ");
+					//fprintf (f, "txbuffer ");
 					for (i=0;i<=txBuffer[0];i++) {
 						printf("%02X ", txBuffer[i]);
-						fprintf(f, "%02X ", txBuffer[i]);
+						//fprintf(f, "%02X ", txBuffer[i]);
 					}
 					printf("\r\n");
-					fprintf(f, "\r\n");
+					//fprintf(f, "\r\n");
 						break;		
 					}
 						if ( cc1120_TH_ID_Selected[counter] != (*(uint16_t*)&rxBuffer[2])){
 							printf( "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
 							printf("TH_ID_selected:TH_Incoming_Id %04X:%04X different \n",cc1120_TH_ID_Selected[counter] ,(*(uint16_t*)&rxBuffer[2]));
-							fprintf(f,  "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
-							fprintf(f, "TH_ID_selected:TH_Incoming_Id %04X:%04X different \n"
-							,cc1120_TH_ID_Selected[counter] ,(*(uint16_t*)&rxBuffer[2]));
+							//fprintf(f,  "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
+							//fprintf(f, "TH_ID_selected:TH_Incoming_Id %04X:%04X different \n"
+							//,cc1120_TH_ID_Selected[counter] ,(*(uint16_t*)&rxBuffer[2]));
 							}	
 						counter++;
 					}
@@ -1051,21 +1163,47 @@ void cc112x_run(void)
 				}
 			}
 		}
+		//fprintf(f,"After the whole data is processed\n");
 	}
 	else if( temp_byte == 0) {
 					//os_dly_wait (1);
 //		if (replyDly>0) return;
 		send_packet(txBuffer);
+		//fprintf(f,"After send packet buffer\n");
 		return;
 	}
 	
 	trxSpiCmdStrobe(CC112X_SIDLE);
+	/*fprintf(f, "after spicmdstrobe bottom %04d-%02d-%02d %02d:%02d:%02d", 
+	timeinfo->tm_year+1900,
+	timeinfo->tm_mon+1,
+	timeinfo->tm_mday,
+	timeinfo->tm_hour,
+	timeinfo->tm_min,
+	timeinfo->tm_sec
+	);*/
 	
 	wait_exp_val(CC112X_MARCSTATE, 0x41);
+	/*fprintf(f, "after wait exp val %04d-%02d-%02d %02d:%02d:%02d", 
+	timeinfo->tm_year+1900,
+	timeinfo->tm_mon+1,
+	timeinfo->tm_mday,
+	timeinfo->tm_hour,
+	timeinfo->tm_min,
+	timeinfo->tm_sec
+	);*/
 		
 			
     // Set radio back in RX
     trxSpiCmdStrobe(CC112X_SRX);
+		/*fprintf(f, "after spi cmd strobe bottom %04d-%02d-%02d %02d:%02d:%02d", 
+		timeinfo->tm_year+1900,
+		timeinfo->tm_mon+1,
+		timeinfo->tm_mday,
+		timeinfo->tm_hour,
+		timeinfo->tm_min,
+		timeinfo->tm_sec
+		);*/
 
 }
 
@@ -1079,8 +1217,8 @@ int main(int argc, char *argv[]) {
   int ret = 0;
 	freq_main = 23;
 	//freq_main = 0;
-  gateway_ID = 0x1234;
-	mac_address_gateway = read_ints();
+  gateway_ID = 0x1001;
+	//mac_address_gateway = read_ints();
   //setup gpio pin to spi function
   wiringPiSetup();
   
@@ -1102,20 +1240,19 @@ int main(int argc, char *argv[]) {
 	int datalog = 0;
 	while (1)
 	{
- 		f = fopen("/home/data.log", "a");
+ 		/*f = fopen("/home/data.log", "a");
 		if (f == NULL)
 		{
     	printf("Error opening file!\n");
     	exit(1);
-		}
-
+		}*/
 		/* print some text */
 		/*const char *text = "Why the result are diffrent";
 		fprintf(f, "Some text: %s %d \n", text, datalog);*/
 		/* communication handler */
 		cc112x_run();
 		datalog++;
-		fclose(f);
+		//fclose(f);
 	}
   /*int repeat;
 	for(repeat=0;repeat<=100;repeat++)
