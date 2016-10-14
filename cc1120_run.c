@@ -285,6 +285,7 @@ uint8_t cc1120_TH_Node;
 uint16_t gateway_ID;
 uint16_t mac_address_gateway;
 int freq_main;
+uint8_t freq_th;
 int kwh_loop = 0;
 int ir_loop = 0;
 uint16_t humidity;
@@ -1046,7 +1047,6 @@ void cc112x_run(void)
 	uint8_t temp_byte;
 	int i;
 	uint8_t rx_byte = 0;
-	uint8_t freq_th = 23;
 	int Oid = 0;
 	//fprintf(f,"The start of the loop\n");
 	time_t t;
@@ -1244,7 +1244,7 @@ void cc112x_run(void)
 							/*res_kwh (location, PhaseRVoltChannels[channel], PhaseSVoltChannels[channel], PhaseTVoltChannels[channel]
 							, PhaseRCurrentChannels[channel], PhaseSCurrentChannels[channel], PhaseTCurrentChannels[channel]
 							, 14, mac_address_gateway, channel);*/
-							printf("PhaseSkwh_totChannels %d\n", PhaseSkwh_totChannels[channel]);
+						/*	printf("PhaseSkwh_totChannels %d\n", PhaseSkwh_totChannels[channel]);
 							printf("PhaseRkwh_totChannels %d\n", PhaseRkwh_totChannels[channel]);	
 							printf("PhaseTkwh_totChannels %d\n", PhaseTkwh_totChannels[channel]);
 							printf("PhaseSVoltChannels %d\n", PhaseSVoltChannels[channel]);
@@ -1261,7 +1261,7 @@ void cc112x_run(void)
 							fprintf(f,"PhaseTVoltChannels %d\n", PhaseTVoltChannels[channel]);
 							fprintf(f,"PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[channel]);
 							fprintf(f,"PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[channel]);
-							fprintf(f,"PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[channel]);
+							fprintf(f,"PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[channel]);*/
 						}
 					}
 					while ( counter < cc1120_TH_Listed )
@@ -1309,7 +1309,7 @@ void cc112x_run(void)
 									txBuffer[10] = wakeup_hold;  
 								} 
 							}
-							if ( (rxBuffer[1] == 0x92) && (rxBuffer[6] == 0x11) )
+							if ( (rxBuffer[1] == 0x92) && (rxBuffer[6] == 0x11)/* && (*(uint16_t*)&txBuffer[4] == 0x296A)*/)
 							{
 								printf("Th data detected\n");
 								fprintf(f, "Th data detected\n");
@@ -1381,7 +1381,7 @@ void cc112x_run(void)
                   dIn1 = 1; 
                 }
 								//res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, mac_address_gateway);
-								trap_th(location, Oid, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, temp1 , temp2, temp3, rssi);
+								//trap_th(location, Oid, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, temp1 , temp2, temp3, rssi);
 								printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
                 humidity, temp1, temp2, temp3, dIn1, dIn2, rssi);
                 printf("Gateway Id %d\n", gateway_ID);
@@ -1469,6 +1469,7 @@ void cc112x_run(void)
 int main(int argc, char *argv[]) {
   uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
   int ret = 0;
+	freq_th = 0;
 	//printf("%02X\n", Panasonic[1][10]);
 	//freq_main = 23; // freq th + kwh
 	//freq_main = 30; // freq receiver ir
