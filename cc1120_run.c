@@ -302,8 +302,9 @@ char* location = "http://52.43.48.93/dcms/rest/alfa";
 //char* gateway_trap_id = "EM24010101"; // di alfamidi pp
 char* gateway_trap_id = "EM24010103"; // di rumah pp
 FILE *f;
-uint16_t past_temp=0;
+uint16_t past_temp[3];
 int past_time=0;
+int loop_temp=0;
 uint16_t max_temp=3000;
 uint16_t min_temp=2800;
 int set_temp = 30;
@@ -1021,8 +1022,25 @@ uint8_t send_packet(uint8_t * sendBuffer) {
 	if ( temp_byte & 0x40) *sendBuffer = 0;
 	return temp_byte;
 }
+// middle filter function
+uint16_t middle_of_3(uint16_t a, uint16_t b, uint16_t c)
+{
+ uint16_t middle;
 
-
+ if ((a <= b) && (a <= c))
+ {
+   middle = (b <= c) ? b : c;
+ }
+ else if ((b <= a) && (b <= c))
+ {
+   middle = (a <= c) ? a : c;
+ }
+ else
+ {
+   middle = (a <= b) ? a : b;
+ }
+ return middle;
+}
 /******************************************************************************
  *
  *  @fn       cc112x_run(void)
@@ -1335,30 +1353,20 @@ void cc112x_run(void)
 								temp1 = *(uint16_t*)&rxBuffer[13];} 
 								dIn1 = *(uint16_t*)&rxBuffer[14] & 0x40; 
 								// check if the temp is on specification
-								if(temp1 > max_temp){
-									if(past_temp == 0 && past_time == 0){
-										past_temp = temp1;
-										past_time = (int)time(NULL);
-									}
-									if(past_temp != 0 && past_time != 0){
-										if( (past_time + 60) < (int)time(NULL) ){
-											set_temp--;
-											ir_loop = 0;
-										}
-									}
+								past_temp[loop_temp] = temp1;
+								loop_temp++;
+								if(loop_temp==3){
+									loop_temp = 0;
 								}	
-								if(temp1 < min_temp){
-									if(past_temp == 0 && past_time == 0){
-										past_temp = temp1;
-										past_time = (int)time(NULL);
-									}
-									if(past_temp != 0 && past_time != 0){
-										if( (past_time + 60) < (int)time(NULL) ){
-											set_temp++;
-											ir_loop = 0;
-										}
-									}
-								}	
+                uint16_t median_temp = middle_of_3(past_temp[0],  past_temp[1], past_temp[2]);
+                if(median_temp > max_temp && median_temp != 0){
+                  set_temp--;
+                  ir_loop = 0; 
+                }    
+                if(median_temp < min_temp && median_temp != 0){
+                  set_temp++;
+                  ir_loop = 0; 
+                }    
 								int i;
 								for(i=0;i<=sizeof(cc1120_TH_ID_Selected);i++)
 								{
@@ -1469,9 +1477,9 @@ void cc112x_run(void)
 int main(int argc, char *argv[]) {
   uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
   int ret = 0;
-	freq_th = 0;
+	//freq_th = 0;
 	//printf("%02X\n", Panasonic[1][10]);
-	//freq_main = 23; // freq th + kwh
+	freq_main = 23; // freq th + kwh
 	//freq_main = 30; // freq receiver ir
 	freq_main = 0; // freq sender ir
   gateway_ID = 0x1001;
