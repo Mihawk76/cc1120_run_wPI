@@ -20,7 +20,7 @@ int main()
 	int32_t kwh[18];
 	int i;
 	int32_t t = 50;
-	printf("%d\n", sizeof kwh);
+	//printf("%d\n", sizeof kwh);
 	for (i=0;i<18;i++)
 	{
 		kwh[i]=t;
@@ -28,10 +28,10 @@ int main()
 	}
   //trap_th(location, 10, gateway_ID, 1245,1,2,1356,3005,5,6,7);
 	//res_kwh_2 (location, kwh, 4004, 2000, 1003, 4004, 2000, 14, cc1120_TH_ID, channel);
-	/*res_kwh_array(location, kwh, kwh, kwh, 
+	res_kwh_array(location, kwh, kwh, kwh, 
 								kwh, kwh, kwh, kwh, 
-								kwh, kwh, 14, 1002, gateway);*/
-	res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, gateway);
+								kwh, kwh, 14, 1002, gateway);
+	//res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, gateway);
 	//res_th_2 (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID);
 	return 0;
 	}

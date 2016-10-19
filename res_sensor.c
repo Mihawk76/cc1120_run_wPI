@@ -32,7 +32,7 @@ int res_kwh_array (char* location,int32_t KwhR[18],int32_t KwhS[18],int32_t KwhT
 		}
 		snprintf(temp, sizeof scoreData, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
 		strcat(scoreData, temp);
-		//printf("%s\n", scoreData);
+		printf("%s\n", scoreData);
 		//printf("location %s\n", location);	
 		  CURL *curl;
 		  CURLcode res; 
@@ -183,7 +183,7 @@ int  res_th (char* location,uint16_t Th1,uint16_t Th2,uint16_t Th3,uint16_t Humi
 {
 		snprintf(scoreData, sizeof scoreData, "Th1=%d&Th2=%d&Th3=%d&Humidity=%d&device=%d&nilai=%d&gateway=%d",
 		Th1, Th2, Th3, Humidity, device, nilai, gateway);
-		printf("%d\n", sizeof scoreData);
+		//printf("%d\n", sizeof scoreData);
 		printf("%s\n", scoreData);
 		  CURL *curl;
 		  CURLcode res; 
