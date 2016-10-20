@@ -22,7 +22,7 @@ astaga	*/
 #include "cc112x_easy_link_reg_config.h"
 #include "mac_address.c"
 #include "kwh_params.c"
-//#include "res_sensor.c"
+#include "res_sensor.c"
 //#include "read_int.c"
 	
 	#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
@@ -68,8 +68,9 @@ uint16_t dIn1;
 uint16_t dIn2;
 int16_t rssi = 0;
 //char* location = "http://52.43.48.93/post.php";
-char* location = "http://52.43.48.93/dcms/rest/alfa";
+//char* location = "http://52.43.48.93/dcms/rest/alfa";
 //char* location = "http://192.168.88.19:1616/dcms/rest/alfa";
+char* location = "http://10.42.0.1/post.php";
 char* gateway_trap_id = "EM24010101";
 FILE *f;
 	
@@ -858,14 +859,6 @@ void cc112x_run(void)
 		// Flush TX FIFO
 		trxSpiCmdStrobe(CC112X_SFTX);
 		
-		/*fprintf(f, "trxspicmdstrobe is excecuted %04d-%02d-%02d %02d:%02d:%02d", 
-		timeinfo->tm_year+1900,
-		timeinfo->tm_mon+1,
-		timeinfo->tm_mday,
-		timeinfo->tm_hour,
-		timeinfo->tm_min,
-		timeinfo->tm_sec
-		);*/
 		printf("trxspicmdstrobe is excecuted %04d-%02d-%02d %02d:%02d:%02d", 
 		timeinfo->tm_year+1900,
 		timeinfo->tm_mon+1,
@@ -878,66 +871,26 @@ void cc112x_run(void)
 	else if (( temp_byte == 0x09)||( temp_byte == 0x0a)){
 		// Flush RX FIFO
 		trxSpiCmdStrobe(CC112X_SFRX);
-		/*fprintf(f, "trxspicmdstrobe is excecuted %04d-%02d-%02d %02d:%02d:%02d", 
-		timeinfo->tm_year+1900,
-		timeinfo->tm_mon+1,
-		timeinfo->tm_mday,
-		timeinfo->tm_hour,
-		timeinfo->tm_min,
-		timeinfo->tm_sec
-		);*/
 	}
 	else if( temp_byte&0x80 ) {
 		// Read number of bytes in RX FIFO
 		cc112xSpiReadReg(CC112X_NUM_RXBYTES, &rx_byte, 1);
-		/*fprintf(f, "cc112xspireadreg excecuted %04d-%02d-%02d %02d:%02d:%02d", 
-		timeinfo->tm_year+1900,
-		timeinfo->tm_mon+1,
-		timeinfo->tm_mday,
-		timeinfo->tm_hour,
-		timeinfo->tm_min,
-		timeinfo->tm_sec
-		);*/
 
 		// Check that we have bytes in FIFO
 		if(rx_byte != 0) {
 
 			// Read MARCSTATE to check for RX FIFO error
 			cc112xSpiReadReg(CC112X_MARCSTATE, &temp_byte, 1);
-			/*fprintf(f, "cc112xspireadreg excecuted %04d-%02d-%02d %02d:%02d:%02d", 
-			timeinfo->tm_year+1900,
-			timeinfo->tm_mon+1,
-			timeinfo->tm_mday,
-			timeinfo->tm_hour,
-			timeinfo->tm_min,
-			timeinfo->tm_sec
-			);*/
 
 			// Mask out MARCSTATE bits and check if we have a RX FIFO error
 			if((temp_byte & 0x1F) == RX_FIFO_ERROR) {
 				// Flush RX FIFO
 				trxSpiCmdStrobe(CC112X_SFRX);
-				/*fprintf(f, "trxspicmdstrobe is excecuted %04d-%02d-%02d %02d:%02d:%02d", 
-				timeinfo->tm_year+1900,
-				timeinfo->tm_mon+1,
-				timeinfo->tm_mday,
-				timeinfo->tm_hour,
-				timeinfo->tm_min,
-				timeinfo->tm_sec
-				);*/
 			} 
 			else {
 				rx_byte &= 0x7F;
 				// Read n bytes from RX FIFO
 				cc112xSpiReadRxFifo(rxBuffer, rx_byte);
-				/*fprintf(f, "after cc112xspireadrxfifo excecuted %04d-%02d-%02d %02d:%02d:%02d", 
-				timeinfo->tm_year+1900,
-				timeinfo->tm_mon+1,
-				timeinfo->tm_mday,
-				timeinfo->tm_hour,
-				timeinfo->tm_min,
-				timeinfo->tm_sec
-				);*/
 
 				// Check CRC ok (CRC_OK: bit7 in second status byte)
 				// This assumes status bytes are appended in RX_FIFO
@@ -946,14 +899,6 @@ void cc112x_run(void)
 				temp_byte = 0;
 				if(rxBuffer[rx_byte - 1] & 0x80) {
 					cc112xSpiReadReg(CC112X_MARCSTATE, &temp_byte, 1);
-					/*fprintf(f, "After there is data on rx buffer %04d-%02d-%02d %02d:%02d:%02d", 
-					timeinfo->tm_year+1900,
-					timeinfo->tm_mon+1,
-					timeinfo->tm_mday,
-					timeinfo->tm_hour,
-					timeinfo->tm_min,
-					timeinfo->tm_sec
-					);*/
 					printf("After there is data on rx buffer %04d-%02d-%02d %02d:%02d:%02d\n", 
 					timeinfo->tm_year+1900,
 					timeinfo->tm_mon+1,
@@ -975,16 +920,6 @@ void cc112x_run(void)
 					timeinfo->tm_sec,
 					//timeinfo->tm_ms,
 					rx_byte, (rx_byte>1) ? "bytes" : "byte",rxBuffer[rx_byte - 2]-102);
-					/*fprintf(f, "%05d: %04d-%02d-%02d %02d:%02d:%02d - Received %d %s RSSI=%d.\r\n", 
-					packetCounter,
-					timeinfo->tm_year+1900,
-					timeinfo->tm_mon+1,
-					timeinfo->tm_mday,
-					timeinfo->tm_hour,
-					timeinfo->tm_min,
-					timeinfo->tm_sec,
-					//timeinfo->tm_ms,
-					rx_byte, (rx_byte>1) ? "bytes" : "byte",rxBuffer[rx_byte - 2]-102);*/
 				  int counter = 0;
 					if ( (rxBuffer[1] == 0x82) && (*(uint32_t*)&rxBuffer[2] == 0x553A67C9))
 					{
@@ -1001,21 +936,48 @@ void cc112x_run(void)
 						txBuffer[17] = 0x00; //scan key a 
 						//txBuffer[14] = 0x06; //*(uint16_t*)&txBuffer[14] = 0x0006; //wake up byte
 					}
-					if ( (rxBuffer[1] == 0x92) && (rxBuffer[10] == 0x14) && (*(uint32_t*)&rxBuffer[2] == 0x553A67C9))
+					if ( (rxBuffer[1] == 0x92) && (rxBuffer[10] == 0x14)/* && (*(uint32_t*)&rxBuffer[2] == 0x553A67C9)*/)
 					{
+            switch (rxBuffer[11])
+            {
+              case 1: // R: V, I, PF
+                break;
+              case 2: // R: Watt, Var
+                break;
+              case 3: // S: V, I, PF
+                break;
+              case 4: // S: Watt, Var
+                break;
+              case 5: // T: V, I, PF
+                break;
+              case 6: // T: Watt, Var
+                break;
+              case 0x11: //R: watt prd, watt hour
+                break;
+              case 0x12: //R: var prd, var hour
+                break;
+              case 0x13: //S: watt prd, watt hour
+                break;
+              case 0x14: //S: var prd, var hour
+                break;
+              case 0x15: //T: watt prd, watt hour
+                break;
+              case 0x16: //T: var prd, var hour
+                break;
+            }
 						printf("KWH data Detected\n");
 						//fprintf(f,"KWH data Detected\n");
 						cc1120_KWH_ID = *(uint32_t*)&rxBuffer[2];
 						get_params_value(&rxBuffer[12], rxBuffer[11], (rxBuffer[0]-11));
-						/*res_kwh_array(location
+						res_kwh_array(location
 													, PhaseRkwh_totChannels, PhaseSkwh_totChannels, PhaseTkwh_totChannels
 													, PhaseRVoltChannels, PhaseSVoltChannels, PhaseTVoltChannels
 													, PhaseRCurrentChannels, PhaseSCurrentChannels, PhaseTCurrentChannels
-													, 14, mac_address_gateway, mac_address_gateway);*/
+													, 14, mac_address_gateway, mac_address_gateway);
 						int channel;
 						for (channel=0;channel<19;channel++)
 						{
-							/*res_kwh (location, PhaseRVoltChannels[channel], PhaseSVoltChannels[channel], PhaseTVoltChannels[channel]
+						/*	res_kwh (location, PhaseRVoltChannels[channel], PhaseSVoltChannels[channel], PhaseTVoltChannels[channel]
 							, PhaseRCurrentChannels[channel], PhaseSCurrentChannels[channel], PhaseTCurrentChannels[channel]
 							, 14, mac_address_gateway, channel);*/
 							printf("PhaseSkwh_totChannels %d\n", PhaseSkwh_totChannels[channel]);
@@ -1125,7 +1087,7 @@ void cc112x_run(void)
                 if ( dIn2 != 0 ){ 
                   dIn1 = 1; 
                 }
-								//res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, mac_address_gateway);
+								res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, mac_address_gateway);
 								//trap_th(location, Oid, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, temp1 , temp2, temp3, rssi);
 								printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
                 humidity, temp1, temp2, temp3, dIn1, dIn2, rssi);
@@ -1174,36 +1136,12 @@ void cc112x_run(void)
 	}
 	
 	trxSpiCmdStrobe(CC112X_SIDLE);
-	/*fprintf(f, "after spicmdstrobe bottom %04d-%02d-%02d %02d:%02d:%02d", 
-	timeinfo->tm_year+1900,
-	timeinfo->tm_mon+1,
-	timeinfo->tm_mday,
-	timeinfo->tm_hour,
-	timeinfo->tm_min,
-	timeinfo->tm_sec
-	);*/
 	
 	wait_exp_val(CC112X_MARCSTATE, 0x41);
-	/*fprintf(f, "after wait exp val %04d-%02d-%02d %02d:%02d:%02d", 
-	timeinfo->tm_year+1900,
-	timeinfo->tm_mon+1,
-	timeinfo->tm_mday,
-	timeinfo->tm_hour,
-	timeinfo->tm_min,
-	timeinfo->tm_sec
-	);*/
 		
 			
     // Set radio back in RX
     trxSpiCmdStrobe(CC112X_SRX);
-		/*fprintf(f, "after spi cmd strobe bottom %04d-%02d-%02d %02d:%02d:%02d", 
-		timeinfo->tm_year+1900,
-		timeinfo->tm_mon+1,
-		timeinfo->tm_mday,
-		timeinfo->tm_hour,
-		timeinfo->tm_min,
-		timeinfo->tm_sec
-		);*/
 
 }
 
