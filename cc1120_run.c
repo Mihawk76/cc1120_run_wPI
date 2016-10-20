@@ -938,37 +938,58 @@ void cc112x_run(void)
 					}
 					if ( (rxBuffer[1] == 0x92) && (rxBuffer[10] == 0x14)/* && (*(uint32_t*)&rxBuffer[2] == 0x553A67C9)*/)
 					{
-            switch (rxBuffer[11])
-            {
-              case 1: // R: V, I, PF
-                break;
-              case 2: // R: Watt, Var
-                break;
-              case 3: // S: V, I, PF
-                break;
-              case 4: // S: Watt, Var
-                break;
-              case 5: // T: V, I, PF
-                break;
-              case 6: // T: Watt, Var
-                break;
-              case 0x11: //R: watt prd, watt hour
-                break;
-              case 0x12: //R: var prd, var hour
-                break;
-              case 0x13: //S: watt prd, watt hour
-                break;
-              case 0x14: //S: var prd, var hour
-                break;
-              case 0x15: //T: watt prd, watt hour
-                break;
-              case 0x16: //T: var prd, var hour
-                break;
-            }
 						printf("KWH data Detected\n");
 						//fprintf(f,"KWH data Detected\n");
 						cc1120_KWH_ID = *(uint32_t*)&rxBuffer[2];
 						get_params_value(&rxBuffer[12], rxBuffer[11], (rxBuffer[0]-11));
+            switch (rxBuffer[11])
+            {
+              case 1: // R: V, I, PF
+								res_R_I_V_PF(location, PhaseRVoltChannels, PhaseRCurrentChannels, PhaseRPowerFactorChannels
+													, 14, mac_address_gateway, mac_address_gateway);
+                break;
+              case 2: // R: Watt, Var
+								res_R_Watt_Var (location, PhaseRwattChannels, PhaseRvarChannels, 14, mac_address_gateway, mac_address_gateway);
+                break;
+              case 3: // S: V, I, PF
+								res_S_I_V_PF(location, PhaseSVoltChannels, PhaseSCurrentChannels, PhaseSPowerFactorChannels
+													, 14, mac_address_gateway, mac_address_gateway);
+                break;
+              case 4: // S: Watt, Var
+								res_S_Watt_Var (location, PhaseSwattChannels, PhaseSvarChannels, 14, mac_address_gateway, mac_address_gateway);
+                break;
+              case 5: // T: V, I, PF
+								res_T_I_V_PF(location, PhaseTVoltChannels, PhaseTCurrentChannels, PhaseTPowerFactorChannels
+													, 14, mac_address_gateway, mac_address_gateway);
+                break;
+              case 6: // T: Watt, Var
+								res_T_Watt_Var (location, PhaseTwattChannels, PhaseTvarChannels, 14, mac_address_gateway, mac_address_gateway);
+                break;
+              case 0x11: //R: watt prd, watt hour
+								res_R_WattPrd_WattHour (location, PhaseRkwh_tot_prdChannels, PhaseRkwh_totChannels, 
+								14, mac_address_gateway, mac_address_gateway);
+                break;
+              case 0x12: //R: var prd, var hour
+								res_R_VarPrd_VarHour (location, PhaseRkvarh_tot_prdChannels, PhaseRkvarh_totChannels, 
+								14, mac_address_gateway, mac_address_gateway);
+                break;
+              case 0x13: //S: watt prd, watt hour
+								res_S_WattPrd_WattHour (location, PhaseSkwh_tot_prdChannels, PhaseSkwh_totChannels, 
+								14, mac_address_gateway, mac_address_gateway);
+                break;
+              case 0x14: //S: var prd, var hour
+								res_S_VarPrd_VarHour (location, PhaseSkvarh_tot_prdChannels, PhaseSkvarh_totChannels, 
+								14, mac_address_gateway, mac_address_gateway);
+                break;
+              case 0x15: //T: watt prd, watt hour
+								res_T_WattPrd_WattHour (location, PhaseTkwh_tot_prdChannels, PhaseTkwh_totChannels, 
+								14, mac_address_gateway, mac_address_gateway);
+                break;
+              case 0x16: //T: var prd, var hour
+								res_T_VarPrd_VarHour (location, PhaseTkvarh_tot_prdChannels, PhaseTkvarh_totChannels, 
+								14, mac_address_gateway, mac_address_gateway);
+                break;
+            }
 						res_kwh_array(location
 													, PhaseRkwh_totChannels, PhaseSkwh_totChannels, PhaseTkwh_totChannels
 													, PhaseRVoltChannels, PhaseSVoltChannels, PhaseTVoltChannels
