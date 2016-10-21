@@ -18,6 +18,7 @@ astaga	*/
 #include <stdint.h>  
 #include <string.h>  
 #include <time.h>
+#include <syslog.h>
 	
 #include "cc112x_easy_link_reg_config.h"
 #include "mac_address.c"
@@ -819,9 +820,11 @@ void cc112x_run(void)
 	time_t t;
 	time (&t);
 	struct tm * timeinfo = localtime (&t);
+	openlog("cc1120Log", LOG_PID|LOG_CONS, LOG_USER);
 	//scanning kwh and then adding them
 	/*if ( kwh_loop <= 10){
 		printf("Sending KWH data\n");
+		syslog(LOG_INFO, "Sending KWH data\n");
 		txBuffer[0] = 15; //length packet data
 		txBuffer[1] = 0x02; //command code 
 		*(uint16_t*)&txBuffer[2] =  gateway_ID; //(2 byte)
@@ -837,8 +840,10 @@ void cc112x_run(void)
 		txBuffer[14] = 0x1B;
 		txBuffer[15] = 0x01;
 		printf ("txbuffer ");
+		syslog(LOG_INFO, "txbuffer ");
 		for (i=0;i<=15;i++) {
 			printf("%02X ", txBuffer[i]);
+			//syslog(LOG_INFO, "%02X ", txBuffer[i]);
 		}
 		kwh_loop++;
 		sleep(1);
@@ -939,6 +944,7 @@ void cc112x_run(void)
 					if ( (rxBuffer[1] == 0x92) && (rxBuffer[10] == 0x14)/* && (*(uint32_t*)&rxBuffer[2] == 0x553A67C9)*/)
 					{
 						printf("KWH data Detected\n");
+						syslog(LOG_INFO, "KWH data Detected\n");
 						//fprintf(f,"KWH data Detected\n");
 						cc1120_KWH_ID = *(uint32_t*)&rxBuffer[2];
 						get_params_value(&rxBuffer[12], rxBuffer[11], (rxBuffer[0]-11));
@@ -996,7 +1002,7 @@ void cc112x_run(void)
 													, PhaseRCurrentChannels, PhaseSCurrentChannels, PhaseTCurrentChannels
 													, 14, mac_address_gateway, mac_address_gateway);
 						int channel;
-						for (channel=0;channel<19;channel++)
+						for (channel=0;channel<6;channel++)
 						{
 						/*	res_kwh (location, PhaseRVoltChannels[channel], PhaseSVoltChannels[channel], PhaseTVoltChannels[channel]
 							, PhaseRCurrentChannels[channel], PhaseSCurrentChannels[channel], PhaseTCurrentChannels[channel]
@@ -1010,6 +1016,15 @@ void cc112x_run(void)
 							printf("PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[channel]);
 							printf("PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[channel]);
 							printf("PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[channel]);
+							syslog(LOG_INFO, "PhaseSkwh_totChannels %d\n", PhaseSkwh_totChannels[channel]);
+							syslog(LOG_INFO, "PhaseRkwh_totChannels %d\n", PhaseRkwh_totChannels[channel]);	
+							syslog(LOG_INFO, "PhaseTkwh_totChannels %d\n", PhaseTkwh_totChannels[channel]);
+							syslog(LOG_INFO, "PhaseSVoltChannels %d\n", PhaseSVoltChannels[channel]);
+							syslog(LOG_INFO, "PhaseRVoltChannels %d\n", PhaseRVoltChannels[channel]);	
+							syslog(LOG_INFO, "PhaseTVoltChannels %d\n", PhaseTVoltChannels[channel]);
+							syslog(LOG_INFO, "PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[channel]);
+							syslog(LOG_INFO, "PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[channel]);
+							syslog(LOG_INFO, "PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[channel]);
 							/*fprintf(f,"PhaseSkwh_totChannels %d\n", PhaseSkwh_totChannels[channel]);
 							fprintf(f,"PhaseRkwh_totChannels %d\n", PhaseRkwh_totChannels[channel]);
 							fprintf(f,"PhaseTkwh_totChannels %d\n", PhaseTkwh_totChannels[channel]);	
@@ -1028,18 +1043,22 @@ void cc112x_run(void)
 							if ( rxBuffer[1] == 0x81 )
 							{
 								printf ("Joint detected\n");
+								syslog(LOG_INFO, "Joint detected\n");
 								//fprintf(f,"Joint detected\n");
 								cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
 								printf("cc1120_TH_ID is %04X\n", cc1120_TH_ID);
+								syslog(LOG_INFO, "cc1120_TH_ID is %04X\n", cc1120_TH_ID);
 								//fprintf(f, "cc1120_TH_ID is %04X\n", cc1120_TH_ID);
 								cc1120_TH_Node = rxBuffer[6];
 							if ( rxBuffer[7] != scan_key ){
 								printf(" Scan key is diffrent \n old : new , %02x : %02x \nCommencing scan command\n", rxBuffer[7], scan_key);
-								fprintf(f, " Scan key is diffrent \n old : new , %02x : %02x \nCommencing scan command\n", rxBuffer[7], scan_key);
+								//fprintf(f, " Scan key is diffrent \n old : new , %02x : %02x \nCommencing scan command\n", rxBuffer[7], scan_key);
+								syslog(LOG_INFO, " Scan key is diffrent \n old : new , %02x : %02x \nCommencing scan command\n", rxBuffer[7], scan_key);
 								//cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
 								//cc1120_TH_Node = rxBuffer[6];
 								printf("TH id is %04X \n Node is %02X \n",cc1120_TH_ID, cc1120_TH_Node);
-								fprintf(f, "TH id is %04X \n Node is %02X \n",cc1120_TH_ID, cc1120_TH_Node);
+								//fprintf(f, "TH id is %04X \n Node is %02X \n",cc1120_TH_ID, cc1120_TH_Node);
+								syslog(LOG_INFO, "TH id is %04X \n Node is %02X \n",cc1120_TH_ID, cc1120_TH_Node);
 								txBuffer[0] = 0x0A; 
 								txBuffer[1] = 0x01; 
 								*(uint16_t*)&txBuffer[2] =  gateway_ID; 
@@ -1053,7 +1072,8 @@ void cc112x_run(void)
 								if ( rxBuffer[7] == scan_key ){
 									printf("Scan key is the same %02X:%02X\n", rxBuffer[7], scan_key);
 									printf("Commencing add command\n");
-									fprintf(f, "Scan key is the same %02X:%02X\n", rxBuffer[7], scan_key);
+									//fprintf(f, "Scan key is the same %02X:%02X\n", rxBuffer[7], scan_key);
+									syslog(LOG_INFO, "Scan key is the same %02X:%02X\n", rxBuffer[7], scan_key);
 									//fprintf(f, "Commencing add command\n");
 									txBuffer[0] = 0x0A; 
 									txBuffer[1] = 0x06; 
@@ -1070,6 +1090,7 @@ void cc112x_run(void)
 							{
 								printf("Th data detected\n");
 								//fprintf(f, "Th data detected\n");
+								syslog(LOG_INFO, "Th data detected\n");
 								cc1120_TH_ID = *(uint16_t*)&rxBuffer[2];
 								cc1120_TH_Node = rxBuffer[6];
 								txBuffer[0] = 14; //length packet data
@@ -1096,8 +1117,10 @@ void cc112x_run(void)
 									{
 										Oid = 1+i;
 										printf("Nilai Oid %d\n", Oid);
+										syslog(LOG_INFO, "Nilai Oid %d\n", Oid);
 								
 										printf( "TH ID: %04X TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
+										syslog(LOG_INFO, "TH ID: %04X TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
 										//fprintf(f, "counter:%d TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
 									}
 								}
@@ -1112,7 +1135,10 @@ void cc112x_run(void)
 								//trap_th(location, Oid, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, temp1 , temp2, temp3, rssi);
 								printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
                 humidity, temp1, temp2, temp3, dIn1, dIn2, rssi);
+								syslog(LOG_INFO, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
+                humidity, temp1, temp2, temp3, dIn1, dIn2, rssi);
                 printf("Gateway Id %d\n", gateway_ID);
+								syslog(LOG_INFO, "Gateway Id %d\n", gateway_ID);
                 //fprintf(f, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
                 //humidity, temp1, temp2, temp3, dIn1, dIn2, rssi);
 
@@ -1120,12 +1146,15 @@ void cc112x_run(void)
 							}
 					for (i=0;i<rx_byte;i++) {
 						printf("%02X ", rxBuffer[i]);
+						//syslog(LOG_INFO, "%02X ", rxBuffer[i]);
 						//fprintf(f, "%02X ", rxBuffer[i]);
 					}
 					printf ("txbuffer ");
+					//syslog(LOG_INFO, "txbuffer ");
 					//fprintf (f, "txbuffer ");
 					for (i=0;i<=txBuffer[0];i++) {
 						printf("%02X ", txBuffer[i]);
+						//syslog(LOG_INFO, "%02X ", txBuffer[i]);
 						//fprintf(f, "%02X ", txBuffer[i]);
 					}
 					printf("\r\n");
@@ -1134,7 +1163,10 @@ void cc112x_run(void)
 					}
 						if ( cc1120_TH_ID_Selected[counter] != (*(uint16_t*)&rxBuffer[2])){
 							printf( "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
+							syslog(LOG_INFO, "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
 							printf("TH_ID_selected:TH_Incoming_Id %04X:%04X different \n",cc1120_TH_ID_Selected[counter] ,(*(uint16_t*)&rxBuffer[2]));
+							syslog(LOG_INFO, "TH_ID_selected:TH_Incoming_Id %04X:%04X different \n",
+							cc1120_TH_ID_Selected[counter] ,(*(uint16_t*)&rxBuffer[2]));
 							//fprintf(f,  "counter:%d TH_ID_Selected:%04X\n", counter, cc1120_TH_ID_Selected[counter]);
 							//fprintf(f, "TH_ID_selected:TH_Incoming_Id %04X:%04X different \n"
 							//,cc1120_TH_ID_Selected[counter] ,(*(uint16_t*)&rxBuffer[2]));
@@ -1163,7 +1195,7 @@ void cc112x_run(void)
 			
     // Set radio back in RX
     trxSpiCmdStrobe(CC112X_SRX);
-
+		closelog();
 }
 
 
