@@ -67,10 +67,10 @@ uint16_t temp3;
 uint16_t dIn1;
 uint16_t dIn2;
 int16_t rssi = 0;
-//char* location = "http://52.43.48.93/post.php";
+char* location = "http://35.160.141.229/post.php";
 //char* location = "http://52.43.48.93/dcms/rest/alfa";
 //char* location = "http://192.168.88.19:1616/dcms/rest/alfa";
-char* location = "http://10.42.0.1/post.php";
+//char* location = "http://10.42.0.1/post.php";
 char* gateway_trap_id = "EM24010101";
 FILE *f;
 	
@@ -942,7 +942,7 @@ void cc112x_run(void)
 						//fprintf(f,"KWH data Detected\n");
 						cc1120_KWH_ID = *(uint32_t*)&rxBuffer[2];
 						get_params_value(&rxBuffer[12], rxBuffer[11], (rxBuffer[0]-11));
-            switch (rxBuffer[11])
+            /*switch (rxBuffer[11])
             {
               case 1: // R: V, I, PF
 								res_R_I_V_PF(location, PhaseRVoltChannels, PhaseRCurrentChannels, PhaseRPowerFactorChannels
@@ -989,7 +989,7 @@ void cc112x_run(void)
 								res_T_VarPrd_VarHour (location, PhaseTkvarh_tot_prdChannels, PhaseTkvarh_totChannels, 
 								14, mac_address_gateway, mac_address_gateway);
                 break;
-            }
+            }*/
 						res_kwh_array(location
 													, PhaseRkwh_totChannels, PhaseSkwh_totChannels, PhaseTkwh_totChannels
 													, PhaseRVoltChannels, PhaseSVoltChannels, PhaseTVoltChannels
