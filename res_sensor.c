@@ -191,16 +191,20 @@ int res_T_Watt_Var (char* location,	int32_t WattT[6], int32_t VarT[6], int nilai
 int res_R_WattPrd_WattHour (char* location,	int32_t WattPrdR[6], int32_t WattHourR[6], int nilai ,int device, int gateway)
 {
 	int Channel = 0;
-	snprintf(scoreData, sizeof scoreData, "data=");
+	snprintf(scoreData, sizeof scoreData, "jsonR={\"Data\":[");
 	for(Channel=0;Channel<6;Channel++)
 	{
-		snprintf(temp, sizeof scoreData, "WattPrdR%d=%d WattHourR%d=%d\n", 
-		Channel, WattPrdR[Channel], Channel, WattHourR[Channel]);
+		snprintf(temp, sizeof scoreData, "{\"WattPrdR\":%d,\"WattHourR\":%d}", 
+		WattPrdR[Channel], WattHourR[Channel]);
 		strcat(scoreData, temp);
+		if(Channel<5){
+		snprintf(temp, sizeof scoreData, ",");
+		strcat(scoreData, temp);
+		}
 	}
-	snprintf(temp, sizeof scoreData, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
+	snprintf(temp, sizeof scoreData, "]}&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
 	strcat(scoreData, temp);
-	//printf("%s\n", scoreData);
+	printf("%s\n", scoreData);
 	//printf("location %s\n", location);	
 	CURL *curl;
 	CURLcode res; 
@@ -220,16 +224,20 @@ int res_R_WattPrd_WattHour (char* location,	int32_t WattPrdR[6], int32_t WattHou
 int res_S_WattPrd_WattHour (char* location,	int32_t WattPrdS[6], int32_t WattHourS[6], int nilai ,int device, int gateway)
 {
 	int Channel = 0;
-	snprintf(scoreData, sizeof scoreData, "data=");
+	snprintf(scoreData, sizeof scoreData, "jsonS={\"Data\":[");
 	for(Channel=0;Channel<6;Channel++)
 	{
-		snprintf(temp, sizeof scoreData, "WattPrdS%d=%d WattHourS%d=%d\n", 
-		Channel, WattPrdS[Channel], Channel, WattHourS[Channel]);
+		snprintf(temp, sizeof scoreData, "{\"WattPrdS\":%d,\"WattHourS\":%d}", 
+		WattPrdS[Channel], WattHourS[Channel]);
 		strcat(scoreData, temp);
+		if(Channel<5){
+		snprintf(temp, sizeof scoreData, ",");
+		strcat(scoreData, temp);
+		}
 	}
-	snprintf(temp, sizeof scoreData, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
+	snprintf(temp, sizeof scoreData, "]}&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
 	strcat(scoreData, temp);
-	//printf("%s\n", scoreData);
+	printf("%s\n", scoreData);
 	//printf("location %s\n", location);	
 	CURL *curl;
 	CURLcode res; 
@@ -249,16 +257,20 @@ int res_S_WattPrd_WattHour (char* location,	int32_t WattPrdS[6], int32_t WattHou
 int res_T_WattPrd_WattHour (char* location,	int32_t WattPrdT[6], int32_t WattHourT[6], int nilai ,int device, int gateway)
 {
 	int Channel = 0;
-	snprintf(scoreData, sizeof scoreData, "data=");
+	snprintf(scoreData, sizeof scoreData, "jsonT={\"Data\":[");
 	for(Channel=0;Channel<6;Channel++)
 	{
-		snprintf(temp, sizeof scoreData, "WattPrdT%d=%d WattHourT%d=%d\n", 
-		Channel, WattPrdT[Channel], Channel, WattHourT[Channel]);
+		snprintf(temp, sizeof scoreData, "{\"WattPrdT\":%d,\"WattHourT\":%d}", 
+		WattPrdT[Channel], WattHourT[Channel]);
 		strcat(scoreData, temp);
+		if(Channel<5){
+		snprintf(temp, sizeof scoreData, ",");
+		strcat(scoreData, temp);
+		}
 	}
-	snprintf(temp, sizeof scoreData, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
+	snprintf(temp, sizeof scoreData, "]}&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
 	strcat(scoreData, temp);
-	//printf("%s\n", scoreData);
+	printf("%s\n", scoreData);
 	//printf("location %s\n", location);	
 	CURL *curl;
 	CURLcode res; 
