@@ -14,6 +14,105 @@ int test (int kwh[])
 	}
 	return 0;
 }
+int res_R_I (char* location, int32_t CurrentR[6], int nilai ,int device, int gateway)
+{
+	int Channel = 0;
+	snprintf(scoreData, sizeof scoreData, "jsonR={\"Data\":[{");
+	for(Channel=0;Channel<6;Channel++)
+	{
+		snprintf(temp, sizeof scoreData, "\"CurrentR\":%d", 
+		CurrentR[Channel]);
+		strcat(scoreData, temp);
+		if(Channel<5){
+		snprintf(temp, sizeof scoreData, ",");
+		strcat(scoreData, temp);
+		}
+	}
+	snprintf(temp, sizeof scoreData, "}]}&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
+	strcat(scoreData, temp);
+	printf("%s\n", scoreData);
+	//printf("location %s\n", location);	
+	CURL *curl;
+	CURLcode res; 
+	curl_global_init(CURL_GLOBAL_ALL);
+	curl = curl_easy_init();
+  if(curl) {     
+	   curl_easy_setopt(curl, CURLOPT_URL, location);
+	   curl_easy_setopt(curl, CURLOPT_POSTFIELDS, scoreData);
+	   res = curl_easy_perform(curl);
+	   if(res != CURLE_OK)
+	   fprintf(stderr, "curl_easy_perform() failed: %s\n",curl_easy_strerror(res));
+	   curl_easy_cleanup(curl);
+	}   
+	curl_global_cleanup();
+	return 0;
+}
+int res_S_I (char* location, int32_t CurrentS[6], int nilai ,int device, int gateway)
+{
+	int Channel = 0;
+	snprintf(scoreData, sizeof scoreData, "jsonS={\"Data\":[{");
+	for(Channel=0;Channel<6;Channel++)
+	{
+		snprintf(temp, sizeof scoreData, "\"CurrentS\":%d", 
+		CurrentS[Channel]);
+		strcat(scoreData, temp);
+		if(Channel<5){
+		snprintf(temp, sizeof scoreData, ",");
+		strcat(scoreData, temp);
+		}
+	}
+	snprintf(temp, sizeof scoreData, "}]}&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
+	strcat(scoreData, temp);
+	printf("%s\n", scoreData);
+	//printf("location %s\n", location);	
+	CURL *curl;
+	CURLcode res; 
+	curl_global_init(CURL_GLOBAL_ALL);
+	curl = curl_easy_init();
+  if(curl) {     
+	   curl_easy_setopt(curl, CURLOPT_URL, location);
+	   curl_easy_setopt(curl, CURLOPT_POSTFIELDS, scoreData);
+	   res = curl_easy_perform(curl);
+	   if(res != CURLE_OK)
+	   fprintf(stderr, "curl_easy_perform() failed: %s\n",curl_easy_strerror(res));
+	   curl_easy_cleanup(curl);
+	}   
+	curl_global_cleanup();
+	return 0;
+}
+int res_T_I (char* location, int32_t CurrentT[6], int nilai ,int device, int gateway)
+{
+	int Channel = 0;
+	snprintf(scoreData, sizeof scoreData, "jsonT={\"Data\":[{");
+	for(Channel=0;Channel<6;Channel++)
+	{
+		snprintf(temp, sizeof scoreData, "\"CurrentT\":%d", 
+		CurrentT[Channel]);
+		strcat(scoreData, temp);
+		if(Channel<5){
+		snprintf(temp, sizeof scoreData, ",");
+		strcat(scoreData, temp);
+		}
+	}
+	snprintf(temp, sizeof scoreData, "}]}&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
+	strcat(scoreData, temp);
+	printf("%s\n", scoreData);
+	//printf("location %s\n", location);	
+	CURL *curl;
+	CURLcode res; 
+	curl_global_init(CURL_GLOBAL_ALL);
+	curl = curl_easy_init();
+  if(curl) {     
+	   curl_easy_setopt(curl, CURLOPT_URL, location);
+	   curl_easy_setopt(curl, CURLOPT_POSTFIELDS, scoreData);
+	   res = curl_easy_perform(curl);
+	   if(res != CURLE_OK)
+	   fprintf(stderr, "curl_easy_perform() failed: %s\n",curl_easy_strerror(res));
+	   curl_easy_cleanup(curl);
+	}   
+	curl_global_cleanup();
+	return 0;
+}
 int res_R_I_V_PF (char* location,	int32_t VoltR[6], int32_t CurrentR[6], int32_t PowerFactorR[6], int nilai ,int device, int gateway)
 {
 	int Channel = 0;
