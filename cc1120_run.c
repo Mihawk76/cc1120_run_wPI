@@ -276,7 +276,14 @@ uint8_t Panasonic_temp[][100] = {
                           0x00 ,0x60 ,0x09 ,0x80 ,0xC9 ,0x2A ,0x01 ,0x00 ,0xDE ,0x0D ,
                           0x01 ,0x40 ,0xB3 ,0x06 ,0x98 ,0xC0 ,0x40 ,0x04 ,0x07 ,0x20 ,
                           0x00 ,0x9C ,0x3C ,0x01 ,0xFE ,0x00 ,0x00 ,0x70 ,0x07 ,0x00 ,
-                          0x00 ,0x81 ,0x00 ,0x00 ,0x97 ,0x2E ,0x81}};
+                          0x00 ,0x81 ,0x00 ,0x00 ,0x97 ,0x2E ,0x81},
+{0x40 ,0x11 ,0x00 ,0x00 ,0x42 ,0x3D ,0x15 ,0x00 ,0x00 ,0x37 ,
+                          0xA1 ,0x01 ,0xD3 ,0x01 ,0x23 ,0x05 ,0x78 ,0x0D ,0x01 ,0x40 ,
+                          0xE5 ,0x06 ,0x40 ,0xC0 ,0x40 ,0x04 ,0x07 ,0x20 ,0x00 ,0x00 ,
+                          0x00 ,0x60 ,0x09 ,0x80 ,0xE3 ,0x2A ,0x01 ,0x00 ,0xC3 ,0x0D ,
+                          0x01 ,0x40 ,0xD0 ,0x06 ,0x98 ,0xC0 ,0x40 ,0x04 ,0x07 ,0x20 ,
+                          0x00 ,0x1C ,0x64 ,0x01 ,0xFE ,0x00 ,0x00 ,0x70 ,0x07 ,0x00 ,
+                          0x00 ,0x81 ,0x00 ,0x00 ,0x4B ,0x28 ,0x81}};
 uint16_t cc1120_TH_ID;
 uint16_t cc1120_TH_ID_Selected[10] = { 0x1DE3, 0x18D9, 0x1D31, 0x18BA, 0x2740, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000};
 uint32_t cc1120_KWH_ID;
@@ -1098,14 +1105,16 @@ void cc112x_run(void)
 	if ( ir_loop <= 4){
 		int suhu = set_temp;
 		int suhu_code = 0;
-		if ( suhu >= 16 && suhu <=30 )
+		if ( suhu >= 16 && suhu <=31 )
 		{
 			suhu_code = suhu - 16;
 			printf("suhu code %d\n", suhu_code);
 		}
+   	//*(uint16_t*)&Panasonic_temp[1][4] = 0x3D42; //id 
 		for(i=0;i<=100;i++)
 		{
-			txBuffer[i] = Panasonic_temp[1][i];
+			txBuffer[i] = Panasonic_temp[suhu_code][i];
+			//txBuffer[i] = Panasonic_temp[15][i];
 			printf("%02X ", txBuffer[i]);
 		}
 		printf("\n");
@@ -1196,7 +1205,7 @@ void cc112x_run(void)
 					timeinfo->tm_sec,
 					//timeinfo->tm_ms,
 					rx_byte, (rx_byte>1) ? "bytes" : "byte",rxBuffer[rx_byte - 2]-102);
-					uint8_t temp[rx_byte];
+					/*uint8_t temp[rx_byte];
 					for (i=0;i<rx_byte;i++) {
 						temp[i] = rxBuffer[i];
 					}
@@ -1220,7 +1229,7 @@ void cc112x_run(void)
 							}
 						}		
 					}
-					printf("};\n");
+					printf("};\n");*/
 				  int counter = 0;
 					if ( rxBuffer[1] == 0x82 )
 					{
@@ -1354,7 +1363,9 @@ void cc112x_run(void)
 									txBuffer[10] = wakeup_hold;  
 								} 
 							}
-							if ( (rxBuffer[1] == 0x92) && (rxBuffer[6] == 0x11)/* && (*(uint16_t*)&txBuffer[4] == 0x296A)*/)
+							if ( (rxBuffer[1] == 0x92) && (rxBuffer[6] == 0x11) /*&& (*(uint16_t*)&rxBuffer[2] == 0x1DE3)*/
+
+									/*	&& (*(uint16_t*)&txBuffer[4] == 0x1DE3)*/)
 							{
 								printf("Th data detected\n");
 								fprintf(f, "Th data detected\n");
@@ -1369,8 +1380,8 @@ void cc112x_run(void)
 								txBuffer[8] = 12; //sensor number
 								txBuffer[9] = freq_th; //radio channel
 								txBuffer[10] = 0x06; //wake up cnt 2 send
-								txBuffer[11] = 10;//in sec wakeup (2 byte)
-								txBuffer[13] = 60;//in sec next wakeup (2 byte)
+								*(uint16_t*)&txBuffer[11] = 10;//in sec wakeup (2 byte)
+								*(uint16_t*)&txBuffer[13] = 60;//in sec next wakeup (2 byte)
 								humidity = *(uint16_t*)&rxBuffer[7]; 
 								if ( *(uint16_t*)&rxBuffer[9] != 12900){
 								temp1 = *(uint16_t*)&rxBuffer[9]; }
@@ -1392,8 +1403,12 @@ void cc112x_run(void)
                 }    
                 if(median_temp < min_temp && median_temp != 0){
                   set_temp++;
+									if (set_temp > 30){
+									set_temp = 31;
+									}
                   ir_loop = 0; 
                 }    
+								printf("Set temp %d now %d min %d max %d ", set_temp, median_temp, min_temp, max_temp); 
 								int i;
 								for(i=0;i<=sizeof(cc1120_TH_ID_Selected);i++)
 								{
@@ -1410,7 +1425,7 @@ void cc112x_run(void)
 								}
                 if ( dIn1 != 0 ){ 
                   dIn1 = 1; 
-                }
+               }
                 dIn2 = *(uint16_t*)&rxBuffer[14] & 0x80; 
                 if ( dIn2 != 0 ){ 
                   dIn1 = 1; 
@@ -1504,9 +1519,10 @@ void cc112x_run(void)
 int main(int argc, char *argv[]) {
   uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
   int ret = 0;
-	//freq_th = 0;
+	//freq_th = 23;
+	freq_th = 0;
 	//printf("%02X\n", Panasonic[1][10]);
-	freq_main = 23; // freq th + kwh
+	//freq_main = 23; // freq th + kwh
 	//freq_main = 30; // freq receiver ir
 	freq_main = 0; // freq sender ir
   gateway_ID = 0x1001;
