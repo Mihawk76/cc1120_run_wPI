@@ -312,9 +312,9 @@ FILE *f;
 uint16_t past_temp[3];
 int past_time=0;
 int loop_temp=0;
-uint16_t max_temp=3000;
-uint16_t min_temp=2800;
-int set_temp = 30;
+uint16_t max_temp=2800;
+uint16_t min_temp=2700;
+int set_temp = 16;
 	
 /*******************************************************************************
  * @fn          trxReadWriteBurstSingle
@@ -1400,6 +1400,9 @@ void cc112x_run(void)
                 if(median_temp > max_temp && median_temp != 0){
                   set_temp--;
                   ir_loop = 0; 
+									if (set_temp < 16){
+										set_temp = 16;
+									}
                 }    
                 if(median_temp < min_temp && median_temp != 0){
                   set_temp++;
@@ -1409,6 +1412,7 @@ void cc112x_run(void)
                   ir_loop = 0; 
                 }    
 								printf("Set temp %d now %d min %d max %d ", set_temp, median_temp, min_temp, max_temp); 
+								fprintf(f, "Set temp %d now %d min %d max %d ", set_temp, median_temp, min_temp, max_temp); 
 								int i;
 								for(i=0;i<=sizeof(cc1120_TH_ID_Selected);i++)
 								{
