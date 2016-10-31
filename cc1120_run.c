@@ -314,7 +314,7 @@ int past_time=0;
 int loop_temp=0;
 uint16_t max_temp=2800;
 uint16_t min_temp=2700;
-int set_temp = 16;
+int set_temp = 30;
 	
 /*******************************************************************************
  * @fn          trxReadWriteBurstSingle
