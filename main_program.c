@@ -4,7 +4,8 @@
 
 int main()
 	{
-	char* location = "http://10.42.0.1/chart/post2.php";
+	char* location = "http://192.168.1.106:3001/api/ths";
+	//char* location = "http://10.42.0.1/chart/post2.php";
 	//char* location = "http://52.43.48.93/post.php";
 	//char* location = "http://192.168.88.19:1616/dcms/rest/alfa";
 	//uint16_t gateway_ID = mac_address();
@@ -31,9 +32,9 @@ int main()
 	/*res_kwh_array(location, kwh, kwh, kwh, 
 								kwh, kwh, kwh, kwh, 
 								kwh, kwh, 14, 1002, gateway);*/
-	//res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, gateway);
+	res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, gateway);
 	//res_T_WattPrd_WattHour(location, kwh, kwh, 14, cc1120_TH_ID, gateway);
-	res_T_I(location, kwh, 14, cc1120_TH_ID, gateway);
+	//res_T_I(location, kwh, 14, cc1120_TH_ID, gateway);
 	//res_th_2 (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID);
 	return 0;
 	}
