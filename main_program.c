@@ -4,8 +4,8 @@
 
 int main()
 	{
-	char* location = "http://192.168.1.106:3001/api/ths";
-	//char* location = "http://10.42.0.1/chart/post2.php";
+	//char* location = "http://192.168.1.106:3001/api/ths";
+	char* location = "http://10.42.0.1/chart/post2.php";
 	//char* location = "http://52.43.48.93/post.php";
 	//char* location = "http://192.168.88.19:1616/dcms/rest/alfa";
 	//uint16_t gateway_ID = mac_address();
