@@ -573,10 +573,14 @@ int  res_th (char* location,uint16_t Th1,uint16_t Th2,uint16_t Th3,uint16_t Humi
 {
 		//snprintf(scoreData, sizeof scoreData, "Th1=%d&Th2=%d&Th3=%d&Humidity=%d&device=%d&nilai=%d&gateway=%d",
 		snprintf(scoreData, sizeof scoreData, 
-		"{\"Th_id\":%d,\"type\":%d,\"Gateway_id\":%d,\"temp1\":%d,\"temp2\":%d,\"temp3\":%d,\"Humidity\":%d,\"id\":0}",
+		"{\"Th_id\": %d,\"type\": %d,\"Gateway_id\": %d,\"temp1\": %d,\"temp2\": %d,\"temp3\": %d,\"humidity\": %d,\"id\": 0}",
 		device, nilai, gateway, Th1, Th2, Th3, Humidity);
 		//printf("%d\n", sizeof scoreData);
 		printf("%s\n", scoreData);
+		struct curl_slist *headers = NULL;
+		headers = curl_slist_append(headers, "Accept: application/json");
+		headers = curl_slist_append(headers, "Content-Type: application/json");
+		headers = curl_slist_append(headers, "charsets: utf-8");
 		  CURL *curl;
 		  CURLcode res; 
 		  curl_global_init(CURL_GLOBAL_ALL);
@@ -584,6 +588,7 @@ int  res_th (char* location,uint16_t Th1,uint16_t Th2,uint16_t Th3,uint16_t Humi
 		  if(curl) { 
 		     	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
 		     	//curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
+					curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers); 
 			    curl_easy_setopt(curl, CURLOPT_URL, location);
 			    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, scoreData);
 			    res = curl_easy_perform(curl);

@@ -11,10 +11,10 @@ int main()
 	//uint16_t gateway_ID = mac_address();
   char* gateway_ID = "EM24010101";
 	uint16_t humidity = 2000;
-	uint16_t temp1 = 3124;
-	uint16_t temp2 = 3100;
+	uint16_t temp1 = 2708;
+	uint16_t temp2 = 0;
 	uint16_t temp3 = 3300;
-	uint16_t cc1120_TH_ID = 1234;
+	uint16_t cc1120_TH_ID = 1908;
 	uint16_t gateway = 1002;
 	int channel = 10;
 	//printf("Gateway id is %d\n", gateway_ID);
