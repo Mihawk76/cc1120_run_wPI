@@ -21,7 +21,7 @@ int main()
 	int32_t kwh[18];
 	int i;
 	int32_t t = 50;
-	printf("%d\n", sizeof kwh);
+	//printf("%d\n", sizeof kwh);
 	for (i=0;i<18;i++)
 	{
 		kwh[i]=t;
