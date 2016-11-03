@@ -5,6 +5,9 @@
 int main()
 	{
 	char* location = "http://35.160.141.229:3000/api/ths";
+	char* location_wattR = "http://35.160.141.229:3000/api/RWatts";
+	char* location_wattS = "http://35.160.141.229:3000/api/SWatts";
+	char* location_wattT = "http://35.160.141.229:3000/api/TWatts";
 	//char* location = "http://10.42.0.1/chart/post2.php";
 	//char* location = "http://52.43.48.93/post.php";
 	//char* location = "http://192.168.88.19:1616/dcms/rest/alfa";
@@ -32,8 +35,10 @@ int main()
 	/*res_kwh_array(location, kwh, kwh, kwh, 
 								kwh, kwh, kwh, kwh, 
 								kwh, kwh, 14, 1002, gateway);*/
-	res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, gateway);
-	//res_T_WattPrd_WattHour(location, kwh, kwh, 14, cc1120_TH_ID, gateway);
+	//res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, gateway);
+	res_R_WattPrd_WattHour(location_wattR, kwh, kwh, 14, cc1120_TH_ID, gateway);
+	//res_S_WattPrd_WattHour(location_wattS, kwh, kwh, 14, cc1120_TH_ID, gateway);
+	//res_T_WattPrd_WattHour(location_wattT, kwh, kwh, 14, cc1120_TH_ID, gateway);
 	//res_T_I(location, kwh, 14, cc1120_TH_ID, gateway);
 	//res_th_2 (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID);
 	return 0;
