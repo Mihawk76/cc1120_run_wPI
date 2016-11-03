@@ -9,7 +9,7 @@
 	* the Free Software Foundation; either version 2 of the License.
 	*
 	* Cross-compile with cross-gcc -I/path/to/cross-kernel/include
-astaga	*/
+	*/
 	
 #include <wiringPi.h>  
 #include <wiringPiSPI.h>  
@@ -60,6 +60,7 @@ uint8_t cc1120_TH_Node;
 uint16_t gateway_ID;
 uint16_t mac_address_gateway;
 int freq_main;
+uint8_t freq_th;
 int kwh_loop = 0;
 uint16_t humidity;
 uint16_t temp1;
@@ -818,7 +819,6 @@ void cc112x_run(void)
 	uint8_t temp_byte;
 	int i;
 	uint8_t rx_byte = 0;
-	uint8_t freq_th = 23;
 	int Oid = 0;
 	//fprintf(f,"The start of the loop\n");
 	time_t t;
@@ -1106,13 +1106,19 @@ void cc112x_run(void)
 								txBuffer[8] = 12; //sensor number
 								txBuffer[9] = freq_th; //radio channel
 								txBuffer[10] = 0x06; //wake up cnt 2 send
-								txBuffer[11] = 10;//in sec wakeup (2 byte)
-								txBuffer[13] = 60;//in sec next wakeup (2 byte)
+								*(uint16_t*)&txBuffer[11] = 10;//in sec wakeup (2 byte)
+								*(uint16_t*)&txBuffer[13] = 60;//in sec next wakeup (2 byte)
 								freq_main = freq_th;
-								humidity = *(uint16_t*)&rxBuffer[7]; 
-								temp1 = *(uint16_t*)&rxBuffer[9]; 
-								temp2 = *(uint16_t*)&rxBuffer[11]; 
-								temp3 = *(uint16_t*)&rxBuffer[13]; 
+								humidity = *(uint16_t*)&rxBuffer[7];
+								if ( *(uint16_t*)&rxBuffer[9] != 12900){
+									temp1 = *(uint16_t*)&rxBuffer[9]; 
+								}
+								if ( *(uint16_t*)&rxBuffer[11] != 12900){
+									temp2 = *(uint16_t*)&rxBuffer[11]; 
+								}
+								if ( *(uint16_t*)&rxBuffer[13] != 12900){
+									temp3 = *(uint16_t*)&rxBuffer[13]; 
+								}
 								dIn1 = *(uint16_t*)&rxBuffer[14] & 0x40; 
 								int i;
 								for(i=0;i<=sizeof(cc1120_TH_ID_Selected);i++)
@@ -1211,6 +1217,7 @@ int main(int argc, char *argv[]) {
   uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
   int ret = 0;
 	freq_main = 23;
+	freq_th = 23;
 	//freq_main = 0;
   gateway_ID = 0x1001;
 	//mac_address_gateway = read_ints();
