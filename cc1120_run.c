@@ -930,7 +930,7 @@ void cc112x_run(void)
 					//timeinfo->tm_ms,
 					rx_byte, (rx_byte>1) ? "bytes" : "byte",rxBuffer[rx_byte - 2]-102);
 				  int counter = 0;
-					if ( (rxBuffer[1] == 0x82) && (*(uint32_t*)&rxBuffer[2] == 0x553A67C9))
+					if ( (rxBuffer[1] == 0x82) /*&& (*(uint32_t*)&rxBuffer[2] == 0x553A67C9)*/)
 					{
 						cc1120_KWH_ID = *(uint32_t*)&rxBuffer[2];
 						txBuffer[0] = 17; //length packet data
@@ -947,6 +947,7 @@ void cc112x_run(void)
 					}
 					if ( (rxBuffer[1] == 0x92) && (rxBuffer[10] == 0x14)/* && (*(uint32_t*)&rxBuffer[2] == 0x553A67C9)*/)
 					{
+						int channel;
 						printf("KWH data Detected\n");
 						syslog(LOG_INFO, "KWH data Detected\n");
 						//fprintf(f,"KWH data Detected\n");
@@ -954,7 +955,7 @@ void cc112x_run(void)
 						get_params_value(&rxBuffer[12], rxBuffer[11], (rxBuffer[0]-11));
             switch (rxBuffer[11])
             {
-              case 1: // R: V, I, PF
+              /*case 1: // R: V, I, PF
 								res_R_I_V_PF(location, PhaseRVoltChannels, PhaseRCurrentChannels, PhaseRPowerFactorChannels
 													, 14, mac_address_gateway, mac_address_gateway);
                 break;
@@ -974,43 +975,54 @@ void cc112x_run(void)
                 break;
               case 6: // T: Watt, Var
 								res_T_Watt_Var (location, PhaseTwattChannels, PhaseTvarChannels, 14, mac_address_gateway, mac_address_gateway);
-                break;
+                break;*/
               case 0x11: //R: watt prd, watt hour
 								res_R_WattPrd_WattHour (location_wattR, PhaseRkwh_tot_prdChannels, PhaseRkwh_totChannels, 
 								14, mac_address_gateway, mac_address_gateway);
+								for (channel=0;channel<6;channel++){
+									printf("WattRPrd%d %d WattRHour%d %d\n", channel, PhaseRkwh_tot_prdChannels[channel], 
+									channel, PhaseRkwh_totChannels[channel]);
+								}
                 break;
-              case 0x12: //R: var prd, var hour
+             /* case 0x12: //R: var prd, var hour
 								res_R_VarPrd_VarHour (location, PhaseRkvarh_tot_prdChannels, PhaseRkvarh_totChannels, 
 								14, mac_address_gateway, mac_address_gateway);
-                break;
+                break;*/
               case 0x13: //S: watt prd, watt hour
 								res_S_WattPrd_WattHour (location_wattS, PhaseSkwh_tot_prdChannels, PhaseSkwh_totChannels, 
 								14, mac_address_gateway, mac_address_gateway);
+								for (channel=0;channel<6;channel++){
+									printf("WattSPrd%d %d WattSHour%d %d\n", channel, PhaseSkwh_tot_prdChannels[channel], 
+									channel, PhaseSkwh_totChannels[channel] );
+								}
                 break;
-              case 0x14: //S: var prd, var hour
+              /*case 0x14: //S: var prd, var hour
 								res_S_VarPrd_VarHour (location, PhaseSkvarh_tot_prdChannels, PhaseSkvarh_totChannels, 
 								14, mac_address_gateway, mac_address_gateway);
-                break;
+                break;*/
               case 0x15: //T: watt prd, watt hour
 								res_T_WattPrd_WattHour (location_wattT, PhaseTkwh_tot_prdChannels, PhaseTkwh_totChannels, 
 								14, mac_address_gateway, mac_address_gateway);
+								for (channel=0;channel<6;channel++){
+									printf("WattTPrd%d %d WattTHour%d %d\n", channel, PhaseTkwh_tot_prdChannels[channel], 
+									channel, PhaseTkwh_totChannels[channel] );
+								}
                 break;
-              case 0x16: //T: var prd, var hour
+              /*case 0x16: //T: var prd, var hour
 								res_T_VarPrd_VarHour (location, PhaseTkvarh_tot_prdChannels, PhaseTkvarh_totChannels, 
 								14, mac_address_gateway, mac_address_gateway);
-                break;
+                break;*/
             }
-						res_kwh_array(location
+						/*res_kwh_array(location
 													, PhaseRkwh_totChannels, PhaseSkwh_totChannels, PhaseTkwh_totChannels
 													, PhaseRVoltChannels, PhaseSVoltChannels, PhaseTVoltChannels
 													, PhaseRCurrentChannels, PhaseSCurrentChannels, PhaseTCurrentChannels
-													, 14, mac_address_gateway, mac_address_gateway);
-						int channel;
-						for (channel=0;channel<6;channel++)
+													, 14, mac_address_gateway, mac_address_gateway);*/
+						/*for (channel=0;channel<6;channel++)
 						{
-						/*	res_kwh (location, PhaseRVoltChannels[channel], PhaseSVoltChannels[channel], PhaseTVoltChannels[channel]
+							res_kwh (location, PhaseRVoltChannels[channel], PhaseSVoltChannels[channel], PhaseTVoltChannels[channel]
 							, PhaseRCurrentChannels[channel], PhaseSCurrentChannels[channel], PhaseTCurrentChannels[channel]
-							, 14, mac_address_gateway, channel);*/
+							, 14, mac_address_gateway, channel);
 							printf("PhaseSkwh_totChannels %d\n", PhaseSkwh_totChannels[channel]);
 							printf("PhaseRkwh_totChannels %d\n", PhaseRkwh_totChannels[channel]);	
 							printf("PhaseTkwh_totChannels %d\n", PhaseTkwh_totChannels[channel]);
@@ -1029,7 +1041,7 @@ void cc112x_run(void)
 							syslog(LOG_INFO, "PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[channel]);
 							syslog(LOG_INFO, "PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[channel]);
 							syslog(LOG_INFO, "PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[channel]);
-							/*fprintf(f,"PhaseSkwh_totChannels %d\n", PhaseSkwh_totChannels[channel]);
+							fprintf(f,"PhaseSkwh_totChannels %d\n", PhaseSkwh_totChannels[channel]);
 							fprintf(f,"PhaseRkwh_totChannels %d\n", PhaseRkwh_totChannels[channel]);
 							fprintf(f,"PhaseTkwh_totChannels %d\n", PhaseTkwh_totChannels[channel]);	
 							fprintf(f,"PhaseSVoltChannels %d\n", PhaseSVoltChannels[channel]);
@@ -1037,8 +1049,8 @@ void cc112x_run(void)
 							fprintf(f,"PhaseTVoltChannels %d\n", PhaseTVoltChannels[channel]);
 							fprintf(f,"PhaseSCurrentChannels %d\n", PhaseSCurrentChannels[channel]);
 							fprintf(f,"PhaseRCurrentChannels %d\n", PhaseRCurrentChannels[channel]);
-							fprintf(f,"PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[channel]);*/
-						}
+							fprintf(f,"PhaseTCurrentChannels %d\n", PhaseTCurrentChannels[channel]);
+						}*/
 					}
 					while ( counter < cc1120_TH_Listed )
 					{
@@ -1114,10 +1126,10 @@ void cc112x_run(void)
 									temp1 = *(uint16_t*)&rxBuffer[9]; 
 								}
 								if ( *(uint16_t*)&rxBuffer[11] != 12900){
-									temp2 = *(uint16_t*)&rxBuffer[11]; 
+									temp1 = *(uint16_t*)&rxBuffer[11]; 
 								}
 								if ( *(uint16_t*)&rxBuffer[13] != 12900){
-									temp3 = *(uint16_t*)&rxBuffer[13]; 
+									temp1 = *(uint16_t*)&rxBuffer[13]; 
 								}
 								dIn1 = *(uint16_t*)&rxBuffer[14] & 0x40; 
 								int i;
