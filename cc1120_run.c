@@ -295,12 +295,16 @@ int freq_main;
 uint8_t freq_th;
 int kwh_loop = 0;
 int ir_loop = 0;
+int32_t kwh_ac = 0;
+int special_condition = 0;
 uint16_t humidity;
 uint16_t temp1;
 uint16_t temp2;
 uint16_t temp3;
+uint16_t temp_temp;
 uint16_t dIn1;
 uint16_t dIn2;
+int alarm_ac;
 int16_t rssi = 0;
 //char* location = "http://10.42.0.1/post.php";
 //char* location = "http://52.43.48.93/post.php";
@@ -1397,20 +1401,36 @@ void cc112x_run(void)
 									loop_temp = 0;
 								}	
                 uint16_t median_temp = middle_of_3(past_temp[0],  past_temp[1], past_temp[2]);
-                if(median_temp > max_temp && median_temp != 0){
+                if(median_temp > max_temp && median_temp != 0 && special_condition == 0){
                   set_temp--;
                   ir_loop = 0; 
 									if (set_temp < 16){
 										set_temp = 16;
 									}
                 }    
-                if(median_temp < min_temp && median_temp != 0){
+                if(median_temp < min_temp && median_temp != 0 && special_condition == 0){
                   set_temp++;
 									if (set_temp > 30){
 									set_temp = 31;
 									}
                   ir_loop = 0; 
-                }    
+                } 
+								//bila suhu ac lebih besar dan ac menyala
+								if ( (median_temp) > ((set_temp * 100) - 200) && kwh_ac != 0 ){									
+									special_condition = 1;
+									temp_temp = median_temp;
+									set_temp = 31;
+                  ir_loop = 0; 
+								}
+								//bila suhu ac setelah dimatikan malah turun ac menghembuskan angin panas
+								if (special_condition == 1 && temp_temp > median_temp ){
+									alarm_ac = 1;
+									special_condition = 1;
+								}
+								//bila suhu ac setelah dimatikan naik ac tetap menghembuskan angin dingin
+								if (special_condition == 1 && temp_temp < median_temp ){
+									special_condition = 0;
+								}
 								printf("Set temp %d now %d min %d max %d ", set_temp, median_temp, min_temp, max_temp); 
 								fprintf(f, "Set temp %d now %d min %d max %d ", set_temp, median_temp, min_temp, max_temp); 
 								int i;
