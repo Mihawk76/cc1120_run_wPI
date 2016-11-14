@@ -53,7 +53,7 @@ uint8_t add_type = 0x02; //add type as new node
 uint8_t index_node = 0x00; //temp index node
 uint8_t wakeup_hold = 0x05; //wake up hold in 100ms
 uint16_t cc1120_TH_ID;
-uint16_t cc1120_TH_ID_Selected[10] = { 0x1DE3, 0x18D9, 0x1D31, 0x18BA, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000};
+uint16_t cc1120_TH_ID_Selected[10] = { 10633, 10517, 6284, 7651, 6485, 6361, 0x0000, 0x0000, 0x0000, 0x0000};
 uint32_t cc1120_KWH_ID;
 int cc1120_TH_Listed = 2;
 uint8_t cc1120_TH_Node;
@@ -69,6 +69,8 @@ uint16_t temp3;
 uint16_t dIn1;
 uint16_t dIn2;
 int16_t rssi = 0;
+uint16_t past_temp[3];
+int loop_temp=0;
 //char* location = "http://35.160.141.229/post.php";
 //char* location = "http://52.43.48.93/dcms/rest/alfa";
 //char* location = "http://192.168.88.19:1616/dcms/rest/alfa";
@@ -793,7 +795,25 @@ uint8_t send_packet(uint8_t * sendBuffer) {
 	if ( temp_byte & 0x40) *sendBuffer = 0;
 	return temp_byte;
 }
+// middle filter function
+uint16_t middle_of_3(uint16_t a, uint16_t b, uint16_t c)
+{
+ uint16_t middle;
 
+ if ((a <= b) && (a <= c))
+ {
+   middle = (b <= c) ? b : c; 
+ }
+ else if ((b <= a) && (b <= c))
+ {
+   middle = (a <= c) ? a : c; 
+ }
+ else 
+ {
+   middle = (a <= b) ? a : b; 
+ }
+ return middle;
+}
 
 /******************************************************************************
  *
@@ -1133,9 +1153,22 @@ void cc112x_run(void)
 								}
 								dIn1 = *(uint16_t*)&rxBuffer[14] & 0x40; 
 								int i;
+                if ( dIn1 != 0 ){ 
+                  dIn1 = 1; 
+                }
+                dIn2 = *(uint16_t*)&rxBuffer[14] & 0x80; 
+                if ( dIn2 != 0 ){ 
+                  dIn1 = 1; 
+                }
+                past_temp[loop_temp] = temp1;
+                loop_temp++;
+                if(loop_temp==3){
+                  loop_temp = 0;
+                }
+                uint16_t median_temp = middle_of_3(past_temp[0],  past_temp[1], past_temp[2]);
 								for(i=0;i<=sizeof(cc1120_TH_ID_Selected);i++)
 								{
-									if( cc1120_TH_ID_Selected[i] == cc1120_TH_ID )
+									if( cc1120_TH_ID_Selected[i] == cc1120_TH_ID && median_temp != 0 )
 									{
 										Oid = 1+i;
 										printf("Nilai Oid %d\n", Oid);
@@ -1144,23 +1177,16 @@ void cc112x_run(void)
 										printf( "TH ID: %04X TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
 										syslog(LOG_INFO, "TH ID: %04X TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
 										//fprintf(f, "counter:%d TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
+										res_th (location, median_temp, temp2, temp3, humidity, 11, cc1120_TH_ID, mac_address_gateway);
+										//trap_th(location, Oid, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, median_temp , temp2, temp3, rssi);
+										printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
+                		humidity, median_temp, temp2, temp3, dIn1, dIn2, rssi);
+										syslog(LOG_INFO, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
+                		humidity, median_temp, temp2, temp3, dIn1, dIn2, rssi);
+                		printf("Gateway Id %d\n", gateway_ID);
+										syslog(LOG_INFO, "Gateway Id %d\n", gateway_ID);
 									}
 								}
-                if ( dIn1 != 0 ){ 
-                  dIn1 = 1; 
-                }
-                dIn2 = *(uint16_t*)&rxBuffer[14] & 0x80; 
-                if ( dIn2 != 0 ){ 
-                  dIn1 = 1; 
-                }
-								res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, mac_address_gateway);
-								//trap_th(location, Oid, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, temp1 , temp2, temp3, rssi);
-								printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
-                humidity, temp1, temp2, temp3, dIn1, dIn2, rssi);
-								syslog(LOG_INFO, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
-                humidity, temp1, temp2, temp3, dIn1, dIn2, rssi);
-                printf("Gateway Id %d\n", gateway_ID);
-								syslog(LOG_INFO, "Gateway Id %d\n", gateway_ID);
                 //fprintf(f, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
                 //humidity, temp1, temp2, temp3, dIn1, dIn2, rssi);
 
