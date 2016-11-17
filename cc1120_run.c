@@ -53,7 +53,7 @@ uint8_t add_type = 0x02; //add type as new node
 uint8_t index_node = 0x00; //temp index node
 uint8_t wakeup_hold = 0x05; //wake up hold in 100ms
 uint16_t cc1120_TH_ID;
-uint16_t cc1120_TH_ID_Selected[10] = { 10633, 10517, 6284, 7651, 6485, 6361, 0x0000, 0x0000, 0x0000, 0x0000};
+uint16_t cc1120_TH_ID_Selected[12] = { 6361, 10633, 7473, 6485, 11143, 11112, 10517, 6330, 7651, 6284, 11169, 6384};
 uint32_t cc1120_KWH_ID;
 int cc1120_TH_Listed = 2;
 uint8_t cc1120_TH_Node;
@@ -412,12 +412,12 @@ static void manualCalibration(void) {
     uint8_t calResults_for_vcdac_start_mid[3];
     uint8_t marcstate;
     uint8_t writeByte;
-		FILE *writeFile = fopen("/home/data.log", "a");
-		if (writeFile == NULL)
-		{
-    	printf("Error opening file!\n");
-    	exit(1);
-		}
+		//FILE *writeFile = fopen("/home/data.log", "a");
+		//if (writeFile == NULL)
+		//{
+    	//printf("Error opening file!\n");
+    	//exit(1);
+		//}
 
     // 1) Set VCO cap-array to 0 (FS_VCO2 = 0x00)
     writeByte = 0x00;
@@ -494,7 +494,7 @@ static void manualCalibration(void) {
         writeByte = calResults_for_vcdac_start_mid[FS_CHP_INDEX];
         cc112xSpiWriteReg(CC112X_FS_CHP, &writeByte, 1);
     }
-		fclose(writeFile);
+		//fclose(writeFile);
 }
 
 /*******************************************************************************
