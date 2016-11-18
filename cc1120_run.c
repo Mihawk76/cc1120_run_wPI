@@ -1140,7 +1140,7 @@ void cc112x_run(void)
 								txBuffer[10] = 0x06; //wake up cnt 2 send
 								*(uint16_t*)&txBuffer[11] = 10;//in sec wakeup (2 byte)
 								*(uint16_t*)&txBuffer[13] = 60;//in sec next wakeup (2 byte)
-								freq_main = freq_th;
+								//freq_main = freq_th;
 								humidity = *(uint16_t*)&rxBuffer[7];
 								if ( *(uint16_t*)&rxBuffer[9] != 12900){
 									temp1 = *(uint16_t*)&rxBuffer[9]; 
@@ -1170,7 +1170,7 @@ void cc112x_run(void)
 								//{
 									//if( cc1120_TH_ID_Selected[i] == cc1120_TH_ID && median_temp != 0 )
 									//{
-										Oid = 1+i;
+										//Oid = 1+i;
 										printf("Nilai Oid %d\n", Oid);
 										syslog(LOG_INFO, "Nilai Oid %d\n", Oid);
 								
