@@ -1166,10 +1166,10 @@ void cc112x_run(void)
                   loop_temp = 0;
                 }
                 uint16_t median_temp = middle_of_3(past_temp[0],  past_temp[1], past_temp[2]);
-								for(i=0;i<=sizeof(cc1120_TH_ID_Selected);i++)
-								{
-									if( cc1120_TH_ID_Selected[i] == cc1120_TH_ID && median_temp != 0 )
-									{
+								//for(i=0;i<=sizeof(cc1120_TH_ID_Selected);i++)
+								//{
+									//if( cc1120_TH_ID_Selected[i] == cc1120_TH_ID && median_temp != 0 )
+									//{
 										Oid = 1+i;
 										printf("Nilai Oid %d\n", Oid);
 										syslog(LOG_INFO, "Nilai Oid %d\n", Oid);
@@ -1177,7 +1177,7 @@ void cc112x_run(void)
 										printf( "TH ID: %04X TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
 										syslog(LOG_INFO, "TH ID: %04X TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
 										//fprintf(f, "counter:%d TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
-										res_th (location, median_temp, temp2, temp3, humidity, 11, cc1120_TH_ID, mac_address_gateway);
+										//res_th (location, median_temp, temp2, temp3, humidity, 11, cc1120_TH_ID, mac_address_gateway);
 										//trap_th(location, Oid, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, median_temp , temp2, temp3, rssi);
 										printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
                 		humidity, median_temp, temp2, temp3, dIn1, dIn2, rssi);
@@ -1185,8 +1185,8 @@ void cc112x_run(void)
                 		humidity, median_temp, temp2, temp3, dIn1, dIn2, rssi);
                 		printf("Gateway Id %d\n", gateway_ID);
 										syslog(LOG_INFO, "Gateway Id %d\n", gateway_ID);
-									}
-								}
+									//}
+								//}
                 //fprintf(f, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
                 //humidity, temp1, temp2, temp3, dIn1, dIn2, rssi);
 
