@@ -1152,7 +1152,7 @@ void cc112x_run(void)
 									temp1 = *(uint16_t*)&rxBuffer[13]; 
 								}
 								dIn1 = *(uint16_t*)&rxBuffer[14] & 0x40; 
-								int i;
+								int i = 0;
                 if ( dIn1 != 0 ){ 
                   dIn1 = 1; 
                 }
@@ -1252,15 +1252,18 @@ void cc112x_run(void)
 ********************************************************************************/
 
 int main(int argc, char *argv[]) {
-  uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
+  //uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
   int ret = 0;
 	freq_main = 23;
 	freq_th = 23;
 	//freq_main = 0;
   gateway_ID = 0x1001;
+	time_t rawtime;
+  struct tm * timeinfo;
+
 	//mac_address_gateway = read_ints();
   //setup gpio pin to spi function
-  wiringPiSetup();
+  /*wiringPiSetup();
   
   pinMode(CC1120_MOSI, SPI_PIN);
   pinMode(CC1120_MISO, SPI_PIN);
@@ -1277,22 +1280,24 @@ int main(int argc, char *argv[]) {
   cc112x_init(freq_main,0);// freq 410 Mhz + (1 Mhz * freq_main)
 	memcpy(&txBuffer[1],DUMMY_BUF,10);
 	txBuffer[0]=10;
-	int datalog = 0;
+	int datalog = 0;*/
 	while (1)
 	{
- 		/*f = fopen("/home/data.log", "a");
+  	time ( &rawtime );
+  	timeinfo = localtime ( &rawtime );
+ 		f = fopen("/home/data.log", "a");
 		if (f == NULL)
 		{
     	printf("Error opening file!\n");
     	exit(1);
-		}*/
+		}
 		/* print some text */
-		/*const char *text = "Why the result are diffrent";
-		fprintf(f, "Some text: %s %d \n", text, datalog);*/
+		/*const char *text = "Why the result are diffrent";*/
+		fprintf(f, "Current local time and date: %s", asctime (timeinfo) );
 		/* communication handler */
-		cc112x_run();
-		datalog++;
-		//fclose(f);
+		//cc112x_run();
+		//datalog++;
+		fclose(f);
 	}
   /*int repeat;
 	for(repeat=0;repeat<=100;repeat++)
