@@ -1152,7 +1152,7 @@ void cc112x_run(void)
 									temp1 = *(uint16_t*)&rxBuffer[13]; 
 								}
 								dIn1 = *(uint16_t*)&rxBuffer[14] & 0x40; 
-								int i;
+								int i = 0;
                 if ( dIn1 != 0 ){ 
                   dIn1 = 1; 
                 }
@@ -1166,10 +1166,10 @@ void cc112x_run(void)
                   loop_temp = 0;
                 }
                 uint16_t median_temp = middle_of_3(past_temp[0],  past_temp[1], past_temp[2]);
-								for(i=0;i<=sizeof(cc1120_TH_ID_Selected);i++)
-								{
-									if( cc1120_TH_ID_Selected[i] == cc1120_TH_ID && median_temp != 0 )
-									{
+								//for(i=0;i<=sizeof(cc1120_TH_ID_Selected);i++)
+								//{
+									//if( cc1120_TH_ID_Selected[i] == cc1120_TH_ID && median_temp != 0 )
+									//{
 										Oid = 1+i;
 										printf("Nilai Oid %d\n", Oid);
 										syslog(LOG_INFO, "Nilai Oid %d\n", Oid);
@@ -1185,8 +1185,8 @@ void cc112x_run(void)
                 		humidity, median_temp, temp2, temp3, dIn1, dIn2, rssi);
                 		printf("Gateway Id %d\n", gateway_ID);
 										syslog(LOG_INFO, "Gateway Id %d\n", gateway_ID);
-									}
-								}
+									//}
+								//}
                 //fprintf(f, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
                 //humidity, temp1, temp2, temp3, dIn1, dIn2, rssi);
 
@@ -1258,7 +1258,7 @@ int main(int argc, char *argv[]) {
 	freq_th = 23;
 	//freq_main = 0;
   gateway_ID = 0x1001;
-	//mac_address_gateway = read_ints();
+	mac_address_gateway = 1001;
   //setup gpio pin to spi function
   wiringPiSetup();
   
