@@ -1293,6 +1293,7 @@ int main(int argc, char *argv[]) {
 		}
 		/* print some text */
 		/*const char *text = "Why the result are diffrent";*/
+		sleep(3);
 		fprintf(f, "Current local time and date: %s", asctime (timeinfo) );
 		/* communication handler */
 		//cc112x_run();
