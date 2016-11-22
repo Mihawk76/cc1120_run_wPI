@@ -46,29 +46,14 @@
 #define TH_DATA_LENGTH 0x0c
 #define TH_DATA_CODE   0xc1
 
-#define TH_NODES_MAX 20;
+#define SENSOR_TONLY    10010
+#define SENSOR_BUSDUCT  10020
+#define SENSOR_DINONLY  10030
+#define VALUE_INVALID   10040
 
-typedef struct{
-  uint8_t nodeId;
-  uint8_t nodeType;
-  uint8_t rssiRx;
-  uint8_t rssiTx;
-  uint8_t trap;
-  uint8_t batt;
-  uint8_t state;
-  uint16_t humidity;
-  uint16_t temp1;
-  uint16_t temp2;
-  uint16_t temp3;
-  uint8_t din1;
-  uint8_t din2;
-  uint32_t counterRx;
-  uint32_t counterTx;
-  uint32_t counterTotal;
-  uint32_t timestamp;
-}WITH_STRUCT;
+#define TH_NODES_MAX 20
 
-WITH_STRUCT wiTH_nodes[TH_NODES_MAX];
+#define COMM_TH_TO_GW 0xC1
 
 uint8_t txBuffer[256];
 uint8_t rxBuffer[256];
@@ -78,7 +63,7 @@ uint8_t add_type = 0x02; //add type as new node
 uint8_t index_node = 0x00; //temp index node
 uint8_t wakeup_hold = 0x05; //wake up hold in 100ms
 uint16_t cc1120_TH_ID;
-uint16_t cc1120_TH_ID_Selected[12] = { 1, 2, 3, 4, 5, 6 };
+uint16_t cc1120_TH_ID_Selected[TH_NODES_MAX] = { 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 uint32_t cc1120_KWH_ID;
 int cc1120_TH_Listed = 6;
 uint8_t cc1120_TH_Node;
@@ -106,6 +91,7 @@ char* location_wattS = "http://35.160.141.229:3000/api/SWatts";
 char* location_wattT = "http://35.160.141.229:3000/api/TWatts";
 char* gateway_trap_id = "EM24010101";
 FILE *f;
+
 	
 /*******************************************************************************
  * @fn          trxReadWriteBurstSingle
@@ -842,123 +828,106 @@ uint16_t middle_of_3(uint16_t a, uint16_t b, uint16_t c)
 
 int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
     uint8_t temp_8;
-	  uint8_t i,ii,z;
-	  uint16_t temp_16, temp2_16;
-	  uint32_t temp_32;
-		uint8_t pktCmd;
-		uint8_t srcAddr;
+    uint8_t i,ii,z;
+    uint16_t temp_16, temp2_16;
+    uint32_t temp_32;
+    uint8_t pktCmd;
+    uint8_t srcAddr;
 	
-		uint32_t interval_between_node;
-		uint32_t current_stamp;
+    uint32_t interval_between_node;
+    uint32_t current_stamp;
     uint32_t next_stamp;
 	
-		int ret = 0;
-	
-	  pktCmd = *bufferin;
-	  i = 0;
-	  for (temp_8 = 0; temp_8 < (len-1); temp_8++) {
-			i += bufferin[temp_8];
-		}
-	  if (i !=  bufferin[temp_8]) pktCmd = 0;
-		if (len < 5) pktCmd = 0;
-	  replyDly = 2;
-	
+    int ret = 0;
 
-		switch (pktCmd) {
+    uint32_t th_counterTx;
+    uint8_t th_Type;
+    uint16_t th_humidity;
+    uint16_t th_temp1;
+    uint16_t th_temp2;
+    uint16_t th_temp3;
+    uint8_t th_rssiTx;
 
-			case	COMM_TH_TO_GW:
-				//Tx.. Data
-				//frame: CMD, NodeID, humidity, temp1, temp2, temp3, carry, rssirx, dinBat count,  cs
-				//         1       1         1      1      1      1      1     1       0,5   2.5    1
-				if(len!=12) break;
-				
-	      srcAddr = bufferin[1]; // get destination address	
+    uint8_t rssiRx;
+    uint8_t th_batt;
+    uint8_t th_din1,th_din2;
+	
+    pktCmd = *bufferin;
+    i = 0;
+
+    switch (pktCmd) {
+
+	case	COMM_TH_TO_GW:
+	  //Tx.. Data
+	  //frame: CMD, NodeID, humidity, temp1, temp2, temp3, carry, rssirx, dinBat count,  cs
+	  //         1       1         1      1      1      1      1     1       0,5   2.5    1
+	  if(len!=12) break;
+	  srcAddr = bufferin[1]; // get destination address	
 	      				
-			  i = srcAddr-1;
-			  if (i>=TH_NODES_MAX) break;
+	  i = srcAddr-1;
+         if (i>=TH_NODES_MAX) break;
 			
-			  wiTH_nodes[i].counterRx++;
-			  wiTH_nodes[i].counterRx &= 0x000fffff;
-			  
-			  temp_32 = bufferin[8] & 0x0f;
-			  temp_32 <<= 16;
-			  memcpy((uint8_t*) &temp_32, (uint8_t*) &bufferin[9], 2);
-	      wiTH_nodes[i].counterTotal = temp_32+1;
-			  wiTH_nodes[i].counterTx &=0x000fffff;
-			  if(wiTH_nodes[i].counterTotal<wiTH_nodes[i].counterTx) 
-			    wiTH_nodes[i].counterTx = temp_32;
+	  temp_32 = bufferin[8] & 0x0f;
+	  temp_32 <<= 16;
+	  memcpy((uint8_t*) &temp_32, (uint8_t*) &bufferin[9], 2);
+	  th_counterTx = temp_32+1;
+	  th_counterTx &=0x000fffff;
+
+	  // srcAddr found in the nodes table parse to collect data
+	  temp_8 = 0;
+	  temp_16 = bufferin[6] & 0xc0;
+	  temp_16 <<= 2;
+	  temp_16 += bufferin[2];
+	  temp_16 *= 10;
+				
+	  th_Type = temp_16&0xffff; //store Th Type
+				
+	  if (temp_16>=SENSOR_TONLY) temp_16=0x2a2a;
+	  th_humidity = temp_16&0x3fff ;      //store humidity value
+				
+	  temp_16 = bufferin[6] & 0x30;
+	  temp_16 <<= 4;
+	  temp_16 += bufferin[3];
+	  temp_16 *= 10;
+	  if (temp_16>=VALUE_INVALID) temp_16=0x2a2a;
+	  th_temp1 = temp_16&0x3fff;            //store temp1 value
 			
-				// srcAddr found in the nodes table parse to collect data
-				temp_8 = 0;
-				temp_16 = bufferin[6] & 0xc0;
-				temp_16 <<= 2;
-				temp_16 += bufferin[2];
-				temp_16 *= 10;
-				
-				wiTH_nodes[i].nodeType = temp_16&0xffff; //store Node Type
-				
-				if (temp_16<SENSOR_TONLY) temp_8 |= 0x02;			 // get humidity enable flag
-				if (temp_16>=SENSOR_TONLY) temp_16=0x2a2a;
-				temp2_16 = (wiTH_nodes[i].humidity&0x3fff);
-				wiTH_nodes[i].humidity = temp_16&0x3fff ;      //store humidity value
-				if (abs(temp2_16 - temp_16) >= 200) wiTH_nodes[i].trap |= 0x0002; 
-				
-				temp_16 = bufferin[6] & 0x30;
-				temp_16 <<= 4;
-				temp_16 += bufferin[3];
-				temp_16 *= 10;
-				if (temp_16<VALUE_INVALID) temp_8 |= 0x01;			 // get temp1 enable flag
-				if (temp_16>=VALUE_INVALID) temp_16=0x2a2a;
-				temp2_16 = (wiTH_nodes[i].temp1&0x3fff);
-				wiTH_nodes[i].temp1 = temp_16&0x3fff;            //store temp1 value
-				if (abs(temp2_16 - temp_16) >= 200) wiTH_nodes[i].trap |= 0x0001; 
-				
-				temp_16 = bufferin[6] & 0x0C;
-				temp_16 <<= 6;
-				temp_16 += bufferin[4];
-				temp_16 *= 10;
-				if (temp_16<VALUE_INVALID) temp_8 |= 0x04;			 // get temp2 enable flag
-				if (temp_16>=VALUE_INVALID) temp_16=0x2a2a;
-				temp2_16 = wiTH_nodes[i].temp2&0x3fff;
-				wiTH_nodes[i].temp2 = temp_16&0x3fff;            //store temp2 value
-				if (abs(temp2_16 - temp_16) >= 200) wiTH_nodes[i].trap |= 0x0004; 
+	  temp_16 = bufferin[6] & 0x0C;
+	  temp_16 <<= 6;
+	  temp_16 += bufferin[4];
+	  temp_16 *= 10;
+	  if (temp_16>=VALUE_INVALID) temp_16=0x2a2a;
+	  th_temp2 = temp_16&0x3fff;            //store temp2 value
 
-				radio_node[i].rssi    = bufferin[len];
-				radio_node[i].rssi_tx = bufferin[7];
+	  rssiRx    = bufferin[len];
+	  th_rssiTx = bufferin[7];
 
-				temp_16 = bufferin[6] & 0x03;
-				temp_16 <<= 8;
-				temp_16 += bufferin[5];
-				temp_16 *= 10;
-				if (temp_16<VALUE_INVALID) temp_8 |= 0x08;			 // get temp3 enable flag
-				if (temp_16>=VALUE_INVALID) temp_16=0x2a2a;
-				temp2_16 = wiTH_nodes[i].temp3&0x3fff;
-				wiTH_nodes[i].temp3 = temp_16&0x3fff; //store temp3 value
-				if (abs(temp2_16 - temp_16) >= 200) wiTH_nodes[i].trap |= 0x0008; 
+	  temp_16 = bufferin[6] & 0x03;
+	  temp_16 <<= 8;
+	  temp_16 += bufferin[5];
+	  temp_16 *= 10;
+         if (temp_16>=VALUE_INVALID) temp_16=0x2a2a;
+         th_temp3 = temp_16&0x3fff; //store temp3 value
 
-				ii = *(uint8_t *)(bufferin+8);		// Get Batt Status
-				ii >>= 4; 
-				ii &= 0x03;
-				wiTH_nodes[i].batt = ii; //Batt Status value
+         ii = *(uint8_t *)(bufferin+8);		// Get Batt Status
+         ii >>= 4; 
+         ii &= 0x03;
+         th_batt = ii; //Batt Status value
 
-				ii = *(uint8_t *)(bufferin+8); // Get Din1 Status
-				ii >>= 6;
-				ii &= 0x01;
-				if (wiTH_nodes[i].din1!=ii) wiTH_nodes[i].trap |= 0x0010;
-				wiTH_nodes[i].din1=ii;
+         ii = *(uint8_t *)(bufferin+8); // Get Din1 Status
+         ii >>= 6;
+         ii &= 0x01;
+         th_din1 = ii;
 
-				ii = *(uint8_t *)(bufferin+8); // Get Din2 Status
-				ii >>= 7;
-				ii &= 0x01;
-				if (wiTH_nodes[i].din2!=ii) wiTH_nodes[i].trap |= 0x0020;
-				wiTH_nodes[i].din2=ii;
-				wiTH_nodes[i].timestamp = os_time_get() / 100;
+         ii = *(uint8_t *)(bufferin+8); // Get Din2 Status
+         ii >>= 7;
+         ii &= 0x01;
+         th_din2 = ii;
 
-				if(wiTH_nodes[i].state == 'r') {
-//					wiTH_nodes[i].trap |= 0x40;
-				  wiTH_nodes[i].state = 'R';
-				}
-				
+         for (ii=0; ii < TH_NODES_MAX; ii++) {}
+                   
+         printf("temp1: %d\n", th_temp1);
+	  
 
 //				current_stamp = os_time_get();
 //				switch(WiTH[i].th3 &0x3fff ) {
@@ -995,7 +964,7 @@ int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
 
 			  memset(bufferout+7,0,3);
 			  memcpy(bufferout+7, (uint8_t*) &current_stamp, 3);
-				printf("ID: %d Stamp :%d, NextWakeup: %d\r\n",i,current_stamp, next_stamp);
+//				printf("ID: %d Stamp :%d, NextWakeup: %d\r\n",i,current_stamp, next_stamp);
 //				create_packet(bufferout, srcAddr, COMM_GW_TO_TH);
 
 				break;
