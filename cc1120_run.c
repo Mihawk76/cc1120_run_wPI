@@ -44,6 +44,13 @@
 	#define FS_VCO2_INDEX 0
 	#define FS_VCO4_INDEX 1
 	#define FS_CHP_INDEX 2
+struct past_temp
+{
+    uint16_t temp[3];
+    int counter_th;
+		uint16_t median_temp;
+};
+struct past_temp[20];
 
 uint8_t txBuffer[136];
 uint8_t rxBuffer[136];
@@ -69,7 +76,7 @@ uint16_t temp3;
 uint16_t dIn1;
 uint16_t dIn2;
 int16_t rssi = 0;
-uint16_t past_temp[3];
+//uint16_t past_temp[50];
 int loop_temp=0;
 //char* location = "http://35.160.141.229/post.php";
 //char* location = "http://52.43.48.93/dcms/rest/alfa";
@@ -1160,33 +1167,43 @@ void cc112x_run(void)
                 if ( dIn2 != 0 ){ 
                   dIn1 = 1; 
                 }
+								/*
                 past_temp[loop_temp] = temp1;
                 loop_temp++;
                 if(loop_temp==3){
                   loop_temp = 0;
-                }
-                uint16_t median_temp = middle_of_3(past_temp[0],  past_temp[1], past_temp[2]);
-								//for(i=0;i<=sizeof(cc1120_TH_ID_Selected);i++)
-								//{
-									//if( cc1120_TH_ID_Selected[i] == cc1120_TH_ID && median_temp != 0 )
-									//{
-										Oid = 1+i;
-										printf("Nilai Oid %d\n", Oid);
-										syslog(LOG_INFO, "Nilai Oid %d\n", Oid);
+                }*/
+                //uint16_t median_temp = middle_of_3(past_temp[0],  past_temp[1], past_temp[2]);
+								for(i=0;i<=sizeof(cc1120_TH_ID_Selected);i++)
+								{
+									if( cc1120_TH_ID_Selected[i] == cc1120_TH_ID )
+									{
 								
 										printf( "TH ID: %04X TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
 										syslog(LOG_INFO, "TH ID: %04X TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
 										//fprintf(f, "counter:%d TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
-										res_th (location, median_temp, temp2, temp3, humidity, 11, cc1120_TH_ID, mac_address_gateway);
-										//trap_th(location, Oid, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, median_temp , temp2, temp3, rssi);
-										printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
-                		humidity, median_temp, temp2, temp3, dIn1, dIn2, rssi);
-										syslog(LOG_INFO, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
-                		humidity, median_temp, temp2, temp3, dIn1, dIn2, rssi);
-                		printf("Gateway Id %d\n", gateway_ID);
-										syslog(LOG_INFO, "Gateway Id %d\n", gateway_ID);
-									//}
-								//}
+										loop_temp = past_temp[i].counter_th;
+				            past_temp[i].temp[loop_temp] = temp1;
+										loop_temp++;
+										if(loop_temp==3){
+											past_temp[i].counter_th = 0;
+										}
+										if(loop_temp!=3){
+											past_temp[i].counter_th = loop_temp;
+										}
+                		past_temp[i].median_temp = middle_of_3(past_temp[i].temp[0],  past_temp[i].temp[1], past_temp[i].temp[2]);
+										if (past_temp[i].median_temp != 0){
+											res_th (location, past_temp[i].median_temp, temp2, temp3, humidity, 11, cc1120_TH_ID, mac_address_gateway);
+											//trap_th(location, Oid, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, median_temp , temp2, temp3, rssi);
+											printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
+                			humidity, past_temp[i].median_temp, temp2, temp3, dIn1, dIn2, rssi);
+											syslog(LOG_INFO, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
+                			humidity, past_temp[i].median_temp, temp2, temp3, dIn1, dIn2, rssi);
+                			printf("Gateway Id %d\n", gateway_ID);
+											syslog(LOG_INFO, "Gateway Id %d\n", gateway_ID);
+										}	
+									}
+								}
                 //fprintf(f, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
                 //humidity, temp1, temp2, temp3, dIn1, dIn2, rssi);
 
