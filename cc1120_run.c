@@ -13,7 +13,7 @@
 
 #include <inttypes.h>
 #include <math.h>
-	
+
 #include <wiringPi.h>  
 #include <wiringPiSPI.h>  
 #include <stdio.h>    
@@ -137,6 +137,8 @@ char* location_wattT = "http://35.160.141.229:3000/api/TWatts";
 char* gateway_trap_id = "EM24010101";
 FILE *f;
 
+void cc1120_service(void);
+void res_service(void);
 	
 /*******************************************************************************
  * @fn          trxReadWriteBurstSingle
@@ -1014,14 +1016,6 @@ int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
 	rssiRx    = bufferin[len];
 	th_nodes[i].tx_rssi = bufferin[7];
 
-    if ( th_nodes[i].id != srcAddr ) {
-       printf(" UnReg %s ID:%02d", th_type_str[th_nodes[i].type], srcAddr);
-    }
-    else { 
-       printf(" Reg   %s ID:%02d", th_type_str[th_nodes[i].type], srcAddr);
-	   th_nodes[i].status = STATUS_UPDATED;
-    }
-	
 	th_nodes[i].median_h = th_nodes[i].past_h[th_nodes[i].loop_h];
 	th_nodes[i].median_t1 = th_nodes[i].past_t1[th_nodes[i].loop_t1];
 	th_nodes[i].median_t2 = th_nodes[i].past_t2[th_nodes[i].loop_t2];
@@ -1036,6 +1030,21 @@ int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
 	th_nodes[i].loop_t3++;
     if (th_nodes[i].loop_t3>=3) th_nodes[i].loop_t3 = 0;
 
+    if ( th_nodes[i].id != srcAddr ) {
+       printf(" UnReg %s ID:%02d", th_type_str[th_nodes[i].type], srcAddr);
+    }
+    else { 
+       printf(" Reg   %s ID:%02d", th_type_str[th_nodes[i].type], srcAddr);
+	   th_nodes[i].status = STATUS_UPDATED;
+    }
+
+    clock_gettime(CLOCK_REALTIME, &spec);
+	
+	th_nodes[i].ts  = spec.tv_sec;
+    ms = round(spec.tv_nsec / 1.0e6); // Convert nanoseconds to milliseconds
+
+    current_stamp = (th_nodes[i].ts * 100) + (ms/10); //convert to 10* ms 
+	
     if   (th_nodes[i].median_h == 0x2a2a)  printf(" H -n.a-");
     else  printf(" H~%02d.%02d", th_nodes[i].median_h/100,th_nodes[i].median_h%100);
     if   (th_nodes[i].median_t1 == 0x2a2a)  printf(" 1 -n.a-");
@@ -1047,13 +1056,6 @@ int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
     printf(" %s %s", (th_nodes[i].din1==0) ? "On " : "Off", (th_nodes[i].din2==0) ? "On " : "Off");
     printf(" B~%s Tx:%03d\r\n", (th_nodes[i].batt==3) ? "Full" : "Low ", th_nodes[i].tx_rssi-102);
 
-    clock_gettime(CLOCK_REALTIME, &spec);
-	
-	th_nodes[i].ts  = spec.tv_sec;
-    ms = round(spec.tv_nsec / 1.0e6); // Convert nanoseconds to milliseconds
-
-    current_stamp = (th_nodes[i].ts * 100) + (ms/10); //convert to 10* ms 
-	
 	switch(th_nodes[i].type) {
 		case 0:  //SENSOR_TONLY:
 			bufferout[4] = t_wakeup_interval;
@@ -1102,12 +1104,7 @@ int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
 	replyDly = 10000;
 			
 	syslog(LOG_INFO, "TH ID: %04X TH_ID_Selected:%04X\n", srcAddr, cc1120_TH_ID_Selected[i]);
-	//fprintf(f, "counter:%d TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
-	//res_th (location, th_nodes[i].median_t1, th_nodes[i].median_t2, th_nodes[i].median_t3, th_nodes[i].median_h, 11, srcAddr, mac_address_gateway);
-	//res_th (location, th_nodes[i].median_t1, th_nodes[i].median_t2, th_nodes[i].median_t3, th_nodes[i].median_h, 11, srcAddr, gateway_ID);
-	//trap_th(location, Oid, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, median_temp , temp2, temp3, rssi);
-	//printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
-    //humidity, median_temp, temp2, temp3, dIn1, dIn2, rssi);
+
 	syslog(LOG_INFO, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
            th_nodes[i].median_h, th_nodes[i].median_t1, th_nodes[i].median_t2, th_nodes[i].median_t3, th_nodes[i].din1, th_nodes[i].din2, rssiRx);
     printf("Gateway Id %d\n", gateway_ID);
@@ -1280,20 +1277,38 @@ void cc112x_run(void)
 }
 
 
+void res_service( void)
+{
+  int i;
+	
+  while(1) {
+	
+    for (i=0;i<TH_NODES_MAX;i++) {
+	   if (th_nodes[i].id!= (i+1)) continue;
+	   if (th_nodes[i].status == STATUS_CLEARED) continue;
+	   //fprintf(f, "counter:%d TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
+	   //res_th (location, th_nodes[i].median_t1, th_nodes[i].median_t2, th_nodes[i].median_t3, th_nodes[i].median_h, 11, srcAddr, mac_address_gateway);
+	   res_th (location, th_nodes[i].median_t1, th_nodes[i].median_t2, th_nodes[i].median_t3, th_nodes[i].median_h, 11, th_nodes[i].id, gateway_ID);
+	   th_nodes[i].status = STATUS_CLEARED;
+	   //trap_th(location, Oid, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, median_temp , temp2, temp3, rssi);
+	   //printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
+       //humidity, median_temp, temp2, temp3, dIn1, dIn2, rssi);
+	}	
 
-/*******************************************************************************
-********************************************************************************/
+  }
+  
+}
 
-int main(int argc, char *argv[]) {
-  uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
-  int ret = 0;
-	freq_main = 1;
-	freq_th = 23;
-    remChannel = freq_main;
-	int i;
-	//freq_main = 0;
+void cc1120_service( void)
+{
+  freq_main = 1;
+  freq_th = 23;
+  remChannel = freq_main; 
+  int i;
+  
+  //freq_main = 0;
   gateway_ID = 0x1001;
-	//mac_address_gateway = read_ints();
+  //mac_address_gateway = read_ints();
   //setup gpio pin to spi function
   wiringPiSetup();
   
@@ -1319,25 +1334,27 @@ int main(int argc, char *argv[]) {
   cc112x_hw_rst();
   //cc112x_init(23,0);// freq 410 Mhz + (1 Mhz * freq_main)
   cc112x_init(freq_main,0);// freq 410 Mhz + (1 Mhz * freq_main)
-	memcpy(&txBuffer[1],DUMMY_BUF,10);
-	txBuffer[0]=10;
-	int datalog = 0;
-	while (1)
+  memset(&txBuffer[0],0,sizeof(txBuffer));
+	
+	
+  while(1) {
+ 	/*f = fopen("/home/data.log", "a");
+	if (f == NULL)
 	{
- 		/*f = fopen("/home/data.log", "a");
-		if (f == NULL)
-		{
     	printf("Error opening file!\n");
     	exit(1);
-		}*/
-		/* print some text */
-		/*const char *text = "Why the result are diffrent";
-		fprintf(f, "Some text: %s %d \n", text, datalog);*/
-		/* communication handler */
-		cc112x_run();
-		datalog++;
-		//fclose(f);
-	}
+	}*/
+	
+	/* print some text */
+	/*const char *text = "Why the result are diffrent";
+	fprintf(f, "Some text: %s %d \n", text, datalog);*/
+	
+	/* communication handler */
+	cc112x_run();
+	//datalog++;
+	//fclose(f);
+  }
+  
   /*int repeat;
 	for(repeat=0;repeat<=100;repeat++)
 	{
@@ -1361,6 +1378,32 @@ int main(int argc, char *argv[]) {
 	int frekuensi = (410 + repeat);
 	printf("No File found frek = %d\n", frekuensi);  	
 	}*/
+
+}
+
+
+/*******************************************************************************
+********************************************************************************/
+
+int main(int argc, char *argv[]) {
+  int ret = 0;
+  
+  pthread_t thread_cc1120, thread_res;	// thread pointers
+  
+  /* Create independent threads each of which will execute function */
+  pthread_create( &thread_cc1120, NULL, cc1120_service, NULL);
+  pthread_create( &thread_res, NULL, res_service, NULL);
+
+  pthread_join( thread_cc1120, NULL);
+  pthread_join( thread_res, NULL);
+	
+
+  //int datalog = 0;
+  while (1)
+  {
+
+  }
+
   return ret;
 	
-  }
+}
