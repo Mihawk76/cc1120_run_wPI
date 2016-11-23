@@ -10,6 +10,9 @@
 	*
 	* Cross-compile with cross-gcc -I/path/to/cross-kernel/include
 	*/
+
+#include <inttypes.h>
+#include <math.h>
 	
 #include <wiringPi.h>  
 #include <wiringPiSPI.h>  
@@ -19,29 +22,29 @@
 #include <string.h>  
 #include <time.h>
 #include <syslog.h>
-	
+
 #include "cc112x_easy_link_reg_config.h"
 #include "mac_address.c"
 #include "kwh_params.c"
 #include "res_sensor.c"
 //#include "read_int.c"
 	
-	#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 	
-	#define ISR_ACTION_REQUIRED 1
-	#define ISR_IDLE            0
-	#define RX_FIFO_ERROR       0x11
+#define ISR_ACTION_REQUIRED 1
+#define ISR_IDLE            0
+#define RX_FIFO_ERROR       0x11
 	
-	#define CC1120_RST  31
-	#define CC1120_SSEL 5
-	#define CC1120_MOSI 12
-	#define CC1120_MISO 13
-	#define CC1120_SCLK 14
+#define CC1120_RST  31
+#define CC1120_SSEL 5
+#define CC1120_MOSI 12
+#define CC1120_MISO 13
+#define CC1120_SCLK 14
 		
-	#define VCDAC_START_OFFSET 2
-	#define FS_VCO2_INDEX 0
-	#define FS_VCO4_INDEX 1
-	#define FS_CHP_INDEX 2
+#define VCDAC_START_OFFSET 2
+#define FS_VCO2_INDEX 0
+#define FS_VCO4_INDEX 1
+#define FS_CHP_INDEX 2
 	
 #define TH_DATA_LENGTH 0x0c
 #define TH_DATA_CODE   0xc1
@@ -54,6 +57,45 @@
 #define TH_NODES_MAX 20
 
 #define COMM_TH_TO_GW 0xC1
+#define COMM_GW_TO_TH 0x41
+
+#define STATUS_CLEARED 0
+#define STATUS_UPDATED 1
+
+const char th_type_str[4][7]={
+  "T-Only\0",
+  "T-BDuc\0",
+  "D-Only\0",
+  "T-Humi\0"
+};
+
+typedef struct {
+	uint8_t id;
+	uint8_t status;
+	uint8_t type;
+	uint8_t loop_h;
+	uint8_t loop_t1;
+	uint8_t loop_t2;
+	uint8_t loop_t3;
+	uint16_t past_h[3];
+	uint16_t past_t1[3];
+	uint16_t past_t2[3];
+	uint16_t past_t3[3];
+	uint16_t median_h;
+	uint16_t median_t1;
+	uint16_t median_t2;
+	uint16_t median_t3;
+	uint8_t din1;
+	uint8_t din2;
+	uint8_t batt;
+	uint8_t tx_rssi;
+	uint32_t tx_counter;
+	time_t ts;  // time stamp
+}TH_NODE_T;
+
+uint8_t t_wakeup_interval = 3;
+uint8_t th_wakeup_interval = 5;
+uint8_t ds_wakeup_interval = 3;
 
 uint8_t txBuffer[256];
 uint8_t rxBuffer[256];
@@ -64,12 +106,14 @@ uint8_t index_node = 0x00; //temp index node
 uint8_t wakeup_hold = 0x05; //wake up hold in 100ms
 uint16_t cc1120_TH_ID;
 uint16_t cc1120_TH_ID_Selected[TH_NODES_MAX] = { 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+TH_NODE_T th_nodes[TH_NODES_MAX];
 uint32_t cc1120_KWH_ID;
 int cc1120_TH_Listed = 6;
 uint8_t cc1120_TH_Node;
 uint16_t gateway_ID;
 uint16_t mac_address_gateway;
 int freq_main;
+uint8_t remChannel;
 uint8_t freq_th;
 int kwh_loop = 0;
 uint16_t humidity;
@@ -79,8 +123,9 @@ uint16_t temp3;
 uint16_t dIn1;
 uint16_t dIn2;
 int16_t rssi = 0;
-uint16_t past_temp[3];
-int loop_temp=0;
+
+int32_t replyDly;
+
 //char* location = "http://35.160.141.229/post.php";
 //char* location = "http://52.43.48.93/dcms/rest/alfa";
 //char* location = "http://192.168.88.19:1616/dcms/rest/alfa";
@@ -769,7 +814,7 @@ void  cc112x_init(uint8_t freq, uint8_t pwr)
  */
 uint8_t send_packet(uint8_t * sendBuffer) {
 	uint8_t temp_byte;
-	uint8_t len;
+	uint8_t len,i;
 	len = *sendBuffer;
 	if (len == 0) return 0;
 	
@@ -782,6 +827,13 @@ uint8_t send_packet(uint8_t * sendBuffer) {
 		len =  0; // if RSSI present from another 
 		return 0;
 	}
+	
+    printf("SendPacket: ");
+    for (i=1;i<len;i++) {
+	  printf("0x%02X ",sendBuffer[i]);
+	}
+	printf("0x%02X\r\n", sendBuffer[i]);
+
 	
 	trxSpiCmdStrobe(CC112X_SIDLE);
 	wait_exp_val(CC112X_MARCSTATE, 0x41);
@@ -828,29 +880,22 @@ uint16_t middle_of_3(uint16_t a, uint16_t b, uint16_t c)
 
 int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
     uint8_t temp_8;
-    uint8_t i,ii,z;
-    uint16_t temp_16, temp2_16;
+    uint8_t i,ii;
+    uint16_t temp_16;
     uint32_t temp_32;
     uint8_t pktCmd;
     uint8_t srcAddr;
 	
+    struct timespec spec;
+	long   ms; // Milliseconds
+
     uint32_t interval_between_node;
     uint32_t current_stamp;
     uint32_t next_stamp;
 	
     int ret = 0;
 
-    uint32_t th_counterTx;
-    uint8_t th_Type;
-    uint16_t th_humidity;
-    uint16_t th_temp1;
-    uint16_t th_temp2;
-    uint16_t th_temp3;
-    uint8_t th_rssiTx;
-
     uint8_t rssiRx;
-    uint8_t th_batt;
-    uint8_t th_din1,th_din2;
 	
     pktCmd = *bufferin;
     i = 0;
@@ -861,114 +906,213 @@ int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
 	  //Tx.. Data
 	  //frame: CMD, NodeID, humidity, temp1, temp2, temp3, carry, rssirx, dinBat count,  cs
 	  //         1       1         1      1      1      1      1     1       0,5   2.5    1
+      // length data always 12 byte, reject it if different
 	  if(len!=12) break;
-	  srcAddr = bufferin[1]; // get destination address	
-	      				
-	  i = srcAddr-1;
-         if (i>=TH_NODES_MAX) break;
-			
-	  temp_32 = bufferin[8] & 0x0f;
-	  temp_32 <<= 16;
-	  memcpy((uint8_t*) &temp_32, (uint8_t*) &bufferin[9], 2);
-	  th_counterTx = temp_32+1;
-	  th_counterTx &=0x000fffff;
+         
+      // calculate checksum
+      temp_8 = 0;
+      for(ii=0;ii<len-1;ii++) {
+        temp_8 += bufferin[ii];
+      }
 
-	  // srcAddr found in the nodes table parse to collect data
-	  temp_8 = 0;
-	  temp_16 = bufferin[6] & 0xc0;
-	  temp_16 <<= 2;
-	  temp_16 += bufferin[2];
-	  temp_16 *= 10;
-				
-	  th_Type = temp_16&0xffff; //store Th Type
-				
-	  if (temp_16>=SENSOR_TONLY) temp_16=0x2a2a;
-	  th_humidity = temp_16&0x3fff ;      //store humidity value
-				
-	  temp_16 = bufferin[6] & 0x30;
-	  temp_16 <<= 4;
-	  temp_16 += bufferin[3];
-	  temp_16 *= 10;
-	  if (temp_16>=VALUE_INVALID) temp_16=0x2a2a;
-	  th_temp1 = temp_16&0x3fff;            //store temp1 value
-			
-	  temp_16 = bufferin[6] & 0x0C;
-	  temp_16 <<= 6;
-	  temp_16 += bufferin[4];
-	  temp_16 *= 10;
-	  if (temp_16>=VALUE_INVALID) temp_16=0x2a2a;
-	  th_temp2 = temp_16&0x3fff;            //store temp2 value
+    // compare calculated checksum vs given checksum
+    if (temp_8 !=  bufferin[ii]) {
+       printf(" Invalid TH data Received\r\n");
+       break;
+    }
 
-	  rssiRx    = bufferin[len];
-	  th_rssiTx = bufferin[7];
 
-	  temp_16 = bufferin[6] & 0x03;
-	  temp_16 <<= 8;
-	  temp_16 += bufferin[5];
-	  temp_16 *= 10;
-         if (temp_16>=VALUE_INVALID) temp_16=0x2a2a;
-         th_temp3 = temp_16&0x3fff; //store temp3 value
+	srcAddr = bufferin[1]; // get destination address	
+	
+	i = srcAddr-1;
+    if (i>=TH_NODES_MAX) break; //overleap Source address
+	
+    //Get Tx Counter of TH 	
+	temp_32 = bufferin[8] & 0x0f;
+	temp_32 <<= 16;
+	memcpy((uint8_t*) &temp_32, (uint8_t*) &bufferin[9], 2);
+	th_nodes[i].tx_counter = temp_32+1;
+	th_nodes[i].tx_counter &=0x000fffff;
 
-         ii = *(uint8_t *)(bufferin+8);		// Get Batt Status
-         ii >>= 4; 
-         ii &= 0x03;
-         th_batt = ii; //Batt Status value
-
-         ii = *(uint8_t *)(bufferin+8); // Get Din1 Status
-         ii >>= 6;
-         ii &= 0x01;
-         th_din1 = ii;
-
-         ii = *(uint8_t *)(bufferin+8); // Get Din2 Status
-         ii >>= 7;
-         ii &= 0x01;
-         th_din2 = ii;
-
-         for (ii=0; ii < TH_NODES_MAX; ii++) {}
-                   
-         printf("temp1: %d\n", th_temp1);
+    //Get humidity data and th type 
+	temp_16 = bufferin[6] & 0xc0;
+	temp_16 <<= 2;
+	temp_16 += bufferin[2];
+	temp_16 *= 10;
 	  
+    // if data < SENSOR_TONLY,  mean humidity data is valid
+    if (temp_16 < SENSOR_TONLY) th_nodes[i].type = 3; 			
+	else th_nodes[i].type = ((temp_16&0xffff)/10)-1001; //store Th Type
+	
+	temp_16 &= 0x3fff ;
+	if (temp_16>=SENSOR_TONLY) temp_16=0x2a2a;
+	if (th_nodes[i].loop_h==0xff) { //initialize past buffer
+		th_nodes[i].past_h[1] = th_nodes[i].past_h[2] = temp_16;
+        th_nodes[i].loop_h = 0;		
+	}
+	th_nodes[i].past_h[th_nodes[i].loop_h] = temp_16; //store humidity value
+	
+		
+    //Get Temp1 data
+	temp_16 = bufferin[6] & 0x30;
+	temp_16 <<= 4;
+	temp_16 += bufferin[3];
+	temp_16 *= 10;
+	temp_16 &= 0x3fff ;
+	if (temp_16>=VALUE_INVALID) temp_16=0x2a2a;
+		if (th_nodes[i].loop_t1==0xff) { //initialize past buffer
+		th_nodes[i].past_t1[1] = th_nodes[i].past_t1[2] = temp_16;
+        th_nodes[i].loop_t1 = 0;		
+	}
+	th_nodes[i].past_t1[th_nodes[i].loop_t1] = temp_16; //store temp1 value
 
-//				current_stamp = os_time_get();
-//				switch(WiTH[i].th3 &0x3fff ) {
-//					case SENSOR_TONLY:
-//						bufferout[4] = wakeup_interval;
-//					  interval_between_node = (wakeup_interval*6000) / NODE_NUM;
-//					  next_stamp = ((current_stamp / (wakeup_interval*6000))+1) * (wakeup_interval*6000);
-//					  break;
-//					case SENSOR_BUSDUCT:
-//						bufferout[4] = ds_wakeup_interval;
-//					  interval_between_node = (ds_wakeup_interval*6000) / NODE_NUM;
-//					  next_stamp = ((current_stamp / (ds_wakeup_interval*6000))+1) * (ds_wakeup_interval*6000);
-//					  break;
-//					default:
-//						bufferout[4] = th_wakeup_interval;
-//					  interval_between_node = (th_wakeup_interval*6000) / NODE_NUM;
-//					  next_stamp = ((current_stamp / (th_wakeup_interval*6000))+1) * (th_wakeup_interval*6000);
-//						break;
-//				}
-//        
-//				next_stamp = next_stamp + (interval_between_node*i);
-//				next_stamp = next_stamp - current_stamp;
+	
+    //Get Temp2 data		
+	temp_16 = bufferin[6] & 0x0C;
+	temp_16 <<= 6;
+	temp_16 += bufferin[4];
+	temp_16 *= 10;
+	temp_16 &= 0x3fff ;
+	if (temp_16>=VALUE_INVALID) temp_16=0x2a2a;
+		if (th_nodes[i].loop_t2==0xff) { //initialize past buffer
+		th_nodes[i].past_t2[1] = th_nodes[i].past_t2[2] = temp_16;
+        th_nodes[i].loop_t2 = 0;		
+	}
+	th_nodes[i].past_t2[th_nodes[i].loop_t2] = temp_16; //store temp2 value
+
+    //Get Temp3 data		
+	temp_16 = bufferin[6] & 0x03;
+	temp_16 <<= 8;
+	temp_16 += bufferin[5];
+	temp_16 *= 10;
+	temp_16 &= 0x3fff ;
+	if (temp_16>=VALUE_INVALID) temp_16=0x2a2a;
+		if (th_nodes[i].loop_t3==0xff) { //initialize past buffer
+		th_nodes[i].past_t3[1] = th_nodes[i].past_t3[2] = temp_16;
+        th_nodes[i].loop_t3 = 0;		
+	}
+	th_nodes[i].past_t3[th_nodes[i].loop_t3] = temp_16; //store temp3 value
+
+    //Get battery status
+    ii = *(uint8_t *)(bufferin+8);		// Get Batt Status
+    ii >>= 4; 
+    ii &= 0x03;
+    th_nodes[i].batt = ii; //Batt Status value
+
+    //Get Din1 status
+    ii = *(uint8_t *)(bufferin+8); // Get Din1 Status
+    ii >>= 6;
+    ii &= 0x01;
+    th_nodes[i].din1 = ii;
+
+    //Get Din2 status
+    ii = *(uint8_t *)(bufferin+8); // Get Din2 Status
+    ii >>= 7;
+    ii &= 0x01;
+    th_nodes[i].din2 = ii;
+
+	rssiRx    = bufferin[len];
+	th_nodes[i].tx_rssi = bufferin[7];
+
+    if ( th_nodes[i].id != srcAddr ) {
+       printf(" UnReg %s ID:%02d", th_type_str[th_nodes[i].type], srcAddr);
+    }
+    else { 
+       printf(" Reg   %s ID:%02d", th_type_str[th_nodes[i].type], srcAddr);
+	   th_nodes[i].status = STATUS_UPDATED;
+    }
+	
+	th_nodes[i].median_h = th_nodes[i].past_h[th_nodes[i].loop_h];
+	th_nodes[i].median_t1 = th_nodes[i].past_t1[th_nodes[i].loop_t1];
+	th_nodes[i].median_t2 = th_nodes[i].past_t2[th_nodes[i].loop_t2];
+	th_nodes[i].median_t3 = th_nodes[i].past_t3[th_nodes[i].loop_t3];
+	
+	th_nodes[i].loop_h++;
+    if (th_nodes[i].loop_h>=3) th_nodes[i].loop_h = 0;	
+	th_nodes[i].loop_t1++;
+    if (th_nodes[i].loop_t1>=3) th_nodes[i].loop_t1 = 0;
+	th_nodes[i].loop_t2++;
+    if (th_nodes[i].loop_t2>=3) th_nodes[i].loop_t2 = 0;
+	th_nodes[i].loop_t3++;
+    if (th_nodes[i].loop_t3>=3) th_nodes[i].loop_t3 = 0;
+
+    if   (th_nodes[i].median_h == 0x2a2a)  printf(" H -n.a-");
+    else  printf(" H~%02d.%02d", th_nodes[i].median_h/100,th_nodes[i].median_h%100);
+    if   (th_nodes[i].median_t1 == 0x2a2a)  printf(" 1 -n.a-");
+    else  printf(" 1~%02d.%02d", th_nodes[i].median_t1/100, th_nodes[i].median_t1%100);
+    if   (th_nodes[i].median_t2 == 0x2a2a)  printf(" 2 -n.a-");
+    else  printf(" 2~%02d.%02d", th_nodes[i].median_t2/100, th_nodes[i].median_t2%100);
+    if   (th_nodes[i].median_t3 == 0x2a2a)  printf(" 3 -n.a-");
+    else  printf(" 3~%02d.%02d", th_nodes[i].median_t3/100, th_nodes[i].median_t3%100);
+    printf(" %s %s", (th_nodes[i].din1==0) ? "On " : "Off", (th_nodes[i].din2==0) ? "On " : "Off");
+    printf(" B~%s Tx:%03d\r\n", (th_nodes[i].batt==3) ? "Full" : "Low ", th_nodes[i].tx_rssi-102);
+
+    clock_gettime(CLOCK_REALTIME, &spec);
+	
+	th_nodes[i].ts  = spec.tv_sec;
+    ms = round(spec.tv_nsec / 1.0e6); // Convert nanoseconds to milliseconds
+
+    current_stamp = (th_nodes[i].ts * 100) + (ms/10); //convert to 10* ms 
+	
+	switch(th_nodes[i].type) {
+		case 0:  //SENSOR_TONLY:
+			bufferout[4] = t_wakeup_interval;
+			interval_between_node = (t_wakeup_interval*6000) / TH_NODES_MAX;
+			next_stamp = ((current_stamp / (t_wakeup_interval*6000))+1) * (t_wakeup_interval*6000);
+			break;
+
+		case 1:  //SENSOR_BUSDUCT:
+		    bufferout[4] = ds_wakeup_interval;
+		    interval_between_node = (ds_wakeup_interval*6000) / TH_NODES_MAX;
+		    next_stamp = ((current_stamp / (ds_wakeup_interval*6000))+1) * (ds_wakeup_interval*6000);
+   		    break;
+
+		default:
+			bufferout[4] = th_wakeup_interval;
+		    interval_between_node = (th_wakeup_interval*6000) / TH_NODES_MAX;
+		    next_stamp = ((current_stamp / (th_wakeup_interval*6000))+1) * (th_wakeup_interval*6000);
+			break;
+	}
+        
+	next_stamp = next_stamp + (interval_between_node*i);
+	next_stamp = next_stamp - current_stamp;
 				
-//				if (next_stamp>=((interval_between_node*NODE_NUM)+((interval_between_node*NODE_NUM)/2))) 
-//					next_stamp -= (interval_between_node*NODE_NUM); 
-//				else if (next_stamp <= interval_between_node) 
-//					next_stamp += (interval_between_node*NODE_NUM); 
+	if (next_stamp>=((interval_between_node*TH_NODES_MAX)+((interval_between_node*TH_NODES_MAX)/2))) 
+		next_stamp -= (interval_between_node*TH_NODES_MAX); 
+	else if (next_stamp <= interval_between_node) 
+		next_stamp += (interval_between_node*TH_NODES_MAX); 
 
-				next_stamp = 600;
-				current_stamp = 1234;
+    bufferout[1] = COMM_GW_TO_TH;
+    bufferout[2] = srcAddr;	
+	bufferout[3] = remChannel; 
+    memset(bufferout+5,0,2);
+	memcpy(bufferout+5, (uint8_t*) &next_stamp, 2);
+	memset(bufferout+7,0,3);
+	memcpy(bufferout+7, (uint8_t*) &current_stamp, 3);
+//	printf("ID: %d Stamp :%d, NextWakeup: %d\r\n",srcAddr,current_stamp, next_stamp);
 
-			  memset(bufferout+5,0,2);
-			  memcpy(bufferout+5, (uint8_t*) &next_stamp, 2);
 
-			  memset(bufferout+7,0,3);
-			  memcpy(bufferout+7, (uint8_t*) &current_stamp, 3);
-//				printf("ID: %d Stamp :%d, NextWakeup: %d\r\n",i,current_stamp, next_stamp);
-//				create_packet(bufferout, srcAddr, COMM_GW_TO_TH);
-
-				break;
+	
+	bufferout[10] = 0;  // init checksum
+	// calculate checksum
+    for(ii=1;ii<10; ii++) {
+	    bufferout[10] += bufferout[ii];
+    }
+	bufferout[0] =  10;
+	replyDly = 10000;
 			
+	syslog(LOG_INFO, "TH ID: %04X TH_ID_Selected:%04X\n", srcAddr, cc1120_TH_ID_Selected[i]);
+	//fprintf(f, "counter:%d TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
+	//res_th (location, th_nodes[i].median_t1, th_nodes[i].median_t2, th_nodes[i].median_t3, th_nodes[i].median_h, 11, srcAddr, mac_address_gateway);
+	//res_th (location, th_nodes[i].median_t1, th_nodes[i].median_t2, th_nodes[i].median_t3, th_nodes[i].median_h, 11, srcAddr, gateway_ID);
+	//trap_th(location, Oid, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, median_temp , temp2, temp3, rssi);
+	//printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
+    //humidity, median_temp, temp2, temp3, dIn1, dIn2, rssi);
+	syslog(LOG_INFO, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
+           th_nodes[i].median_h, th_nodes[i].median_t1, th_nodes[i].median_t2, th_nodes[i].median_t3, th_nodes[i].din1, th_nodes[i].din2, rssiRx);
+    printf("Gateway Id %d\n", gateway_ID);
+	syslog(LOG_INFO, "Gateway Id %d\n", gateway_ID);
+			break;
 		}
 		
 		return ret;
@@ -998,10 +1142,7 @@ int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
 void cc112x_run(void)
 {
 	uint8_t temp_byte;
-	int i;
 	uint8_t rx_byte = 0;
-	uint8_t cs_byte;
-	int Oid = 0;
 	//fprintf(f,"The start of the loop\n");
 	time_t t;
 	time (&t);
@@ -1111,8 +1252,7 @@ void cc112x_run(void)
 					timeinfo->tm_sec,
 					//timeinfo->tm_ms,
 					rx_byte, (rx_byte>1) ? "bytes" : "byte",rxBuffer[rx_byte - 2]-102);
-				  int counter = 0;
-				  
+				 				  
 					processPacket((uint8_t*)&rxBuffer[1], txBuffer, rx_byte-3);
 					
 				}
@@ -1122,8 +1262,9 @@ void cc112x_run(void)
 	}
 	else if( temp_byte == 0) {
 					//os_dly_wait (1);
-//		if (replyDly>0) return;
-		send_packet(txBuffer);
+		//if(replyDly) replyDly--;
+		//if (replyDly>0) return;
+ 		send_packet(txBuffer);
 		//fprintf(f,"After send packet buffer\n");
 		return;
 	}
@@ -1146,13 +1287,24 @@ void cc112x_run(void)
 int main(int argc, char *argv[]) {
   uint8_t DUMMY_BUF[]={1,2,3,4,5,6,7,8,9,0};
   int ret = 0;
-	freq_main = 23;
+	freq_main = 1;
 	freq_th = 23;
+    remChannel = freq_main;
+	int i;
 	//freq_main = 0;
   gateway_ID = 0x1001;
 	//mac_address_gateway = read_ints();
   //setup gpio pin to spi function
   wiringPiSetup();
+  
+  for(i=0; i<TH_NODES_MAX; i++) {
+	th_nodes[i].id = cc1120_TH_ID_Selected[i];
+	th_nodes[i].status = STATUS_CLEARED;
+	th_nodes[i].loop_h = 0xff;
+	th_nodes[i].loop_t1 = 0xff;
+	th_nodes[i].loop_t2 = 0xff;
+	th_nodes[i].loop_t3 = 0xff;
+  }
   
   pinMode(CC1120_MOSI, SPI_PIN);
   pinMode(CC1120_MISO, SPI_PIN);
