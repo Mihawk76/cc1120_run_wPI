@@ -1016,10 +1016,18 @@ int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
 	rssiRx    = bufferin[len];
 	th_nodes[i].tx_rssi = bufferin[7];
 
+	/* without median filter
 	th_nodes[i].median_h = th_nodes[i].past_h[th_nodes[i].loop_h];
 	th_nodes[i].median_t1 = th_nodes[i].past_t1[th_nodes[i].loop_t1];
 	th_nodes[i].median_t2 = th_nodes[i].past_t2[th_nodes[i].loop_t2];
 	th_nodes[i].median_t3 = th_nodes[i].past_t3[th_nodes[i].loop_t3];
+	*/
+	
+	/* with median filter*/
+    th_nodes[i].median_h = middle_of_3(th_nodes[i].past_h[0], th_nodes[i].past_h[1], th_nodes[i].past_h[2]);
+	th_nodes[i].median_t1 = middle_of_3(th_nodes[i].past_t1[0], th_nodes[i].past_t1[1], th_nodes[i].past_t1[2]);
+	th_nodes[i].median_t2 = middle_of_3(th_nodes[i].past_t2[0], th_nodes[i].past_t2[1], th_nodes[i].past_t2[2]);
+	th_nodes[i].median_t3 = middle_of_3(th_nodes[i].past_t3[0], th_nodes[i].past_t3[1], th_nodes[i].past_t3[2]);
 	
 	th_nodes[i].loop_h++;
     if (th_nodes[i].loop_h>=3) th_nodes[i].loop_h = 0;	
@@ -1288,6 +1296,12 @@ void res_service( void)
 	   if (th_nodes[i].status == STATUS_CLEARED) continue;
 	   //fprintf(f, "counter:%d TH_ID_Selected:%04X\n", cc1120_TH_ID, cc1120_TH_ID_Selected[i]);
 	   //res_th (location, th_nodes[i].median_t1, th_nodes[i].median_t2, th_nodes[i].median_t3, th_nodes[i].median_h, 11, srcAddr, mac_address_gateway);
+		 if (th_nodes[i].median_t2 != 10794){
+				th_nodes[i].median_t1 = th_nodes[i].median_t2;
+			}
+		 if (th_nodes[i].median_t3 != 10794){
+				th_nodes[i].median_t1 = th_nodes[i].median_t3;
+			}
 	   res_th (location, th_nodes[i].median_t1, th_nodes[i].median_t2, th_nodes[i].median_t3, th_nodes[i].median_h, 11, th_nodes[i].id, gateway_ID);
 	   th_nodes[i].status = STATUS_CLEARED;
 	   //trap_th(location, Oid, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, median_temp , temp2, temp3, rssi);
@@ -1307,7 +1321,7 @@ void cc1120_service( void)
   int i;
   
   //freq_main = 0;
-  gateway_ID = 0x1001;
+  gateway_ID = 1001;
   //mac_address_gateway = read_ints();
   //setup gpio pin to spi function
   wiringPiSetup();
