@@ -1321,7 +1321,7 @@ void cc1120_service( void)
   int i;
   
   //freq_main = 0;
-  gateway_ID = 1001;
+  gateway_ID = 1002;
   //mac_address_gateway = read_ints();
   //setup gpio pin to spi function
   wiringPiSetup();
