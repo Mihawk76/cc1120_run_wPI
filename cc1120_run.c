@@ -1363,7 +1363,7 @@ void res_service( void)
 	}
 	for (i=0;i<13;i++) {
 	   if (phase_flags[i]== STATUS_CLEARED) continue;
-//	   res_val_kwh (location, kwh_ID, gateway_ID, i);
+	   res_val_kwh (location, kwh_ID, gateway_ID, i);
 	   phase_flags[i]= STATUS_CLEARED;
 	}
 

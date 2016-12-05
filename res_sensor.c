@@ -615,6 +615,176 @@ int  res_th (char* location,uint16_t Th1,uint16_t Th2,uint16_t Th3,uint16_t Humi
 	return 0;
 }
 
+int  res_val_kwh (char* location,  int id, int gateway, int kwh_index)
+
+{
+	switch(kwh_index){
+		case 0: // RST: vrms, freq
+		  //snprintf(scoreData, sizeof scoreData, "Th1=%d&Th2=%d&Th3=%d&Humidity=%d&device=%d&nilai=%d&gateway=%d",
+		  snprintf(scoreData, sizeof scoreData, 
+		  "{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RVRMS\": %03d.%01d,\"RFREQ\": %02d.%0d,\"SVRMS\": %03d.%01d,\"SFREQ\": %02d.%0d,\"TVRMS\": %03d.%01d,\"TFREQ\": %02d.%0d}",
+		    gateway,
+            id,	
+			phase_R.vrms/10, phase_R.vrms%10, phase_R.freq/100, phase_R.freq%100,
+			phase_S.vrms/10, phase_S.vrms%10, phase_S.freq/100, phase_S.freq%100,
+			phase_T.vrms/10, phase_T.vrms%10, phase_T.freq/100, phase_T.freq%100
+			);
+		  printf("%s\n", scoreData);
+		  break;
+		
+		case 1:	// RST: Ia, pfa, WATTa, VARa
+		  snprintf(scoreData, sizeof scoreData, 
+		  "{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RIRMSA\": %03d.%03d,\"RPFA\": %d,\"RWATTA\": %d,\"RVARA\": %d,\"SIRMSA\": %03d.%03d,\"SPFA\": %d,\"SWATTA\": %d,\"SVARA\": %d,\"TIRMSA\": %03d.%03d,\"TPFA\": %d,\"TWATTA\": %d,\"TVARA\": %d}",
+		    gateway, id,
+			phase_R.irmsa/1000, abs(phase_R.irmsa%1000), phase_R.pfa, phase_R.wa, phase_R.vara,
+			phase_S.irmsa/1000, abs(phase_S.irmsa%1000), phase_S.pfa, phase_S.wa, phase_S.vara,
+			phase_T.irmsa/1000, abs(phase_T.irmsa%1000), phase_T.pfa, phase_T.wa, phase_T.vara);
+
+			break;
+		
+		case 2: // RST: Ib, pfb, WATTb, VARb
+		  snprintf(scoreData, sizeof scoreData, 
+		  "{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RIRMSB\": %03d.%03d,\"RPFB\": %d,\"RWATTB\": %d,\"RVARB\": %d,\"SIRMSB\": %03d.%03d,\"SPFB\": %d,\"SWATTB\": %d,\"SVARB\": %d,\"TIRMSB\": %03d.%03d,\"TPFB\": %d,\"TWATTB\": %d,\"TVARB\": %d}",
+		    gateway, id,
+			phase_R.irmsb/1000, abs(phase_R.irmsb%1000), phase_R.pfb, phase_R.wb, phase_R.varb,
+			phase_S.irmsb/1000, abs(phase_S.irmsb%1000), phase_S.pfb, phase_S.wb, phase_S.varb,
+			phase_T.irmsb/1000, abs(phase_T.irmsb%1000), phase_T.pfb, phase_T.wb, phase_T.varb);
+			break;
+		
+		case 3:	// RST: Ic, pfc, WATTc, VARc
+          snprintf(scoreData, sizeof scoreData, 
+		  "{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RIRMSC\": %03d.%03d,\"RPFC\": %d,\"RWATTC\": %d,\"RVARC\": %d,\"SIRMSC\": %03d.%03d,\"SPFC\": %d,\"SWATTC\": %d,\"SVARC\": %d,\"TIRMSC\": %03d.%03d,\"TPFC\": %d,\"TWATTC\": %d,\"TVARC\": %d}",
+		    gateway, id,
+		    phase_R.irmsc/1000, abs(phase_R.irmsc%1000), phase_R.pfc, phase_R.wc, phase_R.varc,
+			phase_S.irmsc/1000, abs(phase_S.irmsc%1000), phase_S.pfc, phase_S.wc, phase_S.varc,
+			phase_T.irmsc/1000, abs(phase_T.irmsc%1000), phase_T.pfc, phase_T.wc, phase_T.varc);
+			break;
+
+		
+		case 4: // RST: Id, pfd, WATTd, VARd
+          snprintf(scoreData, sizeof scoreData, 
+		  "{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RIRMSD\": %03d.%03d,\"RPFD\": %d,\"RWATTD\": %d,\"RVARD\": %d,\"SIRMSD\": %03d.%03d,\"SPFD\": %d,\"SWATTD\": %d,\"SVARD\": %d,\"TIRMSD\": %03d.%03d,\"TPFD\": %d,\"TWATTD\": %d,\"TVARD\": %d}",
+		    gateway, id,
+			phase_R.irmsd/1000, abs(phase_R.irmsd%1000), phase_R.pfd, phase_R.wd, phase_R.vard,
+			phase_S.irmsd/1000, abs(phase_S.irmsd%1000), phase_S.pfd, phase_S.wd, phase_S.vard,
+			phase_T.irmsd/1000, abs(phase_T.irmsd%1000), phase_T.pfd, phase_T.wd, phase_T.vard);
+			break;
+		
+		case 5:	// RST: Ie, pfe, WATTe, VARe
+          snprintf(scoreData, sizeof scoreData, 
+		  "{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RIRMSE\": %03d.%03d,\"RPFE\": %d,\"RWATTE\": %d,\"RVARE\": %d,\"SIRMSE\": %03d.%03d,\"SPFE\": %d,\"SWATTE\": %d,\"SVARE\": %d,\"TIRMSE\": %03d.%03d,\"TPFE\": %d,\"TWATTE\": %d,\"TVARE\": %d}",
+		    gateway, id,
+	        phase_R.irmse/1000, abs(phase_R.irmse%1000), phase_R.pfe, phase_R.we, phase_R.vare,
+		    phase_S.irmse/1000, abs(phase_S.irmse%1000), phase_S.pfe, phase_S.we, phase_S.vare,
+		    phase_T.irmse/1000, abs(phase_T.irmse%1000), phase_T.pfe, phase_T.we, phase_T.vare);
+			break;
+		
+		case 6: // RST: If, pff, WATTf, VARf
+          snprintf(scoreData, sizeof scoreData, 
+		  "{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RIRMSF\": %03d.%03d,\"RPFF\": %d,\"RWATTF\": %d,\"RVARF\": %d,\"SIRMSF\": %03d.%03d,\"SPFF\": %d,\"SWATTF\": %d,\"SVARF\": %d,\"TIRMSF\": %03d.%03d,\"TPFF\": %d,\"TWATTF\": %d,\"TVARF\": %d}",
+		    gateway, id,
+			phase_R.irmsf/1000, abs(phase_R.irmsf%1000), phase_R.pff, phase_R.wf, phase_R.varf,
+			phase_S.irmsf/1000, abs(phase_S.irmsf%1000), phase_S.pff, phase_S.wf, phase_S.varf,
+			phase_T.irmsf/1000, abs(phase_T.irmsf%1000), phase_T.pff, phase_T.wf, phase_T.varf);
+			break;
+			
+		case 7:	// RST: whab varhab
+          snprintf(scoreData, sizeof scoreData, 
+		  "{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RWHA\": %d,\"RVARHA\": %d,\"RWHB\": %d,\"RVARHB\": %d,\"SWHA\": %d,\"SVARHA\": %d,\"SWHB\": %d,\"SVARHB\": %d,\"TWHA\": %d,\"TVARHA\": %d,\"TWHB\": %d,\"TVARHB\": %d}",
+		    gateway, id,
+            phase_R.wha, phase_R.varha,
+			phase_R.whb, phase_R.varhb,
+			phase_S.wha, phase_S.varha,
+			phase_S.whb, phase_S.varhb,
+			phase_T.wha, phase_T.varha,
+			phase_T.whb, phase_T.varhb);
+			break;
+		
+		case 8: // RST: whcd varhcd
+          snprintf(scoreData, sizeof scoreData, 
+		  "{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RWHC\": %d,\"RVARHC\": %d,\"RWHD\": %d,\"RVARHD\": %d,\"SWHC\": %d,\"SVARHC\": %d,\"SWHD\": %d,\"SVARHD\": %d,\"TWHC\": %d,\"TVARHC\": %d,\"TWHD\": %d,\"TVARHD\": %d}",
+		    gateway, id,
+			phase_R.whc, phase_R.varhc,
+			phase_R.whd, phase_R.varhd,
+			phase_S.whc, phase_S.varhc,
+			phase_S.whd, phase_S.varhd, 
+			phase_T.whc, phase_T.varhc, 
+			phase_T.whd, phase_T.varhd);
+			break;
+		
+		case 9:	// RST: whef varhef
+          snprintf(scoreData, sizeof scoreData, 
+		  "{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RWHE\": %d,\"RVARHE\": %d,\"RWHF\": %d,\"RVARHF\": %d,\"SWHE\": %d,\"SVARHE\": %d,\"SWHF\": %d,\"SVARHF\": %d,\"TWHE\": %d,\"TVARHE\": %d,\"TWHF\": %d,\"TVARHF\": %d}",
+		    gateway, id,
+			phase_R.whe, phase_R.varhe,
+			phase_R.whf, phase_R.varhf,
+			phase_S.whe, phase_S.varhe,
+			phase_S.whf, phase_S.varhf,
+			phase_T.whe, phase_T.varhe,
+			phase_T.whf, phase_T.varhf);
+			break;
+		
+		case 10:	// RST: whper ab, varhper ab
+          snprintf(scoreData, sizeof scoreData, 
+		  "{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RWPERA\": %d,\"RVARPERA\": %d,\"RWPERB\": %d,\"RVARPERB\": %d,\"SWPERA\": %d,\"SVARPERA\": %d,\"SWPERB\": %d,\"SVARPERB\": %d,\"TWPERA\": %d,\"TVARPERA\": %d,\"TWPERB\": %d,\"TVARPERB\": %d}",
+		    gateway, id,
+            phase_R.wha_per, phase_R.varha_per,
+			phase_R.whb_per, phase_R.varhb_per,
+			phase_S.wha_per, phase_S.varha_per,
+			phase_S.whb_per, phase_S.varhb_per,
+			phase_T.wha_per, phase_T.varha_per,
+			phase_T.whb_per, phase_T.varhb_per);
+			break;
+		
+		case 11: // RST: whper cd, varhper cd
+          snprintf(scoreData, sizeof scoreData, 
+		  "{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RWPERC\": %d,\"RVARPERC\": %d,\"RWPERD\": %d,\"RVARPERD\": %d,\"SWPERC\": %d,\"SVARPERC\": %d,\"SWPERD\": %d,\"SVARPERD\": %d,\"TWPERC\": %d,\"TVARPERC\": %d,\"TWPERD\": %d,\"TVARPERD\": %d}",
+		    gateway, id,
+			phase_R.whc_per, phase_R.varhc_per,
+			phase_R.whd_per, phase_R.varhd_per,
+			phase_S.whc_per, phase_S.varhc_per,
+			phase_S.whd_per, phase_S.varhd_per,
+			phase_T.whc_per, phase_T.varhc_per,
+			phase_T.whd_per, phase_T.varhd_per);
+			break;
+			
+		case 12: // RST: whper ef, varhper ef
+          snprintf(scoreData, sizeof scoreData, 
+		  "{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RWPERE\": %d,\"RVARPERE\": %d,\"RWPERF\": %d,\"RVARPERF\": %d,\"SWPERE\": %d,\"SVARPERE\": %d,\"SWPERF\": %d,\"SVARPERF\": %d,\"TWPERE\": %d,\"TVARPERE\": %d,\"TWPERF\": %d,\"TVARPERF\": %d}",
+		    gateway, id,
+			phase_R.whe_per, phase_R.varhe_per, 
+			phase_R.whf_per, phase_R.varhf_per,
+			phase_S.whe_per, phase_S.varhe_per,
+			phase_S.whf_per, phase_S.varhf_per,
+			phase_T.whe_per, phase_T.varhe_per,
+			phase_T.whf_per, phase_T.varhf_per);
+			break;
+	}
+		
+		  CURL *curl;
+		  CURLcode res; 
+		  curl_global_init(CURL_GLOBAL_ALL);
+		  curl = curl_easy_init();
+		  if(curl) { 
+		     	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
+					struct curl_slist *headers = NULL;
+					headers = curl_slist_append(headers, "Accept: application/json");
+					headers = curl_slist_append(headers, "Content-Type: application/json");
+					headers = curl_slist_append(headers, "charsets: utf-8");
+					curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers); 
+		     	//curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
+			    curl_easy_setopt(curl, CURLOPT_URL, location);
+			    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, scoreData);
+			    res = curl_easy_perform(curl);
+			    if(res != CURLE_OK)
+			    fprintf(stderr, "curl_easy_perform() failed: %s\n",curl_easy_strerror(res));
+			    curl_easy_cleanup(curl);
+		  	}   
+		  curl_global_cleanup();
+	return 0;
+}
+
+
 int trap_th (char* location, int uID, char* gateway_ID, uint16_t th_ID, uint16_t dIn1, uint16_t dIn2
             , uint16_t hummidity, uint16_t th1, uint16_t th2, uint16_t th3, int16_t rssi
             )
