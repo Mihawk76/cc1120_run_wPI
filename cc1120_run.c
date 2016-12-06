@@ -138,7 +138,7 @@ uint8_t add_type = 0x02; //add type as new node
 uint8_t index_node = 0x00; //temp index node
 uint8_t wakeup_hold = 0x05; //wake up hold in 100ms
 uint16_t cc1120_TH_ID;
-uint16_t cc1120_TH_ID_Selected[TH_NODES_MAX] = { 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+uint16_t cc1120_TH_ID_Selected[TH_NODES_MAX] = { 1, 2, 3, 4, 5, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 TH_NODE_T th_nodes[TH_NODES_MAX];
 uint32_t cc1120_KWH_ID;
 int cc1120_TH_Listed = 6;
@@ -159,6 +159,7 @@ int32_t replyDly;
 //char* location = "http://192.168.88.19:1616/dcms/rest/alfa";
 //char* location = "http://10.42.0.1/post.php";
 char* location = "http://35.160.141.229:3000/api/ths";
+char* location_kwh = "http://35.160.141.229:3000/api/WattPrd_Is";
 char* location_wattR = "http://35.160.141.229:3000/api/RWatts";
 char* location_wattS = "http://35.160.141.229:3000/api/SWatts";
 char* location_wattT = "http://35.160.141.229:3000/api/TWatts";
@@ -1363,7 +1364,12 @@ void res_service( void)
 	}
 	for (i=0;i<13;i++) {
 	   if (phase_flags[i]== STATUS_CLEARED) continue;
-	   res_val_kwh (location, kwh_ID, gateway_ID, i);
+			if(i > 1 && i < 6){
+	   res_val_kwh (location_kwh, kwh_ID, gateway_ID, i);
+		}
+		if(i==0){
+			printf("data kwh\n");
+		}
 	   phase_flags[i]= STATUS_CLEARED;
 	}
 
