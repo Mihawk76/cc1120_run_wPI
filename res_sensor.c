@@ -588,7 +588,7 @@ int  res_th (char* location,uint16_t Th1,uint16_t Th2,uint16_t Th3,uint16_t Humi
 {
 		//snprintf(scoreData, sizeof scoreData, "Th1=%d&Th2=%d&Th3=%d&Humidity=%d&device=%d&nilai=%d&gateway=%d",
 		snprintf(scoreData, sizeof scoreData, 
-		"{\"Th_id\": %d,\"type\": %d,\"Gateway_id\": %d,\"temp1\": %d,\"temp2\": %d,\"temp3\": %d,\"humidity\": %d,\"id\": 0}",
+		"{\"Th_id\": %d,\"type\": %d,\"Gateway_id\": %d,\"temp1\": %d,\"temp2\": %d,\"temp3\": %d,\"humidity\": %d}",
 		device, nilai, gateway, Th1, Th2, Th3, Humidity);
 		//printf("%d\n", sizeof scoreData);
 		printf("%s\n", scoreData);
@@ -634,73 +634,79 @@ int  res_val_kwh (char* location,  int id, int gateway, int kwh_index)
 		
 		case 1:	// RST: Ia, pfa, WATTa, VARa
 		  snprintf(scoreData, sizeof scoreData, 
-		  "{\"Kwh_id\": %d,\"Gateway_id\": %d,\"IR\": %03d.%03d,\"WattPrdR\": %d,\"IS\": %03d.%03d,\"WattPrdS\": %d,\"IT\": %03d.%03d,\"WattPrdT\": %d, \"Channel\": %d}",
+		  "{\"Kwh_id\": %d,\"Gateway_id\": %d,\"WattPrdR\": %d,\"WattPrdS\": %d,\"WattPrdT\": %d,\"IR\": %d,\"IS\": %d,\"IT\": %d,\"Channel\": %d}",
 		    id, gateway,
-			phase_R.irmsa/1000, abs(phase_R.irmsa%1000), phase_R.wa, 
-			phase_S.irmsa/1000, abs(phase_S.irmsa%1000), phase_S.wa, 
-			phase_T.irmsa/1000, abs(phase_T.irmsa%1000), phase_T.wa, (kwh_index-1));
+			phase_R.wa, phase_S.wa, phase_T.wa,
+			phase_R.irmsa, 
+			phase_S.irmsa,  
+			phase_T.irmsa, (kwh_index-1));
 		  printf("%s\n", scoreData);
 
 			break;
 		
 		case 2: // RST: Ib, pfb, WATTb, VARb
 		  snprintf(scoreData, sizeof scoreData, 
-		  "{\"Kwh_id\": %d,\"Gateway_id\": %d,\"IR\": %03d.%03d,\"WattPrdR\": %d,\"IS\": %03d.%03d,\"WattPrdS\": %d,\"IT\": %03d.%03d,\"WattPrdT\": %d, \"Channel\": %d}",
+		  "{\"Kwh_id\": %d,\"Gateway_id\": %d,\"WattPrdR\": %d,\"WattPrdS\": %d,\"WattPrdT\": %d,\"IR\": %d,\"IS\": %d,\"IT\": %d,\"Channel\": %d}",
 		    id, gateway,
+			phase_R.wb, phase_S.wb, phase_T.wb,
+			phase_R.irmsb, 
+			phase_S.irmsb,  
+			phase_T.irmsb, (kwh_index-1));
 		  /*"{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RIRMSB\": %03d.%03d,\"RPFB\": %d,\"RWATTB\": %d,\"RVARB\": %d,\"SIRMSB\": %03d.%03d,\"SPFB\": %d,\"SWATTB\": %d,\"SVARB\": %d,\"TIRMSB\": %03d.%03d,\"TPFB\": %d,\"TWATTB\": %d,\"TVARB\": %d}",
 		    gateway, id,*/
-			phase_R.irmsb/1000, abs(phase_R.irmsb%1000), phase_R.wb, 
-			phase_S.irmsb/1000, abs(phase_S.irmsb%1000), phase_S.wb, 
-			phase_T.irmsb/1000, abs(phase_T.irmsb%1000), phase_T.wb, (kwh_index-1));
 		  printf("%s\n", scoreData);
 			break;
 		
 		case 3:	// RST: Ic, pfc, WATTc, VARc
           snprintf(scoreData, sizeof scoreData, 
-		  "{\"Kwh_id\": %d,\"Gateway_id\": %d,\"IR\": %03d.%03d,\"WattPrdR\": %d,\"IS\": %03d.%03d,\"WattPrdS\": %d,\"IT\": %03d.%03d,\"WattPrdT\": %d, \"Channel\": %d}",
+		  "{\"Kwh_id\": %d,\"Gateway_id\": %d,\"WattPrdR\": %d,\"WattPrdS\": %d,\"WattPrdT\": %d,\"IR\": %d,\"IS\": %d,\"IT\": %d,\"Channel\": %d}",
 		    id, gateway,
+			phase_R.wc, phase_S.wc, phase_T.wc,
+			phase_R.irmsc, 
+			phase_S.irmsc,  
+			phase_T.irmsc, (kwh_index-1));
 		  /*"{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RIRMSC\": %03d.%03d,\"RPFC\": %d,\"RWATTC\": %d,\"RVARC\": %d,\"SIRMSC\": %03d.%03d,\"SPFC\": %d,\"SWATTC\": %d,\"SVARC\": %d,\"TIRMSC\": %03d.%03d,\"TPFC\": %d,\"TWATTC\": %d,\"TVARC\": %d}",
 		    gateway, id,*/
-		    phase_R.irmsc/1000, abs(phase_R.irmsc%1000), phase_R.wc, 
-			phase_S.irmsc/1000, abs(phase_S.irmsc%1000),  phase_S.wc, 
-			phase_T.irmsc/1000, abs(phase_T.irmsc%1000),  phase_T.wc, (kwh_index-1));
 		  printf("%s\n", scoreData);
 			break;
 
 		
 		case 4: // RST: Id, pfd, WATTd, VARd
           snprintf(scoreData, sizeof scoreData, 
-		  "{\"Kwh_id\": %d,\"Gateway_id\": %d,\"IR\": %03d.%03d,\"WattPrdR\": %d,\"IS\": %03d.%03d,\"WattPrdS\": %d,\"IT\": %03d.%03d,\"WattPrdT\": %d, \"Channel\": %d}",
+		  "{\"Kwh_id\": %d,\"Gateway_id\": %d,\"WattPrdR\": %d,\"WattPrdS\": %d,\"WattPrdT\": %d,\"IR\": %d,\"IS\": %d,\"IT\": %d,\"Channel\": %d}",
 		    id, gateway,
+			phase_R.wd, phase_S.wd, phase_T.wd,
+			phase_R.irmsd, 
+			phase_S.irmsd,  
+			phase_T.irmsd, (kwh_index-1));
 		 /* "{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RIRMSD\": %03d.%03d,\"RPFD\": %d,\"RWATTD\": %d,\"RVARD\": %d,\"SIRMSD\": %03d.%03d,\"SPFD\": %d,\"SWATTD\": %d,\"SVARD\": %d,\"TIRMSD\": %03d.%03d,\"TPFD\": %d,\"TWATTD\": %d,\"TVARD\": %d}",
 		    gateway, id,*/
-			phase_R.irmsd/1000, abs(phase_R.irmsd%1000), phase_R.wd, 
-			phase_S.irmsd/1000, abs(phase_S.irmsd%1000), phase_S.wd, 
-			phase_T.irmsd/1000, abs(phase_T.irmsd%1000), phase_T.wd, (kwh_index-1));
 		  printf("%s\n", scoreData);
 			break;
 		
 		case 5:	// RST: Ie, pfe, WATTe, VARe
           snprintf(scoreData, sizeof scoreData, 
-		  "{\"Kwh_id\": %d,\"Gateway_id\": %d,\"IR\": %03d.%03d,\"WattPrdR\": %d,\"IS\": %03d.%03d,\"WattPrdS\": %d,\"IT\": %03d.%03d,\"WattPrdT\": %d, \"Channel\": %d}",
+		  "{\"Kwh_id\": %d,\"Gateway_id\": %d,\"WattPrdR\": %d,\"WattPrdS\": %d,\"WattPrdT\": %d,\"IR\": %d,\"IS\": %d,\"IT\": %d,\"Channel\": %d}",
 		    id, gateway,
+			phase_R.we, phase_S.we, phase_T.we,
+			phase_R.irmse, 
+			phase_S.irmse,  
+			phase_T.irmse, (kwh_index-1));
 		  /*"{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RIRMSE\": %03d.%03d,\"RPFE\": %d,\"RWATTE\": %d,\"RVARE\": %d,\"SIRMSE\": %03d.%03d,\"SPFE\": %d,\"SWATTE\": %d,\"SVARE\": %d,\"TIRMSE\": %03d.%03d,\"TPFE\": %d,\"TWATTE\": %d,\"TVARE\": %d}",
 		    gateway, id,*/
-	      phase_R.irmse/1000, abs(phase_R.irmse%1000), phase_R.we, 
-		    phase_S.irmse/1000, abs(phase_S.irmse%1000), phase_S.we, 
-		    phase_T.irmse/1000, abs(phase_T.irmse%1000), phase_T.we, (kwh_index-1));
 		  printf("%s\n", scoreData);
 			break;
 		
 		case 6: // RST: If, pff, WATTf, VARf
           snprintf(scoreData, sizeof scoreData, 
-		  "{\"Kwh_id\": %d,\"Gateway_id\": %d,\"IR\": %03d.%03d,\"WattPrdR\": %d,\"IS\": %03d.%03d,\"WattPrdS\": %d,\"IT\": %03d.%03d,\"WattPrdT\": %d, \"Channel\": %d}",
+		  "{\"Kwh_id\": %d,\"Gateway_id\": %d,\"WattPrdR\": %d,\"WattPrdS\": %d,\"WattPrdT\": %d,\"IR\": %d,\"IS\": %d,\"IT\": %d,\"Channel\": %d}",
 		    id, gateway,
+			phase_R.wf, phase_S.wf, phase_T.wf,
+			phase_R.irmsf, 
+			phase_S.irmsf,  
+			phase_T.irmsf, (kwh_index-1));
 		  /*"{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RIRMSF\": %03d.%03d,\"RPFF\": %d,\"RWATTF\": %d,\"RVARF\": %d,\"SIRMSF\": %03d.%03d,\"SPFF\": %d,\"SWATTF\": %d,\"SVARF\": %d,\"TIRMSF\": %03d.%03d,\"TPFF\": %d,\"TWATTF\": %d,\"TVARF\": %d}",
 		    gateway, id,*/
-			phase_R.irmsf/1000, abs(phase_R.irmsf%1000), phase_R.wf, 
-			phase_S.irmsf/1000, abs(phase_S.irmsf%1000), phase_S.wf, 
-			phase_T.irmsf/1000, abs(phase_T.irmsf%1000), phase_T.wf, (kwh_index-1));
 		  printf("%s\n", scoreData);
 			break;
 			
