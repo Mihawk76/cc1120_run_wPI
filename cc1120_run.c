@@ -1364,9 +1364,9 @@ void res_service( void)
 	}
 	for (i=0;i<13;i++) {
 	   if (phase_flags[i]== STATUS_CLEARED) continue;
-			if(i > 1 && i < 6){
+		//	if(i > 1 && i < 6){
 	   res_val_kwh (location_kwh, kwh_ID, gateway_ID, i);
-		}
+		//}
 		if(i==0){
 			printf("data kwh\n");
 		}
