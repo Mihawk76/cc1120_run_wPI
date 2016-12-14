@@ -1396,6 +1396,7 @@ void poll_kwh_service( void)
 
 	if ((spec.tv_sec%(t_wakeup_interval*60))<(6*20)) continue;
 	if (tbuff_kwh_poll[0]) continue;
+// add here if want to add ir kontroller
 	tbuff_kwh_poll[1] = COMM_VALUES_GET;
 	memcpy((uint8_t *)&tbuff_kwh_poll[2], (uint8_t *)&gateway_ID, 2);
 	memcpy((uint8_t *)&tbuff_kwh_poll[4], (uint8_t *)&kwh_ID, 2);
