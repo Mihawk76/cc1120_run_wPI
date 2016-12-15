@@ -1117,8 +1117,8 @@ void cc112x_run(void)
    	//*(uint16_t*)&Panasonic_temp[1][4] = 0x3D42; //id 
 		for(i=0;i<=100;i++)
 		{
-			txBuffer[i] = Panasonic_temp[suhu_code][i];
-			//txBuffer[i] = Panasonic_temp[15][i];
+			//txBuffer[i] = Panasonic_temp[suhu_code][i];
+			txBuffer[i] = Panasonic_temp[1][i];
 			printf("%02X ", txBuffer[i]);
 		}
 		printf("\n");
