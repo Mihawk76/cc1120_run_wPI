@@ -262,7 +262,7 @@ uint16_t mac_address_gateway;
 int freq_main;
 uint8_t remChannel;
 int kwh_loop = 0;
-int infrared_loop = 3;
+int infrared_loop = 8;
 uint8_t pktCmdx;
 int16_t rssi = 0;
 
@@ -1542,7 +1542,7 @@ void poll_kwh_service( void)
 void cc1120_service( void)
 {
   //freq_main = 1;
-  freq_main = 0;
+  freq_main = 1;
   pktCmdx = 0;
   //freq_th = 23;
   remChannel = freq_main; 
