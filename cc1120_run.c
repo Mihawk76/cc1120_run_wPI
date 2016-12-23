@@ -57,8 +57,10 @@
 #define VALUE_INVALID   10040
 
 #define TH_NODES_MAX 20
+
+uint8_t Change_freq_ir[] = { 0x0A, 0x06, 0x01, 0x00, 0x42, 0x3D, 0x15, 0x02, 0x00, 0x01, 0x01};
 uint8_t Panasonic_temp[][100] = {
-{0x40 ,0x11 ,0x00 ,0x00 ,0x42 ,0x3D ,0x15 ,0x00 ,0x00 ,0x37 ,
+{0x40 ,0x11 ,0x01 ,0x00 ,0x42 ,0x3D ,0x15 ,0x00 ,0x01 ,0x37 ,
                           0xBF ,0x01 ,0xA2 ,0x01 ,0x08 ,0x05 ,0xA2 ,0x0D ,0x01 ,0x40 ,
                           0xBB ,0x06 ,0x40 ,0xC0 ,0x40 ,0x04 ,0x07 ,0x20 ,0x00 ,0x00 ,
                           0x00 ,0x60 ,0x09 ,0x80 ,0xCF ,0x2A ,0x01 ,0x00 ,0xD6 ,0x0D ,
@@ -262,7 +264,7 @@ uint16_t mac_address_gateway;
 int freq_main;
 uint8_t remChannel;
 int kwh_loop = 0;
-int infrared_loop = 10;
+int infrared_loop = 15;
 uint8_t pktCmdx;
 int16_t rssi = 0;
 
@@ -1512,12 +1514,17 @@ void poll_kwh_service( void)
 	if (tbuff_kwh_poll[0]) continue;
 // add here if want to add ir kontrollerA
 	int i =0;
+	printf("size %d\n", sizeof Change_freq_ir);
 	if (infrared_loop > 0)
 	{
 		//add kontrol infrared
+		/*for(i=0;i<(sizeof Change_freq_ir);i++)
+    {
+      tbuff_kwh_poll[i] = Change_freq_ir[i];
+    }*/
 		for(i=0;i<=68;i++)
     {
-      tbuff_kwh_poll[i] = Panasonic_temp[1][i];
+      tbuff_kwh_poll[i] = Panasonic_temp[0][i];
       //txBuffer[i] = Panasonic_temp[15][i];
       //printf("%02X ", txBuffer[i]);
     }
@@ -1541,8 +1548,8 @@ void poll_kwh_service( void)
 
 void cc1120_service( void)
 {
-  //freq_main = 1;
-  freq_main = 0;
+  freq_main = 1;
+  //freq_main = 0;
   pktCmdx = 0;
   //freq_th = 23;
   remChannel = freq_main; 
