@@ -264,7 +264,8 @@ uint16_t mac_address_gateway;
 int freq_main;
 uint8_t remChannel;
 int kwh_loop = 0;
-int infrared_loop = 15;
+//int infrared_loop = 15;//7 
+int infrared_loop = 4;
 uint8_t pktCmdx;
 int16_t rssi = 0;
 
