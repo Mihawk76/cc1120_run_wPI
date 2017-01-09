@@ -32,6 +32,7 @@
 #include "kwh_params.c"
 #include "crc16.c"
 #include "res_sensor.c"
+#include "paring.c"
 //#include "read_int.c"
 	
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
@@ -1557,7 +1558,10 @@ void cc1120_service( void)
   int i;
   
   //freq_main = 0;
-  gateway_ID = 1002;
+  gateway_ID = 0;
+	get_id("localhost","root","satunol10","paring","main");
+	gateway_ID = mysql_id;
+	printf(" gateway %d\n", gateway_ID);
   kwh_ID = 0x67C9;
   //mac_address_gateway = read_ints();
   //setup gpio pin to spi function
