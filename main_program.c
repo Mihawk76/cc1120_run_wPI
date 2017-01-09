@@ -17,7 +17,7 @@ int main()
 		//trap_th(location, 10, gateway_ID, 1245,1,2,1356,3005,5,6,7);
 		//res_th (location, 3003, 3005, 34000, 4000, 11, gateway_ID);
 		//trap_th (location, 1, gateway_ID, 0x1003, 0, 0, humidity, temp1, temp2, temp3, rssi);
-		get_id_pairing("localhost","root","satunol10","paring","th",1001);
+		/*get_id_pairing("localhost","root","satunol10","paring","th",1001);
 		for(i=0;i<=total_pairing;i++)
 		{
 			printf("%02X %d %d\n", pairing_id[i], pairing_id[i], i+1);
@@ -26,7 +26,9 @@ int main()
 		for(i=0;i<=total_pairing;i++)
 		{
 			printf("%02X %d %d\n", pairing_id[i], pairing_id[i], i+1);
-		}
+		}*/
+		get_id("localhost","root","satunol10","paring","main");
+		printf("%d\n",mysql_id);
 		//printf("Gateway id is %d", gateway_ID);
 		return 0;
 	}
