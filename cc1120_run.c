@@ -3,7 +3,7 @@
 	*
 	* Copyright (c) 2007  MontaVista Software, Inc.
 	* Copyright (c) 2007  Anton Vorontsov <avorontsov@ru.mvista.com>
-	*
+	*a
 	* This program is free software; you can redistribute it and/or modify
 	* it under the terms of the GNU General Public License as published by
 	* the Free Software Foundation; either version 2 of the License.
@@ -240,6 +240,8 @@ typedef struct {
 	uint8_t tx_rssi;
 	uint32_t tx_counter;
 	time_t ts;  // time stamp
+	uint16_t ir_id;
+	uint8_t th_set;
 }TH_NODE_T;
 
 uint8_t t_wakeup_interval = 3;
@@ -254,7 +256,11 @@ uint8_t add_type = 0x02; //add type as new node
 uint8_t index_node = 0x00; //temp index node
 uint8_t wakeup_hold = 0x05; //wake up hold in 100ms
 uint16_t cc1120_TH_ID;
+int TOTAL_TH_ID;
 uint16_t cc1120_TH_ID_Selected[TH_NODES_MAX] = { 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+uint16_t cc1120_IR_ID_Selected[TH_NODES_MAX] = { 0x3D42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+uint8_t cc1120_TH_SET[TH_NODES_MAX] = { 27, 27, 27, 27, 27, 27, 27, 27, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
 TH_NODE_T th_nodes[TH_NODES_MAX];
 uint32_t cc1120_KWH_ID;
 int cc1120_TH_Listed = 6;
@@ -267,6 +273,7 @@ uint8_t remChannel;
 int kwh_loop = 0;
 //int infrared_loop = 15;//7 
 int infrared_loop = 4;
+int loop_th_id = 0;
 uint8_t pktCmdx;
 int16_t rssi = 0;
 
@@ -1516,23 +1523,32 @@ void poll_kwh_service( void)
 	if (tbuff_kwh_poll[0]) continue;
 // add here if want to add ir kontrollerA
 	int i =0;
-	printf("size %d\n", sizeof Change_freq_ir);
-	if (infrared_loop > 0)
+	//printf("size %d\n", sizeof Change_freq_ir);
+	
+	if (infrared_loop > 0 && loop_th_id <= TOTAL_TH_ID)
 	{
 		//add kontrol infrared
 		/*for(i=0;i<(sizeof Change_freq_ir);i++)
     {
       tbuff_kwh_poll[i] = Change_freq_ir[i];
     }*/
+		int suhu_code = th_nodes[loop_th_id].th_set - 16;
+	  printf("suhu code %d", suhu_code);	
 		for(i=0;i<=68;i++)
     {
-      tbuff_kwh_poll[i] = Panasonic_temp[0][i];
+      tbuff_kwh_poll[i] = Panasonic_temp[suhu_code][i];
       //txBuffer[i] = Panasonic_temp[15][i];
       //printf("%02X ", txBuffer[i]);
     }
+		*(uint16_t*)&tbuff_kwh_poll[4] =  th_nodes[loop_th_id].ir_id;
 			infrared_loop--;
+			if (infrared_loop == 0){
+				infrared_loop = 4;
+				loop_th_id++;
+			}
+			printf("infrared %d loop_th_id %d\n", infrared_loop, loop_th_id);
 	}
-	if (infrared_loop ==  0 )
+	if (infrared_loop ==  0 && loop_th_id > TOTAL_TH_ID)
 	{
 		tbuff_kwh_poll[1] = COMM_VALUES_GET;
 		memcpy((uint8_t *)&tbuff_kwh_poll[2], (uint8_t *)&gateway_ID, 2);
@@ -1569,6 +1585,8 @@ void cc1120_service( void)
   
   for(i=0; i<TH_NODES_MAX; i++) {
 	th_nodes[i].id = cc1120_TH_ID_Selected[i];
+	th_nodes[i].ir_id = cc1120_IR_ID_Selected[i];
+	th_nodes[i].th_set = cc1120_TH_SET[i];
 	th_nodes[i].status = STATUS_CLEARED;
 	th_nodes[i].loop_h = 0xff;
 	th_nodes[i].loop_t1 = 0xff;
@@ -1576,6 +1594,15 @@ void cc1120_service( void)
 	th_nodes[i].loop_t3 = 0xff;
   }
   
+	for (i=0;i<TH_NODES_MAX;i++)
+	{
+		if (th_nodes[i].id!= (i+1))
+		{
+			TOTAL_TH_ID = i;
+			break;
+		}
+	}
+	printf("total th id %d\n", TOTAL_TH_ID);
   pinMode(CC1120_MOSI, SPI_PIN);
   pinMode(CC1120_MISO, SPI_PIN);
   pinMode(CC1120_SCLK, SPI_PIN);
