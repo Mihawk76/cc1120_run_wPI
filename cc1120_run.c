@@ -244,6 +244,12 @@ typedef struct {
 	uint8_t th_set;
 }TH_NODE_T;
 
+typedef struct {
+	int start_hour;
+	int close_hour;
+}STORE;
+
+STORE Pondok_Pinang;
 uint8_t t_wakeup_interval = 3;
 uint8_t th_wakeup_interval = 6;
 uint8_t ds_wakeup_interval = 3;
@@ -259,7 +265,7 @@ uint16_t cc1120_TH_ID;
 int TOTAL_TH_ID;
 uint16_t cc1120_TH_ID_Selected[TH_NODES_MAX] = { 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 uint16_t cc1120_IR_ID_Selected[TH_NODES_MAX] = { 0x3D42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-uint8_t cc1120_TH_SET[TH_NODES_MAX] = { 27, 27, 27, 27, 27, 27, 27, 27, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+uint8_t cc1120_TH_SET[TH_NODES_MAX] = { 29, 29, 29, 29, 29, 29, 29, 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 TH_NODE_T th_nodes[TH_NODES_MAX];
 uint32_t cc1120_KWH_ID;
@@ -1506,11 +1512,28 @@ void poll_kwh_service( void)
 {
 //  int i;
   struct timespec spec;
+	Pondok_Pinang.start_hour = 11;
+	Pondok_Pinang.close_hour = 23;	
+	int hour;
+	int min;
+	int sec;
 //  long   ms; // Milliseconds	
   
   while(1) {
 	  
 	clock_gettime(CLOCK_REALTIME, &spec);
+	time_t t = time(NULL);
+	struct tm *tm_struct = localtime(&t);
+	hour = tm_struct->tm_hour;
+	min = tm_struct->tm_min;
+	sec = tm_struct->tm_sec;
+	// send data every 5 minutes
+	if ( min % 5 == 0 && sec == 0)
+	{
+		loop_th_id = 0;
+		//printf ("min is %d\n", min);
+	}
+	//printf("tim %d:%d\n", hour, min);
 //	current_stamp = spec.tv_sec;
 
 //	th_nodes[i].ts  = spec.tv_sec;
@@ -1518,21 +1541,26 @@ void poll_kwh_service( void)
 //	current_stamp = (th_nodes[i].ts * 100) + (ms/10); //convert to 10* ms
 
 
-
+	
 	if ((spec.tv_sec%(t_wakeup_interval*60))<(6*20)) continue;
 	if (tbuff_kwh_poll[0]) continue;
 // add here if want to add ir kontrollerA
 	int i =0;
 	//printf("size %d\n", sizeof Change_freq_ir);
 	
-	if (infrared_loop > 0 && loop_th_id <= TOTAL_TH_ID)
+	if (infrared_loop > 0 && loop_th_id < TOTAL_TH_ID)
 	{
 		//add kontrol infrared
 		/*for(i=0;i<(sizeof Change_freq_ir);i++)
     {
       tbuff_kwh_poll[i] = Change_freq_ir[i];
     }*/
-		int suhu_code = th_nodes[loop_th_id].th_set - 16;
+		int suhu_real = th_nodes[loop_th_id].th_set;
+		if ( hour < Pondok_Pinang.start_hour || hour > Pondok_Pinang.close_hour)
+		{
+			suhu_real = 31;
+		}
+		int suhu_code =  suhu_real- 16;
 	  printf("suhu code %d", suhu_code);	
 		for(i=0;i<=68;i++)
     {
@@ -1548,7 +1576,7 @@ void poll_kwh_service( void)
 			}
 			printf("infrared %d loop_th_id %d\n", infrared_loop, loop_th_id);
 	}
-	if (infrared_loop ==  0 && loop_th_id > TOTAL_TH_ID)
+	if (/*infrared_loop ==  0 && */loop_th_id >= TOTAL_TH_ID)
 	{
 		tbuff_kwh_poll[1] = COMM_VALUES_GET;
 		memcpy((uint8_t *)&tbuff_kwh_poll[2], (uint8_t *)&gateway_ID, 2);
