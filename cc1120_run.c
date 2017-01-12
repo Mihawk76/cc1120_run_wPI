@@ -1560,7 +1560,6 @@ void poll_kwh_service( void)
 		{
 			suhu_real = 31;
 		}
-		suhu_real = 29;
 		int suhu_code =  suhu_real- 16;
 	  printf("suhu code %d\n", suhu_code);	
 		for(i=0;i<=68;i++)
