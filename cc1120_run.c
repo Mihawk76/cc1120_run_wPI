@@ -265,7 +265,7 @@ uint16_t cc1120_TH_ID;
 int TOTAL_TH_ID;
 uint16_t cc1120_TH_ID_Selected[TH_NODES_MAX] = { 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 uint16_t cc1120_IR_ID_Selected[TH_NODES_MAX] = { 0x3D42, 0x3D42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-uint8_t cc1120_TH_SET[TH_NODES_MAX] = { 29, 29, 29, 29, 29, 29, 29, 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+uint8_t cc1120_TH_SET[TH_NODES_MAX] = { 31, 31, 31, 31, 31, 31, 31, 31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 TH_NODE_T th_nodes[TH_NODES_MAX];
 uint32_t cc1120_KWH_ID;
@@ -1558,7 +1558,7 @@ void poll_kwh_service( void)
 		int suhu_real = th_nodes[loop_th_id].th_set;
 		if ( hour < Pondok_Pinang.start_hour || hour > Pondok_Pinang.close_hour)
 		{
-			suhu_real = 31;
+			//suhu_real = 31;
 		}
 		int suhu_code =  suhu_real- 16;
 	  printf("suhu code %d\n", suhu_code);	
