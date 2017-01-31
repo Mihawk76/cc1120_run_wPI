@@ -291,8 +291,8 @@ int32_t replyDly;
 //char* location = "http://10.42.0.1/post.php";
 //char* location = "http://35.166.240.126:3000/api/ths";
 //char* location_kwh = "http://35.166.240.126:3000/api/WattPrd_Is";
-char* location = "http://alfademo.ddns.net:3000/api/ths";
-char* location_kwh = "http://alfademo.ddns.net:3000/api/WattPrd_Is";
+char* location = "http://alfademo.ddns.net:3001/api/ths";
+char* location_kwh = "http://alfademo.ddns.net:3001/api/WattPrd_Is";
 char* location_wattR = "http://35.160.141.229:3000/api/RWatts";
 char* location_wattS = "http://35.160.141.229:3000/api/SWatts";
 char* location_wattT = "http://35.160.141.229:3000/api/TWatts";
@@ -1547,16 +1547,16 @@ void poll_kwh_service( void)
 	if ((spec.tv_sec%(t_wakeup_interval*60))<(6*20)) continue;
 	if (tbuff_kwh_poll[0]) continue;
 // add here if want to add ir kontrollerA
-	int i =0;
+	/*int i =0;
 	//printf("size %d\n", sizeof Change_freq_ir);
 	
 	if (infrared_loop > 0 && loop_th_id < TOTAL_TH_ID)
 	{
 		//add kontrol infrared
-		/*for(i=0;i<(sizeof Change_freq_ir);i++)
+		for(i=0;i<(sizeof Change_freq_ir);i++)
     {
       tbuff_kwh_poll[i] = Change_freq_ir[i];
-    }*/
+    }
 		int suhu_real = th_nodes[loop_th_id].th_set;
 		if ( hour < Pondok_Pinang.start_hour || hour > Pondok_Pinang.close_hour)
 		{
@@ -1577,8 +1577,8 @@ void poll_kwh_service( void)
 				loop_th_id++;
 			}
 			printf("infrared %d loop_th_id %d\n", infrared_loop, loop_th_id);
-	}
-	if (/*infrared_loop ==  0 && */loop_th_id >= TOTAL_TH_ID)
+	}*/
+	if (/*loop_th_id >= TOTAL_TH_ID*/1)
 	{
 		tbuff_kwh_poll[1] = COMM_VALUES_GET;
 		memcpy((uint8_t *)&tbuff_kwh_poll[2], (uint8_t *)&gateway_ID, 2);
