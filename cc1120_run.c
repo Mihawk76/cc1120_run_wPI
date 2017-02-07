@@ -1606,6 +1606,7 @@ void cc1120_service( void)
   //freq_main = 0;
   gateway_ID = 0;
 	get_id("localhost","root","satunol10","paring","main");
+	get_ir_command("localhost","root","satunol10","paring","ir_command", "Panasonic");
 	gateway_ID = mysql_id;
 	printf(" gateway %d\n", gateway_ID);
   kwh_ID = 0x67C9;

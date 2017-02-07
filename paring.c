@@ -3,7 +3,7 @@
 #include <mysql.h>
 #include <string.h>
 #include <stdlib.h>
-#include "paring.h"
+//#include "paring.h"
 
 //char*id_getway[100];
 int total_pairing;
@@ -73,9 +73,9 @@ void get_ir_command(char* server, char* user ,char* password ,char* dbname,char*
 			printf("%d %d %02X\n", ir_command[a].suhu, ir_command[a].no_byte, ir_command[a].value_byte);
 			a++;
   		//printf("\n"); 
-			//if (ir_command[a].suhu == 30){
-				//break;
-			//}
+			if (ir_command[a].suhu == 30){
+				break;
+			}
     }
 	}
 
