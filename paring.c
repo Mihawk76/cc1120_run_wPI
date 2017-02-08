@@ -23,7 +23,7 @@ void finish_with_error(MYSQL *con)
   mysql_close(con);
   exit(1);        
 }
-void get_ir_command(char* server, char* user ,char* password ,char* dbname,char* nm_table,char* tipe_ac)
+void get_ir_command(char* server, char* user ,char* password ,char* dbname,char* nm_table,char* tipe_ac, int suhu)
 {      
   MYSQL *con = mysql_init(NULL);
 
@@ -39,7 +39,7 @@ void get_ir_command(char* server, char* user ,char* password ,char* dbname,char*
       finish_with_error(con);
   }    
 	char select[100];
- sprintf(select,"select suhu, no_byte, value_byte from  %s where tipe_ac='%s'",nm_table,tipe_ac); 
+ sprintf(select,"select suhu, no_byte, value_byte from  %s where tipe_ac='%s' && suhu=%d", nm_table, tipe_ac, suhu); 
  if (mysql_query(con,select)) 
  { 
       finish_with_error(con);

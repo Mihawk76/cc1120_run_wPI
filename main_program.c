@@ -42,7 +42,8 @@ int main()
 	//res_T_WattPrd_WattHour(location_wattT, kwh, kwh, 14, cc1120_TH_ID, gateway);
 	//res_T_I(location, kwh, 14, cc1120_TH_ID, gateway);
 	//res_th_2 (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID);
-  get_id("localhost","root","satunol10","paring","main");
+  //get_id("localhost","root","satunol10","paring","main");
+	get_ir_command("localhost","root","satunol10","paring","ir_command", "Panasonic", 16);
   printf("%d\n",mysql_id);
 	return 0;
 	}

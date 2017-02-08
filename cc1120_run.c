@@ -1564,12 +1564,17 @@ void poll_kwh_service( void)
 		}
 		int suhu_code =  suhu_real- 16;
 	  printf("suhu code %d\n", suhu_code);	
+		get_ir_command("localhost","root","satunol10","paring","ir_command", "Panasonic", suhu_code);
 		for(i=0;i<=68;i++)
     {
       tbuff_kwh_poll[i] = Panasonic_temp[suhu_code][i];
+      //tbuff_kwh_poll[i] = ir_command[i].value_byte;
+			//printf("%02x ", ir_command[i].value_byte);
+			//printf("%02x ", tbuff_kwh_poll[i]);
       //txBuffer[i] = Panasonic_temp[15][i];
       //printf("%02X ", txBuffer[i]);
     }
+		printf("\n");
 		*(uint16_t*)&tbuff_kwh_poll[4] =  th_nodes[loop_th_id].ir_id;
 			infrared_loop--;
 			if (infrared_loop == 0){
@@ -1606,7 +1611,7 @@ void cc1120_service( void)
   //freq_main = 0;
   gateway_ID = 0;
 	get_id("localhost","root","satunol10","paring","main");
-	get_ir_command("localhost","root","satunol10","paring","ir_command", "Panasonic");
+	get_ir_command("localhost","root","satunol10","paring","ir_command", "Panasonic", 16);
 	gateway_ID = mysql_id;
 	printf(" gateway %d\n", gateway_ID);
   kwh_ID = 0x67C9;
