@@ -254,6 +254,7 @@ uint8_t t_wakeup_interval = 3;
 uint8_t th_wakeup_interval = 6;
 uint8_t ds_wakeup_interval = 3;
 
+int flag_ir = 0;
 uint8_t txBuffer[256];
 uint8_t rxBuffer[256];
 uint16_t packetCounter = 0;
@@ -1564,11 +1565,11 @@ void poll_kwh_service( void)
 		}
 		int suhu_code =  suhu_real- 16;
 	  printf("suhu code %d\n", suhu_code);	
-		get_ir_command("localhost","root","satunol10","paring","ir_command", "Panasonic", suhu_code);
+		//get_ir_command("localhost","root","satunol10","paring","ir_command", "Panasonic", suhu_code);
 		for(i=0;i<=68;i++)
     {
-      tbuff_kwh_poll[i] = Panasonic_temp[suhu_code][i];
-      //tbuff_kwh_poll[i] = ir_command[i].value_byte;
+      //tbuff_kwh_poll[i] = Panasonic_temp[suhu_code][i];
+      tbuff_kwh_poll[i] = ir_command[i].value_byte;
 			//printf("%02x ", ir_command[i].value_byte);
 			//printf("%02x ", tbuff_kwh_poll[i]);
       //txBuffer[i] = Panasonic_temp[15][i];
@@ -1611,7 +1612,6 @@ void cc1120_service( void)
   //freq_main = 0;
   gateway_ID = 0;
 	get_id("localhost","root","satunol10","paring","main");
-	get_ir_command("localhost","root","satunol10","paring","ir_command", "Panasonic", 16);
 	gateway_ID = mysql_id;
 	printf(" gateway %d\n", gateway_ID);
   kwh_ID = 0x67C9;
@@ -1668,6 +1668,11 @@ void cc1120_service( void)
 	fprintf(f, "Some text: %s %d \n", text, datalog);*/
 	
 	/* communication handler */
+	if(flag_ir==0){
+		get_ir_command("localhost","root","satunol10","paring","ir_command", "Panasonic", th_nodes[0].th_set);
+		get_ir_command("localhost","root","satunol10","paring","ir_command", "Panasonic", 20);
+		flag_ir++;
+	}
 	cc112x_run();
 	//datalog++;
 	//fclose(f);
