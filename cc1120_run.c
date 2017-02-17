@@ -1551,7 +1551,7 @@ void poll_kwh_service( void)
 	int i =0;
 	//printf("size %d\n", sizeof Change_freq_ir);
 	
-	if (infrared_loop > 0 && loop_th_id < TOTAL_TH_ID)
+	if (infrared_loop > 0 && loop_th_id < TOTAL_TH_ID && flag_ir==1)// 0 ir array is empty
 	{
 		//add kontrol infrared
 		for(i=0;i<(sizeof Change_freq_ir);i++)
