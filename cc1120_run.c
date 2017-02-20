@@ -60,6 +60,7 @@
 #define TH_NODES_MAX 20
 
 uint8_t Change_freq_ir[] = { 0x0A, 0x06, 0x01, 0x00, 0x42, 0x3D, 0x15, 0x02, 0x00, 0x01, 0x01};
+uint8_t ir_command_save[8][100];
 uint8_t Panasonic_temp[][100] = {
 {0x40 ,0x11 ,0x01 ,0x00 ,0x42 ,0x3D ,0x15 ,0x00 ,0x00 ,0x37 ,
                           0xBF ,0x01 ,0xA2 ,0x01 ,0x08 ,0x05 ,0xA2 ,0x0D ,0x01 ,0x40 ,
@@ -242,6 +243,7 @@ typedef struct {
 	time_t ts;  // time stamp
 	uint16_t ir_id;
 	uint8_t th_set;
+	char* ac_type;
 }TH_NODE_T;
 
 typedef struct {
@@ -267,7 +269,7 @@ int TOTAL_TH_ID;
 uint16_t cc1120_TH_ID_Selected[TH_NODES_MAX] = { 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 uint16_t cc1120_IR_ID_Selected[TH_NODES_MAX] = { 0x3D42, 0x3D42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 uint8_t cc1120_TH_SET[TH_NODES_MAX] = { 29, 29, 29, 29, 29, 29, 29, 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
+char* AC_TYPE[TH_NODES_MAX] = { "Panasonic","Panasonic","Panasonic","Panasonic","Panasonic","Panasonic","Panasonic","Panasonic"};
 TH_NODE_T th_nodes[TH_NODES_MAX];
 uint32_t cc1120_KWH_ID;
 int cc1120_TH_Listed = 6;
@@ -1568,8 +1570,9 @@ void poll_kwh_service( void)
 		//get_ir_command("localhost","root","satunol10","paring","ir_command", "Panasonic", suhu_code);
 		for(i=0;i<=68;i++)
     {
-      //tbuff_kwh_poll[i] = Panasonic_temp[suhu_code][i];
-      tbuff_kwh_poll[i] = ir_command[i].value_byte;
+      tbuff_kwh_poll[i] = Panasonic_temp[suhu_code][i];
+      //tbuff_kwh_poll[i] = ir_command_save[0][i];
+			//tbuff_kwh_poll[i] = ir_command[i].value_byte;
 			//printf("%02x ", ir_command[i].value_byte);
 			//printf("%02x ", tbuff_kwh_poll[i]);
       //txBuffer[i] = Panasonic_temp[15][i];
@@ -1623,6 +1626,7 @@ void cc1120_service( void)
 	th_nodes[i].id = cc1120_TH_ID_Selected[i];
 	th_nodes[i].ir_id = cc1120_IR_ID_Selected[i];
 	th_nodes[i].th_set = cc1120_TH_SET[i];
+	//th_nodes[i].ac_type = AC_TYPE[i];
 	th_nodes[i].status = STATUS_CLEARED;
 	th_nodes[i].loop_h = 0xff;
 	th_nodes[i].loop_t1 = 0xff;
@@ -1653,7 +1657,16 @@ void cc1120_service( void)
   //cc112x_init(23,0);// freq 410 Mhz + (1 Mhz * freq_main)
   cc112x_init(freq_main,0);// freq 410 Mhz + (1 Mhz * freq_main)
   memset(&txBuffer[0],0,sizeof(txBuffer));
-	
+	/*if(flag_ir==0){
+		for(loop_th_id=0;loop_th_id<TOTAL_TH_ID;loop_th_id++)
+		{
+			get_ir_command("localhost","root","satunol10","paring","ir_command", "Panasonic", th_nodes[loop_th_id].th_set);
+			for(i=0;i<=68;i++)
+    	{
+      	ir_command_save[0][i] = ir_command[i].value_byte;
+    	}
+		}
+	}*/	
 	
   while(1) {
  	/*f = fopen("/home/data.log", "a");
@@ -1668,11 +1681,18 @@ void cc1120_service( void)
 	fprintf(f, "Some text: %s %d \n", text, datalog);*/
 	
 	/* communication handler */
-	if(flag_ir==0){
-		get_ir_command("localhost","root","satunol10","paring","ir_command", "Panasonic", th_nodes[0].th_set);
-		get_ir_command("localhost","root","satunol10","paring","ir_command", "Panasonic", 20);
+	/*if(flag_ir==0){
+		for(loop_th_id=0;loop_th_id<TOTAL_TH_ID;loop_th_id++)
+		{
+			get_ir_command("localhost","root","satunol10","paring","ir_command", "Panasonic", th_nodes[loop_th_id].th_set);
+			for(i=0;i<=68;i++)
+    	{
+      	ir_command_save[0][i] = ir_command[i].value_byte;
+    	}
+		}
+		//get_ir_command("localhost","root","satunol10","paring","ir_command", "Panasonic", 20);
 		flag_ir++;
-	}
+	}*/
 	cc112x_run();
 	//datalog++;
 	//fclose(f);
