@@ -1537,7 +1537,7 @@ void poll_kwh_service( void)
 	if ( min % 5 == 0 && sec == 0)
 	{
 		loop_th_id = 0;
-		flag_ir=0;
+		//flag_ir=0;
 		//printf ("min is %d\n", min);
 	}
 	//printf("tim %d:%d\n", hour, min);
@@ -1660,17 +1660,32 @@ void cc1120_service( void)
 	int hour;
 	int min;
 	int sec;
+	int flag_reset = 0;
 //  long   ms; // Milliseconds	
   
 	  
 	
 	
   while(1) {
-  	if(flag_ir==0){
 		clock_gettime(CLOCK_REALTIME, &spec);
 		time_t t = time(NULL);
 		struct tm *tm_struct = localtime(&t);
 		hour = tm_struct->tm_hour;
+		min = tm_struct->tm_min;
+		sec = tm_struct->tm_sec;
+		// send data every 5 minutes
+		if ( min % 5 == 0 && sec == 0 && flag_reset == 1)
+		{
+			flag_ir=0;
+			printf("masuk sini\n");
+			sleep(1);
+			//printf ("min is %d\n", min);
+		}
+		if ( min % 5 == 0 && sec == 5 && flag_reset == 0)
+		{
+			flag_reset  = 1;
+		}	
+  	if(flag_ir==0){
     for(loop_th_id=0;loop_th_id<TOTAL_TH_ID;loop_th_id++)
     {
 			int suhu_real = th_nodes[loop_th_id].th_set;
