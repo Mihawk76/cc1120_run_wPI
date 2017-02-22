@@ -1537,6 +1537,7 @@ void poll_kwh_service( void)
 	if ( min % 5 == 0 && sec == 0)
 	{
 		loop_th_id = 0;
+		flag_ir=0;
 		//printf ("min is %d\n", min);
 	}
 	//printf("tim %d:%d\n", hour, min);
@@ -1653,13 +1654,31 @@ void cc1120_service( void)
   //cc112x_init(23,0);// freq 410 Mhz + (1 Mhz * freq_main)
   cc112x_init(freq_main,0);// freq 410 Mhz + (1 Mhz * freq_main)
   memset(&txBuffer[0],0,sizeof(txBuffer));
+  struct timespec spec;
+	Pondok_Pinang.start_hour = 11;
+	Pondok_Pinang.close_hour = 23;	
+	int hour;
+	int min;
+	int sec;
+//  long   ms; // Milliseconds	
+  
+	  
 	
 	
   while(1) {
-  if(flag_ir==0){
+  	if(flag_ir==0){
+		clock_gettime(CLOCK_REALTIME, &spec);
+		time_t t = time(NULL);
+		struct tm *tm_struct = localtime(&t);
+		hour = tm_struct->tm_hour;
     for(loop_th_id=0;loop_th_id<TOTAL_TH_ID;loop_th_id++)
     {
-      get_ir_command("localhost","root","satunol10","paring","ir_command", th_nodes[loop_th_id].ac_type, th_nodes[loop_th_id].th_set);
+			int suhu_real = th_nodes[loop_th_id].th_set;
+			if ( hour < Pondok_Pinang.start_hour || hour > Pondok_Pinang.close_hour)
+			{
+				suhu_real = 31;
+			}	
+      get_ir_command("localhost","root","satunol10","paring","ir_command", th_nodes[loop_th_id].ac_type, suhu_real);
       for(i=0;i<=68;i++)
       {
         ir_command_save[loop_th_id][i] = ir_command[i].value_byte;
