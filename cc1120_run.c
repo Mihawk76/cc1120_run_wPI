@@ -1531,6 +1531,7 @@ void poll_kwh_service( void)
 	time_t t = time(NULL);
 	struct tm *tm_struct = localtime(&t);
 	hour = tm_struct->tm_hour;
+	hour = 10;
 	min = tm_struct->tm_min;
 	sec = tm_struct->tm_sec;
 	// send data every 5 minutes
@@ -1671,6 +1672,7 @@ void cc1120_service( void)
 		time_t t = time(NULL);
 		struct tm *tm_struct = localtime(&t);
 		hour = tm_struct->tm_hour;
+		//hour = 3;
 		min = tm_struct->tm_min;
 		sec = tm_struct->tm_sec;
 		// send data every 5 minutes
@@ -1693,6 +1695,7 @@ void cc1120_service( void)
 			{
 				suhu_real = 31;
 			}	
+			printf("suhu real %d hour %d\n\n",suhu_real, hour);
       get_ir_command("localhost","root","satunol10","paring","ir_command", th_nodes[loop_th_id].ac_type, suhu_real);
       for(i=0;i<=68;i++)
       {
