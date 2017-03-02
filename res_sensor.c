@@ -710,18 +710,26 @@ int  res_val_kwh (char* location,  int id, int gateway, int kwh_index)
 		  printf("%s\n", scoreData);
 			break;
 			
-		/*case 7:	// RST: whab varhab
+		case 7:	// RST: whab varhab
          snprintf(scoreData, sizeof scoreData, 
-		  "{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RWHA\": %d,\"RVARHA\": %d,\"RWHB\": %d,\"RVARHB\": %d,\"SWHA\": %d,\"SVARHA\": %d,\"SWHB\": %d,\"SVARHB\": %d,\"TWHA\": %d,\"TVARHA\": %d,\"TWHB\": %d,\"TVARHB\": %d}",
-		    gateway, id,
-            phase_R.wha, phase_R.varha,
+		  "data:[{\"Kwh_id\": %d,\"Gateway_id\": %d,\"Rwh\": %d,\"Swh\": %d,\"Twh\": %d,\"Rvarh\": %d,\"Svarh\": %d,\"Tvarh\": %d,\"Channel\":%d},{\"Kwh_id\": %d,\"Gateway_id\": %d,\"Rwh\": %d,\"Swh\": %d,\"Twh\": %d,\"Rvarh\": %d,\"Svarh\": %d,\"Tvarh\": %d,\"Channel\":%d}]",
+		  /*"{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RWHA\": %d,\"RVARHA\": %d,\"RWHB\": %d,\"RVARHB\": %d,\"SWHA\": %d,\"SVARHA\": %d,\"SWHB\": %d,\"SVARHB\": %d,\"TWHA\": %d,\"TVARHA\": %d,\"TWHB\": %d,\"TVARHB\": %d}",*/
+		  gateway, id, 
+			phase_R.wha, phase_S.wha, phase_T.wha,
+			phase_R.varha, phase_S.varha, phase_T.varha,
+			(kwh_index-7),
+		  gateway, id, 
+			phase_R.whb, phase_S.whb, phase_T.whb,
+			phase_R.varhb, phase_S.varhb, phase_T.varhb,
+			(kwh_index-6)
+      /*phase_R.wha, phase_R.varha,
 			phase_R.whb, phase_R.varhb,
 			phase_S.wha, phase_S.varha,
 			phase_S.whb, phase_S.varhb,
 			phase_T.wha, phase_T.varha,
-			phase_T.whb, phase_T.varhb);
+			phase_T.whb, phase_T.varhb*/);
 		  printf("%s\n", scoreData);
-			break;*/
+			break;
 		
 		/*case 8: // RST: whcd varhcd
           snprintf(scoreData, sizeof scoreData, 
