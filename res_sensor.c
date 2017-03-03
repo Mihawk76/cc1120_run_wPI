@@ -712,50 +712,71 @@ int  res_val_kwh (char* location,  int id, int gateway, int kwh_index)
 			
 		case 7:	// RST: whab varhab
          snprintf(scoreData, sizeof scoreData, 
-		  "data:[{\"Kwh_id\": %d,\"Gateway_id\": %d,\"Rwh\": %d,\"Swh\": %d,\"Twh\": %d,\"Rvarh\": %d,\"Svarh\": %d,\"Tvarh\": %d,\"Channel\":%d},{\"Kwh_id\": %d,\"Gateway_id\": %d,\"Rwh\": %d,\"Swh\": %d,\"Twh\": %d,\"Rvarh\": %d,\"Svarh\": %d,\"Tvarh\": %d,\"Channel\":%d}]",
+		  "{\"data\":[{\"Kwh_id\": %d,\"Gateway_id\": %d,\"Rwh\": %d,\"Swh\": %d,\"Twh\": %d,\"Rvarh\": %d,\"Svarh\": %d,\"Tvarh\": %d,\"Channel\":%d},{\"Kwh_id\": %d,\"Gateway_id\": %d,\"Rwh\": %d,\"Swh\": %d,\"Twh\": %d,\"Rvarh\": %d,\"Svarh\": %d,\"Tvarh\": %d,\"Channel\":%d}]}",
 		  /*"{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RWHA\": %d,\"RVARHA\": %d,\"RWHB\": %d,\"RVARHB\": %d,\"SWHA\": %d,\"SVARHA\": %d,\"SWHB\": %d,\"SVARHB\": %d,\"TWHA\": %d,\"TVARHA\": %d,\"TWHB\": %d,\"TVARHB\": %d}",*/
-		  gateway, id, 
+		  id, gateway,
 			phase_R.wha, phase_S.wha, phase_T.wha,
 			phase_R.varha, phase_S.varha, phase_T.varha,
-			(kwh_index-7),
-		  gateway, id, 
+			((kwh_index-7)*2),
+		  id, gateway,
 			phase_R.whb, phase_S.whb, phase_T.whb,
 			phase_R.varhb, phase_S.varhb, phase_T.varhb,
-			(kwh_index-6)
+			(((kwh_index-7)*2)+1)
       /*phase_R.wha, phase_R.varha,
 			phase_R.whb, phase_R.varhb,
 			phase_S.wha, phase_S.varha,
 			phase_S.whb, phase_S.varhb,
 			phase_T.wha, phase_T.varha,
-			phase_T.whb, phase_T.varhb*/);
+			phase_T.whb, phase_T.varhb*/
+			);
 		  printf("%s\n", scoreData);
 			break;
 		
-		/*case 8: // RST: whcd varhcd
+		case 8: // RST: whcd varhcd
           snprintf(scoreData, sizeof scoreData, 
-		  "{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RWHC\": %d,\"RVARHC\": %d,\"RWHD\": %d,\"RVARHD\": %d,\"SWHC\": %d,\"SVARHC\": %d,\"SWHD\": %d,\"SVARHD\": %d,\"TWHC\": %d,\"TVARHC\": %d,\"TWHD\": %d,\"TVARHD\": %d}",
-		    gateway, id,
+		  "{\"data\":[{\"Kwh_id\": %d,\"Gateway_id\": %d,\"Rwh\": %d,\"Swh\": %d,\"Twh\": %d,\"Rvarh\": %d,\"Svarh\": %d,\"Tvarh\": %d,\"Channel\":%d},{\"Kwh_id\": %d,\"Gateway_id\": %d,\"Rwh\": %d,\"Swh\": %d,\"Twh\": %d,\"Rvarh\": %d,\"Svarh\": %d,\"Tvarh\": %d,\"Channel\":%d}]}",
+		  /*"{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RWHC\": %d,\"RVARHC\": %d,\"RWHD\": %d,\"RVARHD\": %d,\"SWHC\": %d,\"SVARHC\": %d,\"SWHD\": %d,\"SVARHD\": %d,\"TWHC\": %d,\"TVARHC\": %d,\"TWHD\": %d,\"TVARHD\": %d}",*/
+		  id, gateway,
+			phase_R.whc, phase_S.whc, phase_T.whc,
+			phase_R.varhc, phase_S.varhc, phase_T.varhc,
+			((kwh_index-7)*2),
+		  id, gateway,
+			phase_R.whd, phase_S.whd, phase_T.whd,
+			phase_R.varhd, phase_S.varhd, phase_T.varhd,
+			(((kwh_index-7)*2)+1)
+		  /*  gateway, id,
 			phase_R.whc, phase_R.varhc,
 			phase_R.whd, phase_R.varhd,
 			phase_S.whc, phase_S.varhc,
 			phase_S.whd, phase_S.varhd, 
 			phase_T.whc, phase_T.varhc, 
-			phase_T.whd, phase_T.varhd);
+			phase_T.whd, phase_T.varhd*/
+			);
 		  printf("%s\n", scoreData);
-			break;*/
+			break;
 		
-		/*case 9:	// RST: whef varhef
+		case 9:	// RST: whef varhef
           snprintf(scoreData, sizeof scoreData, 
-		  "{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RWHE\": %d,\"RVARHE\": %d,\"RWHF\": %d,\"RVARHF\": %d,\"SWHE\": %d,\"SVARHE\": %d,\"SWHF\": %d,\"SVARHF\": %d,\"TWHE\": %d,\"TVARHE\": %d,\"TWHF\": %d,\"TVARHF\": %d}",
-		    gateway, id,
+		  "{\"data\":[{\"Kwh_id\": %d,\"Gateway_id\": %d,\"Rwh\": %d,\"Swh\": %d,\"Twh\": %d,\"Rvarh\": %d,\"Svarh\": %d,\"Tvarh\": %d,\"Channel\":%d},{\"Kwh_id\": %d,\"Gateway_id\": %d,\"Rwh\": %d,\"Swh\": %d,\"Twh\": %d,\"Rvarh\": %d,\"Svarh\": %d,\"Tvarh\": %d,\"Channel\":%d}]}",
+		  /*"{\"Gateway_id\": %d,\"Kwh_id\": %d,\"RWHE\": %d,\"RVARHE\": %d,\"RWHF\": %d,\"RVARHF\": %d,\"SWHE\": %d,\"SVARHE\": %d,\"SWHF\": %d,\"SVARHF\": %d,\"TWHE\": %d,\"TVARHE\": %d,\"TWHF\": %d,\"TVARHF\": %d}",*/
+		  id, gateway,
+			phase_R.whe, phase_S.whe, phase_T.whe,
+			phase_R.varhe, phase_S.varhe, phase_T.varhe,
+			((kwh_index-7)*2),
+		  id, gateway,
+			phase_R.whf, phase_S.whf, phase_T.whf,
+			phase_R.varhf, phase_S.varhf, phase_T.varhf,
+			(((kwh_index-7)*2)+1)
+		    /*gateway, id,
 			phase_R.whe, phase_R.varhe,
 			phase_R.whf, phase_R.varhf,
 			phase_S.whe, phase_S.varhe,
 			phase_S.whf, phase_S.varhf,
 			phase_T.whe, phase_T.varhe,
 			phase_T.whf, phase_T.varhf);
-		  printf("%s\n", scoreData);
-			break;*/
+		  printf("%s\n", scoreData*/
+			);
+			break;
 		
 		/*case 10:	// RST: whper ab, varhper ab
           snprintf(scoreData, sizeof scoreData, 

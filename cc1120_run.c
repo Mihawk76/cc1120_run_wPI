@@ -296,7 +296,8 @@ int32_t replyDly;
 //char* location = "http://35.166.240.126:3000/api/ths";
 //char* location_kwh = "http://35.166.240.126:3000/api/WattPrd_Is";
 char* location = "http://alfademo.ddns.net:3000/api/ths/save";
-char* location_kwh = "http://alfademo.ddns.net:3000/api/WattPrd_Is/save";
+char* location_wattprd = "http://alfademo.ddns.net:3000/api/WattPrd_Is/save";
+char* location_watthour = "http://alfademo.ddns.net:3000/api/WattHours/save";
 char* location_wattR = "http://35.160.141.229:3000/api/RWatts";
 char* location_wattS = "http://35.160.141.229:3000/api/SWatts";
 char* location_wattT = "http://35.160.141.229:3000/api/TWatts";
@@ -1500,9 +1501,15 @@ void res_service( void)
        //humidity, median_temp, temp2, temp3, dIn1, dIn2, rssi);
 	}
 	for (i=0;i<13;i++) {
-	   if (phase_flags[i]== STATUS_CLEARED) continue;
+	  	if (phase_flags[i]== STATUS_CLEARED) continue;
 		//	if(i > 1 && i < 6){
-	   res_val_kwh (location_kwh, kwh_ID, gateway_ID, i);
+			if(i<=6){
+				location = location_wattprd;
+			}
+			if(i>=7 && i<=9){
+				location = location_watthour;
+			}
+	  	res_val_kwh (location, kwh_ID, gateway_ID, i);
 		//}
 		if(i==0){
 			printf("data kwh\n");
