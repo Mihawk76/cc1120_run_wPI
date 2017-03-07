@@ -61,6 +61,7 @@
 
 uint8_t Change_freq_ir[] = { 0x0A, 0x06, 0x01, 0x00, 0x42, 0x3D, 0x15, 0x02, 0x00, 0x01, 0x01};
 uint8_t ir_command_save[8][100];
+uint8_t io_command[] = { 12, 0x11, 0x00, 0x00, 0xE6, 0xA9, 0x17, 0x05, 0x00, 0x01, 0x02, 0x01, 0x02};
 uint8_t Panasonic_temp[][100] = {
 {0x40 ,0x11 ,0x01 ,0x00 ,0x42 ,0x3D ,0x15 ,0x00 ,0x00 ,0x37 ,
                           0xBF ,0x01 ,0xA2 ,0x01 ,0x08 ,0x05 ,0xA2 ,0x0D ,0x01 ,0x40 ,
@@ -1577,13 +1578,18 @@ void poll_kwh_service( void)
 		}
 		int suhu_code =  suhu_real- 16;
 	  printf("suhu code %d\n", suhu_code);	
-		for(i=0;i<=68;i++)
+		printf("IO COMMAND \n\n");
+		for(i=0;i<(sizeof io_command);i++)
+		{
+      tbuff_kwh_poll[i] = io_command[i];
+		}
+		/*for(i=0;i<=68;i++)
     {
       tbuff_kwh_poll[i] = ir_command_save[loop_th_id][i];
       //tbuff_kwh_poll[i] = Panasonic_temp[suhu_code][i];
       //txBuffer[i] = Panasonic_temp[15][i];
       //printf("%02X ", txBuffer[i]);
-    }
+    }*/
 		*(uint16_t*)&tbuff_kwh_poll[4] =  th_nodes[loop_th_id].ir_id;
 			infrared_loop--;
 			if (infrared_loop == 0){
@@ -1591,6 +1597,14 @@ void poll_kwh_service( void)
 				loop_th_id++;
 			}
 			printf("infrared %d loop_th_id %d\n", infrared_loop, loop_th_id);
+	}
+	if (infrared_loop > TOTAL_TH_ID && loop_th_id < (TOTAL_TH_ID + 1))
+	{
+		// put here from io cc1120
+		for(i=0;i<(sizeof io_command);i++)
+		{
+      tbuff_kwh_poll[i] = io_command[i];
+		}
 	}
 	if (/*infrared_loop ==  0 && */loop_th_id >= TOTAL_TH_ID)
 	{
