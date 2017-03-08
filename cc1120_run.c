@@ -1664,7 +1664,7 @@ void cc1120_service( void)
   memset(&txBuffer[0],0,sizeof(txBuffer));
   struct timespec spec;
 	Pondok_Pinang.start_hour = 11;
-	Pondok_Pinang.close_hour = 23;	
+	Pondok_Pinang.close_hour = 20;	
 	int hour;
 	int min;
 	int sec;
@@ -1679,7 +1679,7 @@ void cc1120_service( void)
 		time_t t = time(NULL);
 		struct tm *tm_struct = localtime(&t);
 		hour = tm_struct->tm_hour;
-		//hour = 3;
+		//hour = 23;
 		min = tm_struct->tm_min;
 		sec = tm_struct->tm_sec;
 		// send data every 5 minutes
@@ -1701,8 +1701,9 @@ void cc1120_service( void)
 			if ( hour < Pondok_Pinang.start_hour || hour > Pondok_Pinang.close_hour)
 			{
 				suhu_real = 31;
+				printf("hour %d suhu real %d \n\n", hour, suhu_real);
 			}	
-			printf("suhu real %d hour %d\n\n",suhu_real, hour);
+			printf("suhu real %d hour %d close hour %d open hour %d\n\n",suhu_real, hour, Pondok_Pinang.close_hour,Pondok_Pinang.start_hour);
       get_ir_command("localhost","root","satunol10","paring","ir_command", th_nodes[loop_th_id].ac_type, suhu_real);
       for(i=0;i<=68;i++)
       {
