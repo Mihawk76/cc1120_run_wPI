@@ -1538,7 +1538,7 @@ void poll_kwh_service( void)
 	time_t t = time(NULL);
 	struct tm *tm_struct = localtime(&t);
 	hour = tm_struct->tm_hour;
-	hour = 10;
+	//hour = 10;
 	min = tm_struct->tm_min;
 	sec = tm_struct->tm_sec;
 	// send data every 5 minutes
@@ -1570,13 +1570,13 @@ void poll_kwh_service( void)
     {
       tbuff_kwh_poll[i] = Change_freq_ir[i];
     }*/
-		int suhu_real = th_nodes[loop_th_id].th_set;
+		/*int suhu_real = th_nodes[loop_th_id].th_set;
 		if ( hour < Pondok_Pinang.start_hour || hour > Pondok_Pinang.close_hour)
 		{
 			suhu_real = 31;
-		}
-		int suhu_code =  suhu_real- 16;
-	  printf("suhu code %d\n", suhu_code);	
+		}*/ //not used anymore because moved into different section
+		//int suhu_code =  suhu_real- 16;
+	  //printf("suhu code %d\n", suhu_code);	
 		for(i=0;i<=68;i++)
     {
       tbuff_kwh_poll[i] = ir_command_save[loop_th_id][i];
