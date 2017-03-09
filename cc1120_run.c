@@ -1525,9 +1525,9 @@ void poll_kwh_service( void)
 {
 //  int i;
   struct timespec spec;
-	Pondok_Pinang.start_hour = 11;
-	Pondok_Pinang.close_hour = 20;	
-	int hour;
+	//Pondok_Pinang.start_hour = 11;
+	//Pondok_Pinang.close_hour = 20;	
+	//int hour;
 	int min;
 	int sec;
 //  long   ms; // Milliseconds	
@@ -1537,7 +1537,7 @@ void poll_kwh_service( void)
 	clock_gettime(CLOCK_REALTIME, &spec);
 	time_t t = time(NULL);
 	struct tm *tm_struct = localtime(&t);
-	hour = tm_struct->tm_hour;
+	//hour = tm_struct->tm_hour;
 	//hour = 10;
 	min = tm_struct->tm_min;
 	sec = tm_struct->tm_sec;
@@ -1679,7 +1679,7 @@ void cc1120_service( void)
 		time_t t = time(NULL);
 		struct tm *tm_struct = localtime(&t);
 		hour = tm_struct->tm_hour;
-		//hour = 23;
+		//hour = 21;
 		min = tm_struct->tm_min;
 		sec = tm_struct->tm_sec;
 		// send data every 5 minutes
