@@ -1305,6 +1305,21 @@ int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
 		  if(pktCmdx>12) pktCmdx = 0;
 		  //printf("\r\nMasuk %d\r\n", pktCmdx);
 	      break;
+			
+			case COMM_SEND_IR_RPL:
+			if (bufferin[6] == 0x17)
+			{
+				int i;
+				for (i=0;i<12;i++)
+				{
+					printf("%02X ",bufferin[i]);
+				}
+					printf("\n");
+				printf("IO data get\n");
+				int din = bufferin[7];
+				int dout = bufferin[8];
+			}
+			//io or infrared
 	}
 		
 		return ret;
@@ -1590,7 +1605,7 @@ void poll_kwh_service( void)
       //txBuffer[i] = Panasonic_temp[15][i];
       //printf("%02X ", txBuffer[i]);
     }*/
-		*(uint16_t*)&tbuff_kwh_poll[4] =  th_nodes[loop_th_id].ir_id;
+		//*(uint16_t*)&tbuff_kwh_poll[4] =  th_nodes[loop_th_id].ir_id;
 			infrared_loop--;
 			if (infrared_loop == 0){
 				infrared_loop = 4;
@@ -1606,7 +1621,7 @@ void poll_kwh_service( void)
       tbuff_kwh_poll[i] = io_command[i];
 		}
 	}
-	if (/*infrared_loop ==  0 && */loop_th_id >= TOTAL_TH_ID)
+	if (/*infrared_loop ==  0 && */loop_th_id >= (1+TOTAL_TH_ID))
 	{
 		tbuff_kwh_poll[1] = COMM_VALUES_GET;
 		memcpy((uint8_t *)&tbuff_kwh_poll[2], (uint8_t *)&gateway_ID, 2);
