@@ -52,9 +52,9 @@ void get_ir_command(char* server, char* user ,char* password ,char* dbname,char*
       finish_with_error(con);
  }
 
-	int num_fields = mysql_num_fields(result);
+	//int num_fields = mysql_num_fields(result);
 	MYSQL_ROW row;
-	int i;
+	//int i;
 	int a=0;
 	{
    while((row = mysql_fetch_row(result)) != NULL)

@@ -1,5 +1,5 @@
 	/*
-	* SPI testing utility (using spidev driver)
+	* SPI testing utility (using spidev driver)a
 	*
 	* Copyright (c) 2007  MontaVista Software, Inc.
 	* Copyright (c) 2007  Anton Vorontsov <avorontsov@ru.mvista.com>
@@ -61,7 +61,7 @@
 
 uint8_t Change_freq_ir[] = { 0x0A, 0x06, 0x01, 0x00, 0x42, 0x3D, 0x15, 0x02, 0x00, 0x01, 0x01};
 uint8_t ir_command_save[8][100];
-uint8_t io_command[] = { 12, 0x11, 0x00, 0x00, 0xE6, 0xA9, 0x17, 0x05, 0x00, 0x01, 0x02, 0x01, 0x02};
+uint8_t io_command[] = { 12, 0x11, 0x00, 0x00, 0x2D, 0xE6, 0x17, 0x05, 0x00, 0x01, 0x02, 0x01, 0x02};
 uint8_t Panasonic_temp[][100] = {
 {0x40 ,0x11 ,0x01 ,0x00 ,0x42 ,0x3D ,0x15 ,0x00 ,0x00 ,0x37 ,
                           0xBF ,0x01 ,0xA2 ,0x01 ,0x08 ,0x05 ,0xA2 ,0x0D ,0x01 ,0x40 ,
@@ -260,6 +260,7 @@ uint8_t ds_wakeup_interval = 3;
 uint8_t txBuffer[256];
 uint8_t rxBuffer[256];
 uint16_t packetCounter = 0;
+int selector = 0;
 uint8_t scan_key = 0x00;
 uint8_t add_type = 0x02; //add type as new node
 uint8_t index_node = 0x00; //temp index node 
@@ -268,6 +269,8 @@ uint16_t cc1120_TH_ID;
 int TOTAL_TH_ID;
 uint16_t cc1120_TH_ID_Selected[TH_NODES_MAX] = { 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 uint16_t cc1120_IR_ID_Selected[TH_NODES_MAX] = { 0x3D42, 0x3D42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+uint16_t din_array[16];
+uint16_t dout_array[16];
 uint8_t cc1120_TH_SET[TH_NODES_MAX] = { 29, 29, 29, 29, 29, 29, 29, 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 char* AC_TYPE[TH_NODES_MAX] = { "Panasonic","Panasonic","Panasonic","Panasonic","Panasonic","Panasonic","Panasonic","Panasonic"};
 
@@ -1307,7 +1310,7 @@ int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
 	      break;
 			
 			case COMM_SEND_IR_RPL:
-			if (bufferin[6] == 0x17)
+			if (bufferin[5] == 0x17)
 			{
 				int i;
 				for (i=0;i<12;i++)
@@ -1316,10 +1319,22 @@ int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
 				}
 					printf("\n");
 				printf("IO data get\n");
-				int din = bufferin[7];
-				int dout = bufferin[8];
+				uint16_t din = *(uint16_t*)&bufferin[8];
+				uint8_t jumlah_din = bufferin[6];
+				uint16_t dout = *(uint16_t*)&bufferin[10];
+				uint8_t jumlah_dout = bufferin[7];
+				printf("\ndin %04X dout %04X bufferin %02X %02X out %02X %02X\n",din, dout, bufferin[8],bufferin[9],bufferin[10],bufferin[11]);
+				for(i=0;i<jumlah_din;i++){
+					din_array[i] = (din >> i) & 0x0001;
+					printf("din%d %02x ",i,din_array[i]); 
+				}
+				for(i=0;i<jumlah_dout;i++){
+					dout_array[i] = (dout >> i) & 0x0001;
+					printf("dout%d %02x ",i,dout_array[i]); 
+				}
+				printf("\n");
 			}
-			//io or infrared
+			//io or infrareda
 	}
 		
 		return ret;
@@ -1546,6 +1561,8 @@ void poll_kwh_service( void)
 	int hour;
 	int min;
 	int sec;
+	int loop_io = 0;
+	int loop_io_total = 1;
 //  long   ms; // Milliseconds	
   
   while(1) {
@@ -1561,8 +1578,10 @@ void poll_kwh_service( void)
 	if ( min % 5 == 0 && sec == 0)
 	{
 		loop_th_id = 0;
-		//flag_ir=0;
-		//printf ("min is %d\n", min);
+	}
+	if ( sec % 5 == 0)
+	{
+		loop_io = 0;
 	}
 	//printf("tim %d:%d\n", hour, min);
 //	current_stamp = spec.tv_sec;
@@ -1613,22 +1632,35 @@ void poll_kwh_service( void)
 			}
 			printf("infrared %d loop_th_id %d\n", infrared_loop, loop_th_id);
 	}
-	if (infrared_loop > TOTAL_TH_ID && loop_th_id < (TOTAL_TH_ID + 1))
+	if (loop_io <= loop_io_total && loop_th_id >= (TOTAL_TH_ID))
 	{
 		// put here from io cc1120
 		for(i=0;i<(sizeof io_command);i++)
 		{
       tbuff_kwh_poll[i] = io_command[i];
 		}
+			loop_io++;
 	}
-	if (/*infrared_loop ==  0 && */loop_th_id >= (1+TOTAL_TH_ID))
+	if (loop_io > loop_io_total && loop_th_id >= (TOTAL_TH_ID))
 	{
-		tbuff_kwh_poll[1] = COMM_VALUES_GET;
-		memcpy((uint8_t *)&tbuff_kwh_poll[2], (uint8_t *)&gateway_ID, 2);
-		memcpy((uint8_t *)&tbuff_kwh_poll[4], (uint8_t *)&kwh_ID, 2);
-		tbuff_kwh_poll[6] = ADE_NODE_TYPE;
-		tbuff_kwh_poll[7] = pktCmdx;
-		tbuff_kwh_poll[0] = 7;
+		//if ((sec % 2) == 0){
+			printf("masuk data kwh \n\n");
+			tbuff_kwh_poll[1] = COMM_VALUES_GET;
+			memcpy((uint8_t *)&tbuff_kwh_poll[2], (uint8_t *)&gateway_ID, 2);
+			memcpy((uint8_t *)&tbuff_kwh_poll[4], (uint8_t *)&kwh_ID, 2);
+			tbuff_kwh_poll[6] = ADE_NODE_TYPE;
+			tbuff_kwh_poll[7] = pktCmdx;
+			tbuff_kwh_poll[0] = 7;
+			selector = 0;
+		//}
+		/*if ((sec % 2) != 0){
+			for(i=0;i<(sizeof io_command);i++)
+			{
+      	tbuff_kwh_poll[i] = io_command[i];
+				printf("masuk io command \n\n\n");
+			}
+			selector++;
+		}	*/
 		//printf("\r\nKeluar: %d\r\n", pktCmdx);
 	}
 	sleep(1);
