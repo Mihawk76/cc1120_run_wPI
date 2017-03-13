@@ -1579,7 +1579,7 @@ void poll_kwh_service( void)
 	{
 		loop_th_id = 0;
 	}
-	if ( sec % 5 == 0)
+	if ( sec % 2 == 0)
 	{
 		loop_io = 0;
 	}
@@ -1613,17 +1613,13 @@ void poll_kwh_service( void)
 		int suhu_code =  suhu_real- 16;
 	  printf("suhu code %d\n", suhu_code);	
 		printf("IO COMMAND \n\n");
-		for(i=0;i<(sizeof io_command);i++)
-		{
-      tbuff_kwh_poll[i] = io_command[i];
-		}
-		/*for(i=0;i<=68;i++)
+		for(i=0;i<=68;i++)
     {
       tbuff_kwh_poll[i] = ir_command_save[loop_th_id][i];
       //tbuff_kwh_poll[i] = Panasonic_temp[suhu_code][i];
       //txBuffer[i] = Panasonic_temp[15][i];
       //printf("%02X ", txBuffer[i]);
-    }*/
+    }
 		//*(uint16_t*)&tbuff_kwh_poll[4] =  th_nodes[loop_th_id].ir_id;
 			infrared_loop--;
 			if (infrared_loop == 0){
@@ -1632,7 +1628,7 @@ void poll_kwh_service( void)
 			}
 			printf("infrared %d loop_th_id %d\n", infrared_loop, loop_th_id);
 	}
-	if (loop_io <= loop_io_total && loop_th_id >= (TOTAL_TH_ID))
+	/*if (loop_io <= loop_io_total && loop_th_id >= (TOTAL_TH_ID))
 	{
 		// put here from io cc1120
 		for(i=0;i<(sizeof io_command);i++)
@@ -1640,8 +1636,8 @@ void poll_kwh_service( void)
       tbuff_kwh_poll[i] = io_command[i];
 		}
 			loop_io++;
-	}
-	if (loop_io > loop_io_total && loop_th_id >= (TOTAL_TH_ID))
+	}*/
+	if (/*loop_io > loop_io_total && */loop_th_id >= (TOTAL_TH_ID))
 	{
 		//if ((sec % 2) == 0){
 			printf("masuk data kwh \n\n");

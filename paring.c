@@ -78,7 +78,7 @@ void get_ir_command(char* server, char* user ,char* password ,char* dbname,char*
 			}
     }
 	}
-
+	mysql_close(con);
 }
 void get_id_pairing(char* server, char* user ,char* password ,char* dbname,char* nm_table,int kk)
 {      
@@ -126,7 +126,7 @@ void get_id_pairing(char* server, char* user ,char* password ,char* dbname,char*
   	//printf("\n"); 
     }
 	}
-
+	mysql_close(con);
 }
 void get_id(char* server, char* user ,char* password ,char* dbname,char* nm_table)
 {      
@@ -174,6 +174,6 @@ void get_id(char* server, char* user ,char* password ,char* dbname,char* nm_tabl
   	//printf("\n"); 
     }
 	}
-
+	mysql_close(con);
 }
 
