@@ -1721,7 +1721,7 @@ void cc1120_service( void)
   memset(&txBuffer[0],0,sizeof(txBuffer));
   struct timespec spec;
 	Pondok_Pinang.start_hour = 11;
-	Pondok_Pinang.close_hour = 23;	
+	Pondok_Pinang.close_hour = 20;	
 	int hour;
 	int min;
 	int sec;
