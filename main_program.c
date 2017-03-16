@@ -1,7 +1,7 @@
 #include "mac_address.c"
 #include <stdio.h>
-#include "paring.c"
-//#include "res_sensor.c"
+//#include "paring.c"
+#include "res_sensor_2.c"
 
 int main()
 	{
@@ -22,7 +22,7 @@ int main()
 	uint16_t gateway = 1002;
 	int channel = 10;
 	//printf("Gateway id is %d\n", gateway_ID);
-	int32_t kwh[18];
+	uint16_t kwh[18];
 	int i;
 	int32_t t = 50;
 	//printf("%d\n", sizeof kwh);
@@ -35,14 +35,15 @@ int main()
 	//res_kwh_2 (location, kwh, 4004, 2000, 1003, 4004, 2000, 14, cc1120_TH_ID, channel);
 	/*res_kwh_array(location, kwh, kwh, kwh, 
 								kwh, kwh, kwh, kwh, 
-								kwh, kwh, 14, 1002, gateway);*/
+								kwh, kwh, 14, 1002, gateway)*/
+	res_io(location, kwh, kwh, 245, gateway, 6);
 	//res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, gateway);
 	//res_R_WattPrd_WattHour(location_wattR, kwh, kwh, 14, cc1120_TH_ID, gateway);
 	//res_S_WattPrd_WattHour(location_wattS, kwh, kwh, 14, cc1120_TH_ID, gateway);
 	//res_T_WattPrd_WattHour(location_wattT, kwh, kwh, 14, cc1120_TH_ID, gateway);
 	//res_T_I(location, kwh, 14, cc1120_TH_ID, gateway);
 	//res_th_2 (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID);
-  get_id("localhost","root","satunol10","paring","main");
-  printf("%d\n",mysql_id);
+  //get_id("localhost","root","satunol10","paring","main");
+  //printf("%d\n",mysql_id);
 	return 0;
 	}

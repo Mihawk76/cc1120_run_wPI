@@ -1,5 +1,5 @@
-	/*
-	* SPI testing utility (using spidev driver)a
+	/*a
+	* SPI testing utility (using spidev driver)
 	*
 	* Copyright (c) 2007  MontaVista Software, Inc.
 	* Copyright (c) 2007  Anton Vorontsov <avorontsov@ru.mvista.com>
@@ -16,7 +16,7 @@
 
 #include <wiringPi.h>  
 #include <wiringPiSPI.h>  
-#include <stdio.h>    
+#include <stdio.h>   
 #include <stdlib.h>    
 #include <stdint.h>  
 #include <string.h>  
@@ -276,6 +276,7 @@ char* AC_TYPE[TH_NODES_MAX] = { "Panasonic","Panasonic","Panasonic","Panasonic",
 
 TH_NODE_T th_nodes[TH_NODES_MAX];
 uint32_t cc1120_KWH_ID;
+int io_flags = STATUS_CLEARED;
 int cc1120_TH_Listed = 6;
 uint8_t cc1120_TH_Node;
 int flag_ir = 0;
@@ -1312,6 +1313,7 @@ int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
 			case COMM_SEND_IR_RPL:
 			if (bufferin[5] == 0x17)
 			{
+				io_flags = STATUS_UPDATED;
 				int i;
 				for (i=0;i<12;i++)
 				{
@@ -1547,7 +1549,9 @@ void res_service( void)
 		}
 	   phase_flags[i]= STATUS_CLEARED;
 	}
-
+		if(io_flags==STATUS_CLEARED) continue;
+		res_io(location, din_array, dout_array, 245, gateway_ID, 6);
+		io_flags = STATUS_CLEARED;
   }
   
 }
@@ -1575,7 +1579,7 @@ void poll_kwh_service( void)
 	min = tm_struct->tm_min;
 	sec = tm_struct->tm_sec;
 	// send data every 5 minutes
-	if ( min % 5 == 0 && sec == 0)
+	if ( min % 5 == 0 && sec == 0 && loop_th_id >= TOTAL_TH_ID)
 	{
 		loop_th_id = 0;
 	}
