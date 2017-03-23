@@ -1,3 +1,4 @@
+#define _GNU_SOURCE 1
 #include "mac_address.c"
 #include <stdio.h>
 #include "paring.c"

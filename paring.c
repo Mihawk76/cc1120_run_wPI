@@ -1,4 +1,4 @@
-#define _GNU_SOURCE 1
+//#define _GNU_SOURCE 1
 #include <stdio.h>
 #include <my_global.h>
 #include <mysql.h>
@@ -11,6 +11,8 @@
 int total_pairing;
 int pairing_id[1000];
 int mysql_id;
+struct tm start_operation;
+struct tm end_operation;
 typedef struct{
 	int suhu;
 	int no_byte;
@@ -22,8 +24,8 @@ typedef struct{
 }IR_CONFIG;
 typedef struct{
 	char* brand;
-	int start_operation;
-	int end_operation;
+	struct tm start_operation;
+	struct tm end_operation;
 }AC_CONFIG;
 
 IR_COMMAND ir_command[1000];
@@ -71,20 +73,15 @@ void get_ac_config(char* server, char* user ,char* password ,char* dbname,char* 
 	int a=0;
 	{
    while((row = mysql_fetch_row(result)) != NULL)
-    {
-     /*for (i = 0; i < num_fields; i++)
-        {
-      total_pairing = a+i;     
-			pairing_id[total_pairing]= atoi(row[i]?row[i]:"NULL");
-			printf("%d %d\n", pairing_id[total_pairing], total_pairing);
-        //printf("data_library:%02X \n",pairing_id[total_pairing]);
-        }
-		a=a+i;*/
-			//ac_config[a].brand = (row[0]?row[0]:"NULL");	
+    {	
 			ac_config[a].brand = (row[0]?row[0]:"NULL");	
-			ac_config[a].start_operation = atoi(row[1]?row[1]:"NULL");
-			ac_config[a].end_operation = atoi(row[1]?row[1]:"NULL");
-			printf("%s %d %d\n", ac_config[a].brand, ac_config[a].start_operation, ac_config[a].end_operation);
+			strptime((row[1]?row[1]:"NULL"),"%H:%M",&ac_config[a].start_operation);
+			strptime((row[2]?row[2]:"NULL"),"%H:%M",&ac_config[a].end_operation);
+			printf("%s\n", ac_config[a].brand);
+			printf("start %d:%d:%d\n", ac_config[a].start_operation.tm_hour,
+			ac_config[a].start_operation.tm_min,ac_config[a].start_operation.tm_sec);
+			printf("end %d:%d:%d\n\n", ac_config[a].end_operation.tm_hour,
+			ac_config[a].end_operation.tm_min,ac_config[a].end_operation.tm_sec);
 			a++;
   		//printf("\n"); 
 			if (ir_command[a].suhu == 30){
