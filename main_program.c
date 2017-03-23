@@ -1,7 +1,7 @@
 #include "mac_address.c"
 #include <stdio.h>
-//#include "paring.c"
-#include "res_sensor_2.c"
+#include "paring.c"
+//#include "res_sensor_2.c"
 
 int main()
 	{
@@ -36,7 +36,7 @@ int main()
 	/*res_kwh_array(location, kwh, kwh, kwh, 
 								kwh, kwh, kwh, kwh, 
 								kwh, kwh, 14, 1002, gateway)*/
-	res_io(location, kwh, kwh, 245, gateway, 6);
+	//res_io(location, kwh, kwh, 245, gateway, 6);
 	//res_th (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID, gateway);
 	//res_R_WattPrd_WattHour(location_wattR, kwh, kwh, 14, cc1120_TH_ID, gateway);
 	//res_S_WattPrd_WattHour(location_wattS, kwh, kwh, 14, cc1120_TH_ID, gateway);
@@ -44,6 +44,7 @@ int main()
 	//res_T_I(location, kwh, 14, cc1120_TH_ID, gateway);
 	//res_th_2 (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID);
   //get_id("localhost","root","satunol10","paring","main");
+  get_ac_config("localhost","root","satunol10","EMSV1","ac", 1001);
   //printf("%d\n",mysql_id);
 	return 0;
 	}
