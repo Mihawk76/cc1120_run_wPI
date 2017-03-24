@@ -14,6 +14,12 @@ int mysql_id;
 struct tm start_operation;
 struct tm end_operation;
 typedef struct{
+	uint16_t io_id;
+}IO_CONFIG;
+typedef struct{
+	uint16_t kwh_id;
+}KWH_CONFIG;
+typedef struct{
 	int suhu;
 	int no_byte;
 	int value_byte;
@@ -23,14 +29,24 @@ typedef struct{
 	int default_temp;
 }IR_CONFIG;
 typedef struct{
+	uint16_t io_id;
 	char* brand;
+	struct tm start_operation;
+	struct tm end_operation;
+}LAMP_CONFIG;
+typedef struct{
+	char* brand;
+	uint16_t kwh_id;
 	struct tm start_operation;
 	struct tm end_operation;
 }AC_CONFIG;
 
+IO_CONFIG io_config[10];
 IR_COMMAND ir_command[1000];
 IR_CONFIG ir_config[10];
+LAMP_CONFIG lamp_config[10];
 AC_CONFIG ac_config[10];
+KWH_CONFIG kwh_config[10];
 
 void finish_with_error(MYSQL *con)
 {
@@ -38,7 +54,7 @@ void finish_with_error(MYSQL *con)
   mysql_close(con);
   exit(1);        
 }
-void get_ac_config(char* server, char* user ,char* password ,char* dbname,char* nm_table,uint16_t gateway_id)
+void get_io_config(char* server, char* user ,char* password ,char* dbname,char* nm_table,uint16_t gateway_id)
 {      
   MYSQL *con = mysql_init(NULL);
 
@@ -54,7 +70,7 @@ void get_ac_config(char* server, char* user ,char* password ,char* dbname,char* 
       finish_with_error(con);
   }    
 	char select[100];
- sprintf(select,"select brand, start_operation, end_operation from %s where id_location=%d", nm_table, gateway_id); 
+ sprintf(select,"select io_id from %s where Gateway_id=%d", nm_table, gateway_id); 
  if (mysql_query(con,select)) 
  { 
       finish_with_error(con);
@@ -74,10 +90,152 @@ void get_ac_config(char* server, char* user ,char* password ,char* dbname,char* 
 	{
    while((row = mysql_fetch_row(result)) != NULL)
     {	
-			ac_config[a].brand = (row[0]?row[0]:"NULL");	
-			strptime((row[1]?row[1]:"NULL"),"%H:%M",&ac_config[a].start_operation);
-			strptime((row[2]?row[2]:"NULL"),"%H:%M",&ac_config[a].end_operation);
-			printf("%s\n", ac_config[a].brand);
+			io_config[a].io_id = atoi(row[0]?row[0]:"NULL");	
+			printf("io id %02X\n", io_config[a].io_id);
+			a++;
+  		//printf("\n"); 
+    }
+	}
+	mysql_close(con);
+}
+void get_kwh_config(char* server, char* user ,char* password ,char* dbname,char* nm_table,uint16_t gateway_id)
+{      
+  MYSQL *con = mysql_init(NULL);
+
+  if (con == NULL) 
+  {
+      fprintf(stderr, "mysql_init() failed\n");
+      exit(1);
+  }  
+  
+  if (mysql_real_connect(con, server, user, password, 
+          dbname, 0, NULL, 0) == NULL) 
+  {
+      finish_with_error(con);
+  }    
+	char select[100];
+ sprintf(select,"select kwh_id from %s where id_location=%d", nm_table, gateway_id); 
+ if (mysql_query(con,select)) 
+ { 
+      finish_with_error(con);
+ }
+
+
+ MYSQL_RES *result = mysql_store_result(con);  
+ if (result == NULL) 
+ {
+      finish_with_error(con);
+ }
+
+	//int num_fields = mysql_num_fields(result);
+	MYSQL_ROW row;
+	//int i;
+	int a=0;
+	{
+   while((row = mysql_fetch_row(result)) != NULL)
+    {	
+			kwh_config[a].kwh_id = atoi(row[0]?row[0]:"NULL");	
+			printf("kwh id %02X\n", kwh_config[a].kwh_id);
+			a++;
+  		//printf("\n"); 
+    }
+	}
+	mysql_close(con);
+}
+void get_lamp_config(char* server, char* user ,char* password ,char* dbname,char* nm_table,uint16_t gateway_id)
+{      
+  MYSQL *con = mysql_init(NULL);
+
+  if (con == NULL) 
+  {
+      fprintf(stderr, "mysql_init() failed\n");
+      exit(1);
+  }  
+  
+  if (mysql_real_connect(con, server, user, password, 
+          dbname, 0, NULL, 0) == NULL) 
+  {
+      finish_with_error(con);
+  }    
+	char select[100];
+ sprintf(select,"select io_id, start_operation, end_operation from %s where id_location=%d", nm_table, gateway_id); 
+ if (mysql_query(con,select)) 
+ { 
+      finish_with_error(con);
+ }
+
+
+ MYSQL_RES *result = mysql_store_result(con);  
+ if (result == NULL) 
+ {
+      finish_with_error(con);
+ }
+
+	//int num_fields = mysql_num_fields(result);
+	MYSQL_ROW row;
+	//int i;
+	int a=0;
+	{
+   while((row = mysql_fetch_row(result)) != NULL)
+    {	
+			lamp_config[a].io_id = atoi(row[0]?row[0]:"NULL");	
+			strptime((row[1]?row[1]:"NULL"),"%H:%M",&lamp_config[a].start_operation);
+			strptime((row[2]?row[2]:"NULL"),"%H:%M",&lamp_config[a].end_operation);
+			printf("%02X\n", lamp_config[a].io_id);
+			printf("start %d:%d:%d\n", lamp_config[a].start_operation.tm_hour,
+			lamp_config[a].start_operation.tm_min,lamp_config[a].start_operation.tm_sec);
+			printf("end %d:%d:%d\n\n", lamp_config[a].end_operation.tm_hour,
+			lamp_config[a].end_operation.tm_min,lamp_config[a].end_operation.tm_sec);
+			a++;
+  		//printf("\n"); 
+			if (ir_command[a].suhu == 30){
+				break;
+			}
+    }
+	}
+	mysql_close(con);
+}
+void get_ac_config(char* server, char* user ,char* password ,char* dbname,char* nm_table,uint16_t gateway_id)
+{      
+  MYSQL *con = mysql_init(NULL);
+
+  if (con == NULL) 
+  {
+      fprintf(stderr, "mysql_init() failed\n");
+      exit(1);
+  }  
+  
+  if (mysql_real_connect(con, server, user, password, 
+          dbname, 0, NULL, 0) == NULL) 
+  {
+      finish_with_error(con);
+  }    
+	char select[100];
+ sprintf(select,"select id_kwh, brand, start_operation, end_operation from %s where id_location=%d", nm_table, gateway_id); 
+ if (mysql_query(con,select)) 
+ { 
+      finish_with_error(con);
+ }
+
+
+ MYSQL_RES *result = mysql_store_result(con);  
+ if (result == NULL) 
+ {
+      finish_with_error(con);
+ }
+
+	//int num_fields = mysql_num_fields(result);
+	MYSQL_ROW row;
+	//int i;
+	int a=0;
+	{
+   while((row = mysql_fetch_row(result)) != NULL)
+    {	
+			ac_config[a].kwh_id = atoi(row[0]?row[0]:"NULL");
+			ac_config[a].brand = (row[1]?row[1]:"NULL");	
+			strptime((row[2]?row[2]:"NULL"),"%H:%M",&ac_config[a].start_operation);
+			strptime((row[3]?row[3]:"NULL"),"%H:%M",&ac_config[a].end_operation);
+			printf("id kwh %02X %s\n",ac_config[a].kwh_id, ac_config[a].brand);
 			printf("start %d:%d:%d\n", ac_config[a].start_operation.tm_hour,
 			ac_config[a].start_operation.tm_min,ac_config[a].start_operation.tm_sec);
 			printf("end %d:%d:%d\n\n", ac_config[a].end_operation.tm_hour,
