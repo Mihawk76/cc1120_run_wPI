@@ -14,6 +14,9 @@ int mysql_id;
 struct tm start_operation;
 struct tm end_operation;
 typedef struct{
+	uint16_t th_id;
+}TH_CONFIG;
+typedef struct{
 	uint16_t io_id;
 }IO_CONFIG;
 typedef struct{
@@ -41,6 +44,7 @@ typedef struct{
 	struct tm end_operation;
 }AC_CONFIG;
 
+TH_CONFIG th_config[10];
 IO_CONFIG io_config[10];
 IR_COMMAND ir_command[1000];
 IR_CONFIG ir_config[10];
@@ -53,6 +57,50 @@ void finish_with_error(MYSQL *con)
   fprintf(stderr, "%s\n", mysql_error(con));
   mysql_close(con);
   exit(1);        
+}
+void get_th_config(char* server, char* user ,char* password ,char* dbname,char* nm_table,uint16_t gateway_id)
+{      
+  MYSQL *con = mysql_init(NULL);
+
+  if (con == NULL) 
+  {
+      fprintf(stderr, "mysql_init() failed\n");
+      exit(1);
+  }  
+  
+  if (mysql_real_connect(con, server, user, password, 
+          dbname, 0, NULL, 0) == NULL) 
+  {
+      finish_with_error(con);
+  }    
+	char select[100];
+ sprintf(select,"select id from %s where id_location=%d", nm_table, gateway_id); 
+ if (mysql_query(con,select)) 
+ { 
+      finish_with_error(con);
+ }
+
+
+ MYSQL_RES *result = mysql_store_result(con);  
+ if (result == NULL) 
+ {
+      finish_with_error(con);
+ }
+
+	//int num_fields = mysql_num_fields(result);
+	MYSQL_ROW row;
+	//int i;
+	int a=0;
+	{
+   while((row = mysql_fetch_row(result)) != NULL)
+    {	
+			th_config[a].th_id = atoi(row[0]?row[0]:"NULL");	
+			printf("th id %02X\n", th_config[a].th_id);
+			a++;
+  		//printf("\n"); 
+    }
+	}
+	mysql_close(con);
 }
 void get_io_config(char* server, char* user ,char* password ,char* dbname,char* nm_table,uint16_t gateway_id)
 {      

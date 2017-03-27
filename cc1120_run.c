@@ -778,7 +778,7 @@ void cc112xpwrConfig(uint8_t pwrTx) {
  *            
  *
  * input parameters
- *
+ 
  * @param     addr    - register address
  * @param     exp_val - expected value
  *
