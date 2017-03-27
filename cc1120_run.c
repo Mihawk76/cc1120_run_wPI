@@ -11,9 +11,9 @@
 	* Cross-compile with cross-gcc -I/path/to/cross-kernel/include
 	*/
 
+#define _GNU_SOURCE 1
 #include <inttypes.h>
 #include <math.h>
-
 #include <wiringPi.h>  
 #include <wiringPiSPI.h>  
 #include <stdio.h>   
@@ -1449,7 +1449,7 @@ void poll_kwh_service( void)
   struct timespec spec;
 	Pondok_Pinang.start_hour = 11;
 	Pondok_Pinang.close_hour = 20;	
-	int hour;
+	//int hour;
 	int min;
 	int sec;
 	int loop_io = 0;
@@ -1461,8 +1461,8 @@ void poll_kwh_service( void)
 	clock_gettime(CLOCK_REALTIME, &spec);
 	time_t t = time(NULL);
 	struct tm *tm_struct = localtime(&t);
-	hour = tm_struct->tm_hour;
-	hour = 10;
+	//hour = tm_struct->tm_hour;
+	//hour = 10;
 	min = tm_struct->tm_min;
 	sec = tm_struct->tm_sec;
 	// send data every 5 minutes
@@ -1496,13 +1496,13 @@ void poll_kwh_service( void)
     {
       tbuff_kwh_poll[i] = Change_freq_ir[i];
     }*/
-		int suhu_real = th_nodes[loop_th_id].th_set;
+		/*int suhu_real = th_nodes[loop_th_id].th_set;
 		if ( hour < Pondok_Pinang.start_hour || hour > Pondok_Pinang.close_hour)
 		{
 			suhu_real = 31;
-		}
-		int suhu_code =  suhu_real- 16;
-	  printf("suhu code %d\n", suhu_code);	
+		}*/
+		//int suhu_code =  suhu_real- 16;
+	  //printf("suhu code %d\n", suhu_code);	
 		printf("IO COMMAND \n\n");
 		for(i=0;i<=68;i++)
     {
@@ -1568,6 +1568,8 @@ void cc1120_service( void)
   gateway_ID = 0;
 	get_id("localhost","root","satunol10","paring","main");
 	gateway_ID = mysql_id;
+	get_ir_config("localhost","root","satunol10","EMS","infrared", gateway_ID);
+	get_ac_config("localhost","root","satunol10","EMS","ac", gateway_ID);
 	printf(" gateway %d\n", gateway_ID);
   kwh_ID = 0x67C9;
   //mac_address_gateway = read_ints();
@@ -1576,9 +1578,12 @@ void cc1120_service( void)
   
   for(i=0; i<TH_NODES_MAX; i++) {
 	th_nodes[i].id = cc1120_TH_ID_Selected[i];
-	th_nodes[i].ir_id = cc1120_IR_ID_Selected[i];
-	th_nodes[i].th_set = cc1120_TH_SET[i];
-	th_nodes[i].ac_type = AC_TYPE[i];
+	//th_nodes[i].ir_id = cc1120_IR_ID_Selected[i];
+	th_nodes[i].ir_id = ir_config[i].ir_id;
+	//th_nodes[i].th_set = cc1120_TH_SET[i];
+	th_nodes[i].th_set = ir_config[i].default_temp;
+	//th_nodes[i].ac_type = AC_TYPE[i];
+	th_nodes[i].ac_type = ac_config[i].brand;
 	th_nodes[i].status = STATUS_CLEARED;
 	th_nodes[i].loop_h = 0xff;
 	th_nodes[i].loop_t1 = 0xff;
@@ -1649,7 +1654,7 @@ void cc1120_service( void)
 			{
 				suhu_real = 31;
 			}	
-			printf("suhu real %d hour %d\n\n",suhu_real, hour);
+			//printf("suhu real %d hour %d\n\n",suhu_real, hour);
       get_ir_command("localhost","root","satunol10","paring","ir_command", th_nodes[loop_th_id].ac_type, suhu_real);
       for(i=0;i<=68;i++)
       {
