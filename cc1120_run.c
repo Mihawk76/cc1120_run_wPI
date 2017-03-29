@@ -131,6 +131,8 @@ typedef struct {
 	time_t ts;  // time stamp
 	uint16_t ir_id;
 	uint8_t th_set;
+	int start_operation;
+	int end_operation;
   char* ac_type;
 }TH_NODE_T;
 
@@ -1447,8 +1449,8 @@ void poll_kwh_service( void)
 {
 //  int i;
   struct timespec spec;
-	Pondok_Pinang.start_hour = 11;
-	Pondok_Pinang.close_hour = 20;	
+	//Pondok_Pinang.start_hour = 11;
+	//Pondok_Pinang.close_hour = 20;	
 	//int hour;
 	int min;
 	int sec;
@@ -1570,6 +1572,7 @@ void cc1120_service( void)
 	gateway_ID = mysql_id;
 	get_ir_config("localhost","root","satunol10","EMS","infrared", gateway_ID);
 	get_ac_config("localhost","root","satunol10","EMS","ac", gateway_ID);
+	get_th_config("localhost","root","satunol10","EMS","temperature", gateway_ID);
 	printf(" gateway %d\n", gateway_ID);
   kwh_ID = 0x67C9;
   //mac_address_gateway = read_ints();
@@ -1577,13 +1580,16 @@ void cc1120_service( void)
   wiringPiSetup();
   
   for(i=0; i<TH_NODES_MAX; i++) {
-	th_nodes[i].id = cc1120_TH_ID_Selected[i];
+	//th_nodes[i].id = cc1120_TH_ID_Selected[i];
+	th_nodes[i].id = th_config[i].th_id;
 	//th_nodes[i].ir_id = cc1120_IR_ID_Selected[i];
 	th_nodes[i].ir_id = ir_config[i].ir_id;
 	//th_nodes[i].th_set = cc1120_TH_SET[i];
 	th_nodes[i].th_set = ir_config[i].default_temp;
 	//th_nodes[i].ac_type = AC_TYPE[i];
 	th_nodes[i].ac_type = ac_config[i].brand;
+	th_nodes[i].start_operation = (ac_config[i].start_operation.tm_hour*60+ac_config[i].start_operation.tm_min);
+	th_nodes[i].end_operation = (ac_config[i].end_operation.tm_hour*60+ac_config[i].end_operation.tm_min);
 	th_nodes[i].status = STATUS_CLEARED;
 	th_nodes[i].loop_h = 0xff;
 	th_nodes[i].loop_t1 = 0xff;
@@ -1615,8 +1621,10 @@ void cc1120_service( void)
   cc112x_init(freq_main,0);// freq 410 Mhz + (1 Mhz * freq_main)
   memset(&txBuffer[0],0,sizeof(txBuffer));
   struct timespec spec;
-	Pondok_Pinang.start_hour = 11;
-	Pondok_Pinang.close_hour = 20;	
+	//Pondok_Pinang.start_hour = 11;
+	//Pondok_Pinang.close_hour = 20;	
+	Pondok_Pinang.start_hour = ac_config[0].start_operation.tm_hour;
+	Pondok_Pinang.close_hour = ac_config[0].end_operation.tm_hour;	
 	int hour;
 	int min;
 	int sec;
@@ -1634,6 +1642,7 @@ void cc1120_service( void)
 		//hour = 3;
 		min = tm_struct->tm_min;
 		sec = tm_struct->tm_sec;
+		int current_time = (hour*60+min);
 		// send data every 5 minutes
 		if ( min % 5 == 0 && sec == 0 && flag_reset == 1)
 		{
@@ -1649,17 +1658,20 @@ void cc1120_service( void)
   	if(flag_ir==0){
     for(loop_th_id=0;loop_th_id<TOTAL_TH_ID;loop_th_id++)
     {
-			int suhu_real = th_nodes[loop_th_id].th_set;
-			if ( hour < Pondok_Pinang.start_hour || hour > Pondok_Pinang.close_hour)
+			//int suhu_real = th_nodes[loop_th_id].th_set;
+			for (i=0;i<TH_NODES_MAX;i++)
 			{
-				suhu_real = 31;
-			}	
-			//printf("suhu real %d hour %d\n\n",suhu_real, hour);
-      get_ir_command("localhost","root","satunol10","paring","ir_command", th_nodes[loop_th_id].ac_type, suhu_real);
-      for(i=0;i<=68;i++)
-      {
-        ir_command_save[loop_th_id][i] = ir_command[i].value_byte;
-      }
+				if ( current_time < th_nodes[i].start_operation || current_time > th_nodes[i].end_operation)
+				{
+					th_nodes[i].th_set = 31;
+				}	
+				//printf("suhu real %d hour %d\n\n",suhu_real, hour);
+      	get_ir_command("localhost","root","satunol10","paring","ir_command", th_nodes[loop_th_id].ac_type, th_nodes[i].th_set);
+      	for(i=0;i<=68;i++)
+      	{
+        	ir_command_save[loop_th_id][i] = ir_command[i].value_byte;
+      	}
+			}
     }
 		flag_ir++;
   }

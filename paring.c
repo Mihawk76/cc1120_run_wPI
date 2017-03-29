@@ -95,7 +95,7 @@ void get_th_config(char* server, char* user ,char* password ,char* dbname,char* 
    while((row = mysql_fetch_row(result)) != NULL)
     {	
 			th_config[a].th_id = atoi(row[0]?row[0]:"NULL");	
-			printf("th id %02X\n", th_config[a].th_id);
+			printf("th id %d\n", th_config[a].th_id);
 			a++;
   		//printf("\n"); 
     }
