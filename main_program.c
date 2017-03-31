@@ -45,7 +45,7 @@ int main()
 	//res_T_I(location, kwh, 14, cc1120_TH_ID, gateway);
 	//res_th_2 (location, temp1, temp2, temp3, humidity, 11, cc1120_TH_ID);
   //get_id("localhost","root","satunol10","paring","main");
-  get_th_config("localhost","root","satunol10","EMSV1","temperature", 1001);
+  get_lamp_config("localhost","root","satunol10","EMS","lamp", 1002);
   //printf("%d\n",mysql_id);
 	return 0;
 	}

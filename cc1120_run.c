@@ -137,6 +137,14 @@ typedef struct {
 }TH_NODE_T;
 
 typedef struct {
+	uint16_t id;
+	int start_operation;
+	int end_operation;
+	int channel;
+	int type;
+}IO_NODE;
+
+typedef struct {
 	int start_hour;
 	int close_hour;
 }STORE;
@@ -163,6 +171,7 @@ uint16_t dout_array[16];
 uint8_t cc1120_TH_SET[TH_NODES_MAX] = { 29, 29, 29, 29, 29, 29, 29, 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 char* AC_TYPE[TH_NODES_MAX] = { "Panasonic","Panasonic","Panasonic","Panasonic","Panasonic","Panasonic","Panasonic","Panasonic"};
 
+IO_NODE io_nodes[16];
 TH_NODE_T th_nodes[TH_NODES_MAX];
 uint32_t cc1120_KWH_ID;
 int io_flags = STATUS_CLEARED;
@@ -1573,6 +1582,7 @@ void cc1120_service( void)
 	get_ir_config("localhost","root","satunol10","EMS","infrared", gateway_ID);
 	get_ac_config("localhost","root","satunol10","EMS","ac", gateway_ID);
 	get_th_config("localhost","root","satunol10","EMS","temperature", gateway_ID);
+	get_lamp_config("localhost","root","satunol10","EMS","lamp", gateway_ID);
 	printf(" gateway %d\n", gateway_ID);
   kwh_ID = 0x67C9;
   //mac_address_gateway = read_ints();
@@ -1596,7 +1606,24 @@ void cc1120_service( void)
 	th_nodes[i].loop_t2 = 0xff;
 	th_nodes[i].loop_t3 = 0xff;
   }
-  
+	for (i=0;i<5;i++)
+ 	{
+		io_nodes[i].id = lamp_config[i].io_id;
+		io_nodes[lamp_config[i].channel].start_operation = ((lamp_config[i].start_operation.tm_hour*60)
+		+lamp_config[i].start_operation.tm_min);
+		printf("i %d node %d start opera %d hour sql %d\n"
+		, i, lamp_config[i].channel, io_nodes[lamp_config[i].channel].start_operation, (lamp_config[i].start_operation.tm_hour));
+		io_nodes[lamp_config[i].channel].end_operation = ((lamp_config[i].end_operation.tm_hour*60)
+		+lamp_config[i].end_operation.tm_min);
+	} 
+		//io_nodes[lamp_config[0].channel].start_operation = ((lamp_config[0].start_operation.tm_hour*60)
+		//+lamp_config[0].start_operation.tm_min);
+	for (i=0;i<16;i++)
+	{
+		printf("i %d io_nodes %d hour %d\n",i,io_nodes[i]
+		.start_operation,lamp_config[lamp_config[i].channel].start_operation.tm_hour
+		); 
+	}
 	for (i=0;i<TH_NODES_MAX;i++)
 	{
 		if (th_nodes[i].id!= (i+1))

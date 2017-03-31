@@ -36,6 +36,8 @@ typedef struct{
 	char* brand;
 	struct tm start_operation;
 	struct tm end_operation;
+	int channel;
+	int type;
 }LAMP_CONFIG;
 typedef struct{
 	char* brand;
@@ -48,7 +50,7 @@ TH_CONFIG th_config[10];
 IO_CONFIG io_config[10];
 IR_COMMAND ir_command[1000];
 IR_CONFIG ir_config[10];
-LAMP_CONFIG lamp_config[10];
+LAMP_CONFIG lamp_config[16];
 AC_CONFIG ac_config[10];
 KWH_CONFIG kwh_config[10];
 
@@ -206,7 +208,7 @@ void get_lamp_config(char* server, char* user ,char* password ,char* dbname,char
       finish_with_error(con);
   }    
 	char select[100];
- sprintf(select,"select io_id, start_operation, end_operation from %s where id_location=%d", nm_table, gateway_id); 
+ sprintf(select,"select io_id, start_operation, end_operation, phasa, channel from %s where id_location=%d", nm_table, gateway_id); 
  if (mysql_query(con,select)) 
  { 
       finish_with_error(con);
@@ -229,7 +231,9 @@ void get_lamp_config(char* server, char* user ,char* password ,char* dbname,char
 			lamp_config[a].io_id = atoi(row[0]?row[0]:"NULL");	
 			strptime((row[1]?row[1]:"NULL"),"%H:%M",&lamp_config[a].start_operation);
 			strptime((row[2]?row[2]:"NULL"),"%H:%M",&lamp_config[a].end_operation);
-			printf("%02X\n", lamp_config[a].io_id);
+			lamp_config[a].type = atoi(row[3]?row[3]:"NULL");	
+			lamp_config[a].channel = atoi(row[4]?row[4]:"NULL");	
+			printf("io_id %02X, type %d, channel %d\n", lamp_config[a].io_id, lamp_config[a].type, lamp_config[a].channel);
 			printf("start %d:%d:%d\n", lamp_config[a].start_operation.tm_hour,
 			lamp_config[a].start_operation.tm_min,lamp_config[a].start_operation.tm_sec);
 			printf("end %d:%d:%d\n\n", lamp_config[a].end_operation.tm_hour,
