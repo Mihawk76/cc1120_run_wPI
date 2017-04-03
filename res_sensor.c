@@ -623,7 +623,7 @@ int  res_io (char* location,uint16_t din_array[16],uint16_t dout_array[16], uint
   for(channel = 0;channel<total_channel;channel++)
   {
     snprintf(temp, sizeof temp, 
-    "{\"Io_id\": %d,\"Gateway_Id\": %d,\"type\": %d,\"channel\": %d,\"value\": %d}",
+    "{\"io_id\": %d,\"Gateway_id\": %d,\"type\": %d,\"Channel\": %d,\"value\": %d}",
     io_id, gateway, 0, channel, din_array[channel]);
     strcat(scoreData, temp);
     //if(channel!=(total_channel-1)){
@@ -634,7 +634,7 @@ int  res_io (char* location,uint16_t din_array[16],uint16_t dout_array[16], uint
   for(channel = 0;channel<total_channel;channel++)
   {
     snprintf(temp, sizeof temp, 
-    "{\"Io_id\": %d,\"Gateway_Id\": %d,\"type\": %d,\"channel\": %d,\"value\": %d}",
+    "{\"io_id\": %d,\"Gateway_id\": %d,\"type\": %d,\"Channel\": %d,\"value\": %d}",
     io_id, gateway, 1, channel, dout_array[channel]);
     strcat(scoreData, temp);
     if(channel!=(total_channel-1)){
@@ -646,7 +646,7 @@ int  res_io (char* location,uint16_t din_array[16],uint16_t dout_array[16], uint
     strcat(scoreData, temp);
 		printf("%d\n", sizeof scoreData);
 		printf("%s\n", scoreData);
-/*		  CURL *curl;
+		  CURL *curl;
 		  CURLcode res; 
 		  curl_global_init(CURL_GLOBAL_ALL);
 		  curl = curl_easy_init();
@@ -665,7 +665,7 @@ int  res_io (char* location,uint16_t din_array[16],uint16_t dout_array[16], uint
 			    fprintf(stderr, "curl_easy_perform() failed: %s\n",curl_easy_strerror(res));
 			    curl_easy_cleanup(curl);
 		  	}   
-		  curl_global_cleanup();*/
+		  curl_global_cleanup();
 	return 0;
 }
 

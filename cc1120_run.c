@@ -199,6 +199,7 @@ int32_t replyDly;
 //char* location = "http://35.166.240.126:3000/api/ths";
 //char* location_kwh = "http://35.166.240.126:3000/api/WattPrd_Is";
 char* location = "http://alfademo.ddns.net:3000/api/ths/save";
+char* location_io = "http://35.166.240.126:3000/api/ios/save";
 char* location_wattprd = "http://alfademo.ddns.net:3000/api/WattPrd_Is/save";
 char* location_watthour = "http://alfademo.ddns.net:3000/api/WattHours/save";
 char* location_wattR = "http://35.160.141.229:3000/api/RWatts";
@@ -1448,7 +1449,8 @@ void res_service( void)
 	   phase_flags[i]= STATUS_CLEARED;
 	}
 		if(io_flags==STATUS_CLEARED) continue;
-		res_io(location, din_array, dout_array, 245, gateway_ID, 6);
+		printf("res_io activated \n");
+		res_io(location_io, din_array, dout_array, io_nodes[0].id, gateway_ID, 6);
 		io_flags = STATUS_CLEARED;
   }
   
