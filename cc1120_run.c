@@ -1462,7 +1462,7 @@ void poll_kwh_service( void)
   struct timespec spec;
 	//Pondok_Pinang.start_hour = 11;
 	//Pondok_Pinang.close_hour = 20;	
-	//int hour;
+	int hour;
 	int min;
 	int sec;
 	int loop_io = 0;
@@ -1474,10 +1474,11 @@ void poll_kwh_service( void)
 	clock_gettime(CLOCK_REALTIME, &spec);
 	time_t t = time(NULL);
 	struct tm *tm_struct = localtime(&t);
-	//hour = tm_struct->tm_hour;
-	//hour = 10;
+	hour = tm_struct->tm_hour;
+	hour = 10;
 	min = tm_struct->tm_min;
 	sec = tm_struct->tm_sec;
+	int current_time = (hour*60)+min;
 	// send data every 5 minutes
 	if ( min % 5 == 0 && sec == 0 && loop_th_id >= TOTAL_TH_ID)
 	{
@@ -1539,6 +1540,18 @@ void poll_kwh_service( void)
       tbuff_kwh_poll[i] = io_command[i];
 		}
 			loop_io++;
+		*(uint16_t*)&tbuff_kwh_poll[4] =  io_nodes[i].id;
+		for(i=0;i<5;i++)
+		{
+			if(current_time<io_nodes[i].start_operation||current_time>=io_nodes[i].end_operation)
+			{
+				tbuff_kwh_poll[i+7] = 0x00;
+			}	
+			if(current_time>io_nodes[i].start_operation||current_time<=io_nodes[i].end_operation)
+			{
+				tbuff_kwh_poll[i+7] = 0x01;
+			}	
+		}
 	}
 	if (loop_io > loop_io_total && loop_th_id >= (TOTAL_TH_ID))
 	{
