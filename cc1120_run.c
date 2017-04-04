@@ -1707,7 +1707,7 @@ void cc1120_service( void)
 				{
 					th_nodes[i].th_set = 31;
 				}	
-				//printf("suhu real %d hour %d\n\n",suhu_real, hour);
+				printf("suhu real %d hour %d\n\n",th_nodes[i].th_set, current_time);
       	get_ir_command("localhost","root","satunol10","paring","ir_command", th_nodes[loop_th_id].ac_type, th_nodes[i].th_set);
       	for(i=0;i<=68;i++)
       	{
