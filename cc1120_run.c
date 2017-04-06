@@ -61,7 +61,7 @@
 
 uint8_t Change_freq_ir[] = { 0x0A, 0x06, 0x01, 0x00, 0x42, 0x3D, 0x15, 0x02, 0x00, 0x01, 0x01};
 uint8_t ir_command_save[8][100];
-uint8_t io_command[] = { 12, 0x11, 0x00, 0x00, 0x2D, 0xE6, 0x17, 0x05, 0x00, 0x01, 0x02, 0x01, 0x02};
+uint8_t io_command[] = { 12, 0x11, 0x00, 0x00, 0x2D, 0xE6, 0x17, 0x05, 0x01, 0x01, 0x02, 0x01, 0x02};
 
 typedef enum _CC1120_COMM_CMD {
 	COMM_JOINT = 1,
@@ -1466,7 +1466,7 @@ void poll_kwh_service( void)
 	int min;
 	int sec;
 	int loop_io = 0;
-	int loop_io_total = 2;
+	int loop_io_total = 1;
 //  long   ms; // Milliseconds	
   
   while(1) {
@@ -1533,8 +1533,7 @@ void poll_kwh_service( void)
 			}
 			printf("infrared %d loop_th_id %d\n", infrared_loop, loop_th_id);
 	}
-	//if (loop_io <= loop_io_total && loop_th_id >= (TOTAL_TH_ID))
-	if (loop_io <= 1 && loop_th_id >= (TOTAL_TH_ID))
+	if (loop_io <= loop_io_total && loop_th_id >= (TOTAL_TH_ID))
 	{
 		// put here from io cc1120
 		printf("masuk data io \n\n");
@@ -1542,24 +1541,22 @@ void poll_kwh_service( void)
 		{
       tbuff_kwh_poll[i] = io_command[i];
 		}
-		int angka = 2;
-		printf("before io id %02X loop io %d angka %d\n", io_nodes[loop_io], loop_io,angka);
 			loop_io++;
-		printf("after io id %02X loop io %d\n", io_nodes[loop_io], loop_io);
 		*(uint16_t*)&tbuff_kwh_poll[4] =  io_nodes[loop_io].id;
+		printf("io id %02X loop io %d\n", io_nodes[loop_io].id, loop_io);
 		for(i=0;i<5;i++)
 		{
 			if(current_time<io_nodes[i].start_operation||current_time>=io_nodes[i].end_operation)
 			{
-				tbuff_kwh_poll[i+7] = 0x00;
+				tbuff_kwh_poll[i+8] = 0x00;
 			}	
 			if(current_time>io_nodes[i].start_operation||current_time<=io_nodes[i].end_operation)
 			{
-				tbuff_kwh_poll[i+7] = 0x01;
+				tbuff_kwh_poll[i+8] = 0x01;
 			}	
 		}
 	}
-	if (loop_io > 1 && loop_th_id >= (TOTAL_TH_ID))
+	if (loop_io > loop_io_total && loop_th_id >= (TOTAL_TH_ID))
 	{
 		//if ((sec % 2) == 0){
 			printf("masuk data kwh \n\n");
@@ -1654,9 +1651,9 @@ void cc1120_service( void)
 		}
 	}
 	printf("total th id %d\n", TOTAL_TH_ID);
-  //pinMode(CC1120_MOSI, SPI_PIN);
-  //pinMode(CC1120_MISO, SPI_PIN);
-  //pinMode(CC1120_SCLK, SPI_PIN);
+  pinMode(CC1120_MOSI, SPI_PIN);
+  pinMode(CC1120_MISO, SPI_PIN);
+  pinMode(CC1120_SCLK, SPI_PIN);
   pinMode(CC1120_SSEL, OUTPUT) ;  
   pinMode(CC1120_RST, OUTPUT) ;
   
