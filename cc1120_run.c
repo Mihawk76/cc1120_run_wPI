@@ -1466,7 +1466,7 @@ void poll_kwh_service( void)
 	int min;
 	int sec;
 	int loop_io = 0;
-	int loop_io_total = 1;
+	int loop_io_total = 2;
 //  long   ms; // Milliseconds	
   
   while(1) {
@@ -1487,6 +1487,7 @@ void poll_kwh_service( void)
 	if ( sec % 2 == 0)
 	{
 		loop_io = 0;
+		//printf("loop io reset %d", loop_io);
 	}
 	//printf("tim %d:%d\n", hour, min);
 //	current_stamp = spec.tv_sec;
@@ -1532,15 +1533,20 @@ void poll_kwh_service( void)
 			}
 			printf("infrared %d loop_th_id %d\n", infrared_loop, loop_th_id);
 	}
-	if (loop_io <= loop_io_total && loop_th_id >= (TOTAL_TH_ID))
+	//if (loop_io <= loop_io_total && loop_th_id >= (TOTAL_TH_ID))
+	if (loop_io <= 1 && loop_th_id >= (TOTAL_TH_ID))
 	{
 		// put here from io cc1120
+		printf("masuk data io \n\n");
 		for(i=0;i<(sizeof io_command);i++)
 		{
       tbuff_kwh_poll[i] = io_command[i];
 		}
+		int angka = 2;
+		printf("before io id %02X loop io %d angka %d\n", io_nodes[loop_io], loop_io,angka);
 			loop_io++;
-		*(uint16_t*)&tbuff_kwh_poll[4] =  io_nodes[i].id;
+		printf("after io id %02X loop io %d\n", io_nodes[loop_io], loop_io);
+		*(uint16_t*)&tbuff_kwh_poll[4] =  io_nodes[loop_io].id;
 		for(i=0;i<5;i++)
 		{
 			if(current_time<io_nodes[i].start_operation||current_time>=io_nodes[i].end_operation)
@@ -1553,7 +1559,7 @@ void poll_kwh_service( void)
 			}	
 		}
 	}
-	if (loop_io > loop_io_total && loop_th_id >= (TOTAL_TH_ID))
+	if (loop_io > 1 && loop_th_id >= (TOTAL_TH_ID))
 	{
 		//if ((sec % 2) == 0){
 			printf("masuk data kwh \n\n");
@@ -1648,9 +1654,9 @@ void cc1120_service( void)
 		}
 	}
 	printf("total th id %d\n", TOTAL_TH_ID);
-  pinMode(CC1120_MOSI, SPI_PIN);
-  pinMode(CC1120_MISO, SPI_PIN);
-  pinMode(CC1120_SCLK, SPI_PIN);
+  //pinMode(CC1120_MOSI, SPI_PIN);
+  //pinMode(CC1120_MISO, SPI_PIN);
+  //pinMode(CC1120_SCLK, SPI_PIN);
   pinMode(CC1120_SSEL, OUTPUT) ;  
   pinMode(CC1120_RST, OUTPUT) ;
   
