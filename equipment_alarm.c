@@ -25,7 +25,8 @@ EQ_LAMP_T      lamp_equipt[10];
 EQ_ALARM_T     alarm_buffer[ALARM_BUFFER_SIZE];
 uint16_t       alarm_head_ptr, alarm_tail_ptr;
 
-char* location_alarm = "http://alfademo.ddns.net:3000/api/ths/save";
+//char* location_alarm = "http://alfademo.ddns.net:3000/api/ths/save";
+char* location_alarm = "http://ec2-35-166-240-126.us-west-2.compute.amazonaws.com:3000/api/alarms/save";
 
 
 uint8_t equipment_count[EQ_MAX]={
@@ -51,7 +52,8 @@ int insert_new_alarm_to_buffer( time_t timeStamp, uint16_t equipmentType, uint16
   alarm_buffer[alarm_head_ptr].equipmentId = equipmentId;
   alarm_buffer[alarm_head_ptr].alarmCode = alarmCode;
   memset(alarm_buffer[alarm_head_ptr].value,0,sizeof(alarm_buffer[alarm_head_ptr].value));
-  sprintf(alarm_buffer[alarm_head_ptr].value,"[%s]",values);
+  //sprintf(alarm_buffer[alarm_head_ptr].value,"[%s]",values);
+  sprintf(alarm_buffer[alarm_head_ptr].value,"%s",values);
   alarm_head_ptr = 	local_ptr;
   return local_ptr;
 }
@@ -65,14 +67,16 @@ int res_equipment_alarm (char* location, EQ_ALARM_T eq_alarm, int gateway) {
 	
 	struct tm *tms = localtime(&eq_alarm.timeStamp);
 
-	len = snprintf(resData, sizeof resData, "data=");
-	len = snprintf(&resData[len], sizeof(resData) - len, "&Gateway=%d",gateway);
-	len = snprintf(&resData[len], sizeof(resData) - len, "&TimeStamp=\"%04d-%02d-%02d %02d:%02d:%02d\"",
-	  tms->tm_year, tms->tm_mon, tms->tm_mday, tms->tm_hour, tms->tm_min, tms->tm_sec);
-	len = snprintf(&resData[len], sizeof(resData) - len, "EqType=%d",eq_alarm.equipmentType);
-	len = snprintf(&resData[len], sizeof(resData) - len, "EqId=%d",eq_alarm.equipmentId);
-	len = snprintf(&resData[len], sizeof(resData) - len, "AlarmCode=%d",eq_alarm.alarmCode);
-	len = snprintf(&resData[len], sizeof(resData) - len, "val=\"%s\"",eq_alarm.value);
+	//len += snprintf(resData, sizeof resData, "Data=");
+	len = snprintf(resData, sizeof resData, "{");
+	len += snprintf(&resData[len], sizeof(resData) - len, "\"Gateway_id\": %d,",gateway);
+	//len += snprintf(&resData[len], sizeof(resData) - len, "&TimeStamp=\"%04d-%02d-%02d %02d:%02d:%02d\"",
+	  //tms->tm_year, tms->tm_mon, tms->tm_mday, tms->tm_hour, tms->tm_min, tms->tm_sec);
+	len += snprintf(&resData[len], sizeof(resData) - len, "\"EquipmentType\": %d,",eq_alarm.equipmentType);
+	len += snprintf(&resData[len], sizeof(resData) - len, "\"EquipmentId\": %d,",eq_alarm.equipmentId);
+	len += snprintf(&resData[len], sizeof(resData) - len, "\"AlarmCode\": %d,",eq_alarm.alarmCode);
+	len += snprintf(&resData[len], sizeof(resData) - len, "\"value\": %s}",eq_alarm.value);
+	printf("%s\n", resData);
 	
 	curl_global_init(CURL_GLOBAL_ALL);
 	curl = curl_easy_init();
@@ -148,7 +152,8 @@ void * alarm_checking(void * arg ) {
 					    if(main_power_equipt[i].alarmState[1]!=Mains_off) {
 						    main_power_equipt[i].alarmState[1]=Mains_off;
 						    memset(str_val,0,sizeof(str_val));
-						    sprintf(str_val,"%d.%d", *main_power_equipt[i].volt/10, *main_power_equipt[i].volt%10);
+						    //sprintf(str_val,"%d.%d", *main_power_equipt[i].volt/10, *main_power_equipt[i].volt%10);
+						    sprintf(str_val,"%d", *main_power_equipt[i].volt/10);
 						    insert_new_alarm_to_buffer(now_ts, EQ_MAINPOWER+1, main_power_equipt[i].id, Mains_off, str_val);
 					    }
 					    continue;
