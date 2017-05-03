@@ -72,8 +72,8 @@ int res_equipment_alarm (char* location, EQ_ALARM_T eq_alarm, int gateway) {
 	len += snprintf(&resData[len], sizeof(resData) - len, "\"Gateway_id\": %d,",gateway);
 	//len += snprintf(&resData[len], sizeof(resData) - len, "&TimeStamp=\"%04d-%02d-%02d %02d:%02d:%02d\"",
 	  //tms->tm_year, tms->tm_mon, tms->tm_mday, tms->tm_hour, tms->tm_min, tms->tm_sec);
-	len += snprintf(&resData[len], sizeof(resData) - len, "\"EquipmentType\": %d,",eq_alarm.equipmentType);
 	len += snprintf(&resData[len], sizeof(resData) - len, "\"EquipmentId\": %d,",eq_alarm.equipmentId);
+	len += snprintf(&resData[len], sizeof(resData) - len, "\"EquipmentType\": %d,",eq_alarm.equipmentType);
 	len += snprintf(&resData[len], sizeof(resData) - len, "\"AlarmCode\": %d,",eq_alarm.alarmCode);
 	len += snprintf(&resData[len], sizeof(resData) - len, "\"value\": %s}",eq_alarm.value);
 	printf("%s\n", resData);
@@ -81,6 +81,13 @@ int res_equipment_alarm (char* location, EQ_ALARM_T eq_alarm, int gateway) {
 	curl_global_init(CURL_GLOBAL_ALL);
 	curl = curl_easy_init();
   if(curl) {     
+     curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1); 
+     struct curl_slist *headers = NULL;
+     headers = curl_slist_append(headers, "Accept: application/json");
+     headers = curl_slist_append(headers, "Content-Type: application/json");
+     headers = curl_slist_append(headers, "charsets: utf-8");
+     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers); 
+     //curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
 	   curl_easy_setopt(curl, CURLOPT_URL, location);
 	   curl_easy_setopt(curl, CURLOPT_POSTFIELDS, resData);
 	   res = curl_easy_perform(curl);
@@ -126,6 +133,7 @@ void * alarm_checking(void * arg ) {
 			      main_power_equipt[i].alarmState[0]=Mains_ComDisconnected;
 			                
             memset(str_val,0,sizeof(str_val));
+						sprintf(str_val,"0");
             insert_new_alarm_to_buffer(now_ts, EQ_MAINPOWER+1, main_power_equipt[i].id, Mains_ComDisconnected, str_val);
 			      printf("\r\n<<<MAIN_POWER%d::DISCONNECTED>>>\r\n",i);
 			      continue;
@@ -142,6 +150,7 @@ void * alarm_checking(void * arg ) {
 			        main_power_equipt[i].alarmState[0]=Mains_ComConnected;
 			                
               memset(str_val,0,sizeof(str_val));
+							sprintf(str_val,"0");
               insert_new_alarm_to_buffer(now_ts, EQ_MAINPOWER+1, main_power_equipt[i].id, Mains_ComConnected, str_val);
 		        }
 		  
@@ -153,7 +162,7 @@ void * alarm_checking(void * arg ) {
 						    main_power_equipt[i].alarmState[1]=Mains_off;
 						    memset(str_val,0,sizeof(str_val));
 						    //sprintf(str_val,"%d.%d", *main_power_equipt[i].volt/10, *main_power_equipt[i].volt%10);
-						    sprintf(str_val,"%d", *main_power_equipt[i].volt/10);
+						    sprintf(str_val,"%d", *main_power_equipt[i].volt);
 						    insert_new_alarm_to_buffer(now_ts, EQ_MAINPOWER+1, main_power_equipt[i].id, Mains_off, str_val);
 					    }
 					    continue;
@@ -165,7 +174,8 @@ void * alarm_checking(void * arg ) {
 		        else if(main_power_equipt[i].alarmState[1]!=Mains_On) {
 					    main_power_equipt[i].alarmState[1]=Mains_On;
               memset(str_val,0,sizeof(str_val));
-		          sprintf(str_val,"%d.%d", *main_power_equipt[i].volt/10, *main_power_equipt[i].volt%10);
+		          //sprintf(str_val,"%d.%d", *main_power_equipt[i].volt/10, *main_power_equipt[i].volt%10);
+		          sprintf(str_val,"%d", *main_power_equipt[i].volt);
               insert_new_alarm_to_buffer(now_ts, EQ_MAINPOWER+1, main_power_equipt[i].id, Mains_On, str_val);
 		        }
 			
@@ -179,7 +189,8 @@ void * alarm_checking(void * arg ) {
 			          main_power_equipt[i].alarmState[2]=Mains_voltage_sag;
 			                
                 memset(str_val,0,sizeof(str_val));
-			          sprintf(str_val,"%d.%d", *main_power_equipt[i].volt/10, *main_power_equipt[i].volt%10);
+			          //sprintf(str_val,"%d.%d", *main_power_equipt[i].volt/10, *main_power_equipt[i].volt%10);
+		          	sprintf(str_val,"%d", *main_power_equipt[i].volt);
                 insert_new_alarm_to_buffer(now_ts, EQ_MAINPOWER+1, main_power_equipt[i].id, Mains_voltage_sag, str_val);
 			        }
 		        }
@@ -192,7 +203,8 @@ void * alarm_checking(void * arg ) {
 			          main_power_equipt[i].alarmState[2]=Mains_over_voltage;
 			                
                 memset(str_val,0,sizeof(str_val));
-			          sprintf(str_val,"%d.%d", *main_power_equipt[i].volt/10, *main_power_equipt[i].volt%10);
+			          //sprintf(str_val,"%d.%d", *main_power_equipt[i].volt/10, *main_power_equipt[i].volt%10);
+		          	sprintf(str_val,"%d", *main_power_equipt[i].volt);
                 insert_new_alarm_to_buffer(now_ts, EQ_MAINPOWER+1, main_power_equipt[i].id, Mains_over_voltage, str_val);
 			        }
 		        }
@@ -205,7 +217,8 @@ void * alarm_checking(void * arg ) {
 			          main_power_equipt[i].alarmState[2]=Mains_Norm;
 			                
                 memset(str_val,0,sizeof(str_val));
-			          sprintf(str_val,"%d.%d", *main_power_equipt[i].volt/10, *main_power_equipt[i].volt%10);
+			          //sprintf(str_val,"%d.%d", *main_power_equipt[i].volt/10, *main_power_equipt[i].volt%10);
+		          	sprintf(str_val,"%d", *main_power_equipt[i].volt);
                 insert_new_alarm_to_buffer(now_ts, EQ_MAINPOWER+1, main_power_equipt[i].id, Mains_Norm, str_val);
 			        }
 		        }
@@ -231,7 +244,8 @@ void * alarm_checking(void * arg ) {
 			        main_power_equipt[i].alarmState[3]=Mains_over_current;
 			                
               memset(str_val,0,sizeof(str_val));
-			        sprintf(str_val,"%d.%d", *main_power_equipt[i].current/1000, (*main_power_equipt[i].current%1000)/10);
+			        //sprintf(str_val,"%d.%d", *main_power_equipt[i].current/1000, (*main_power_equipt[i].current%1000)/10);
+			        sprintf(str_val,"%d", *main_power_equipt[i].current);
               insert_new_alarm_to_buffer(now_ts, EQ_MAINPOWER+1, main_power_equipt[i].id, Mains_over_current, str_val);
 			      }
 		      }
@@ -244,7 +258,8 @@ void * alarm_checking(void * arg ) {
 			        main_power_equipt[i].alarmState[3]=Mains_Norm_current;
 			              
               memset(str_val,0,sizeof(str_val));
-			        sprintf(str_val,"%d.%d", *main_power_equipt[i].current/1000, (*main_power_equipt[i].current%1000)/10);
+			        //sprintf(str_val,"%d.%d", *main_power_equipt[i].current/1000, (*main_power_equipt[i].current%1000)/10);
+			        sprintf(str_val,"%d", *main_power_equipt[i].current);
               insert_new_alarm_to_buffer(now_ts, EQ_MAINPOWER+1, main_power_equipt[i].id, Mains_Norm_current, str_val);
 			      }
 		      }
@@ -266,6 +281,7 @@ void * alarm_checking(void * arg ) {
 			      ac_equipt[i].alarmState[1]=AcCoilDisconnected;
 			                
             memset(str_val,0,sizeof(str_val));
+						sprintf(str_val,"0");
             insert_new_alarm_to_buffer(now_ts, EQ_AC+1, ac_equipt[i].id, AcCoilDisconnected, str_val);
 			      continue;
 		      }
@@ -278,6 +294,7 @@ void * alarm_checking(void * arg ) {
 			      ac_equipt[i].alarmState[1]=AcCoilDisconnected;
 			                
             memset(str_val,0,sizeof(str_val));
+						sprintf(str_val,"0");
             insert_new_alarm_to_buffer(now_ts, EQ_AC+1, ac_equipt[i].id, AcCoilDisconnected, str_val);
 			      continue;
 		      }
@@ -302,7 +319,8 @@ void * alarm_checking(void * arg ) {
 			        ac_equipt[i].alarmState[1]=AcCoilHiTemp;
 			                
               memset(str_val,0,sizeof(str_val));
-			        sprintf(str_val,"%d.%d", temporary_uint/100, (temporary_uint%100)/10);
+			        //sprintf(str_val,"%d.%d", temporary_uint/100, (temporary_uint%100)/10);
+			        sprintf(str_val,"%d", temporary_uint);
               insert_new_alarm_to_buffer(now_ts, EQ_AC+1, ac_equipt[i].id, AcCoilHiTemp, str_val);
 			      }
 		      }
@@ -315,7 +333,8 @@ void * alarm_checking(void * arg ) {
 			        ac_equipt[i].alarmState[1]=AcCoilNormTemp;
 			              
               memset(str_val,0,sizeof(str_val));
-			        sprintf(str_val,"%d.%d", *ac_equipt[i].current/1000, (*ac_equipt[i].current%1000)/10);
+			        //sprintf(str_val,"%d.%d", *ac_equipt[i].current/1000, (*ac_equipt[i].current%1000)/10);
+			        sprintf(str_val,"%d", *main_power_equipt[i].current);
               insert_new_alarm_to_buffer(now_ts, EQ_AC+1, ac_equipt[i].id, AcCoilNormTemp, str_val);
 			      }
 		      }
@@ -331,6 +350,7 @@ void * alarm_checking(void * arg ) {
 			      ac_equipt[i].alarmState[2]=AcDisconnectedCurrent;
 			                
             memset(str_val,0,sizeof(str_val));
+						sprintf(str_val,"0");
             insert_new_alarm_to_buffer(now_ts, EQ_AC+1, ac_equipt[i].id, AcDisconnectedCurrent, str_val);
 			      continue;
 		      }
@@ -350,7 +370,8 @@ void * alarm_checking(void * arg ) {
 			        ac_equipt[i].alarmState[2]=AcHiCurrent;
 			                
               memset(str_val,0,sizeof(str_val));
-			        sprintf(str_val,"%d.%d", *ac_equipt[i].current/1000, (*ac_equipt[i].current%1000)/10);
+			        //sprintf(str_val,"%d.%d", *ac_equipt[i].current/1000, (*ac_equipt[i].current%1000)/10);
+			        sprintf(str_val,"%d", *main_power_equipt[i].current);
               insert_new_alarm_to_buffer(now_ts, EQ_AC+1, ac_equipt[i].id, AcHiCurrent, str_val);
 			      }
 		      }
@@ -363,7 +384,8 @@ void * alarm_checking(void * arg ) {
 			        ac_equipt[i].alarmState[2]=AcNormCurrent;
 			              
               memset(str_val,0,sizeof(str_val));
-			        sprintf(str_val,"%d.%d", *ac_equipt[i].current/1000, (*ac_equipt[i].current%1000)/10);
+			        //sprintf(str_val,"%d.%d", *ac_equipt[i].current/1000, (*ac_equipt[i].current%1000)/10);
+			        sprintf(str_val,"%d", *main_power_equipt[i].current);
               insert_new_alarm_to_buffer(now_ts, EQ_AC+1, ac_equipt[i].id, AcNormCurrent, str_val);
 			      }
 		      }
@@ -380,6 +402,7 @@ void * alarm_checking(void * arg ) {
 			      ac_equipt[i].alarmState[3]=AcIrDisconnected;
 			                
             memset(str_val,0,sizeof(str_val));
+						sprintf(str_val,"0");
             insert_new_alarm_to_buffer(now_ts, EQ_AC+1, ac_equipt[i].id, AcIrDisconnected, str_val);
 			      continue;
 		      }
@@ -395,6 +418,7 @@ void * alarm_checking(void * arg ) {
 			        ac_equipt[i].alarmState[3]=AcIrConnected;
 			                
               memset(str_val,0,sizeof(str_val));
+							sprintf(str_val,"0");
               insert_new_alarm_to_buffer(now_ts, EQ_AC+1, ac_equipt[i].id, AcIrConnected, str_val);
 		        }
 		      }
@@ -421,6 +445,7 @@ void * alarm_checking(void * arg ) {
 			      door_equipt[i].alarmState[0]=DoorComDisconnected;
 			                
             memset(str_val,0,sizeof(str_val));
+						sprintf(str_val,"0");
             insert_new_alarm_to_buffer(now_ts, EQ_DOOR+1, door_equipt[i].id, DoorComDisconnected, str_val);
 			      continue;
 		      }
@@ -437,7 +462,8 @@ void * alarm_checking(void * arg ) {
 			        door_equipt[i].alarmState[0]=DoorOpenXmin;
 			                
               memset(str_val,0,sizeof(str_val));
-			        sprintf(str_val,"%d,%d", *door_equipt[i].doorOpen, *door_equipt[i].doorOpenTime);
+			        //sprintf(str_val,"%d,%d", *door_equipt[i].doorOpen, *door_equipt[i].doorOpenTime);
+			        sprintf(str_val,"%d", *door_equipt[i].doorOpen);
               insert_new_alarm_to_buffer(now_ts, EQ_DOOR+1, door_equipt[i].id, DoorOpenXmin, str_val);
 		        }
 			
@@ -467,6 +493,7 @@ void * alarm_checking(void * arg ) {
 			        room_equipt[i].alarmState[0]=RoomDisconnectTemp;
 			                
               memset(str_val,0,sizeof(str_val));
+							sprintf(str_val,"0");
               insert_new_alarm_to_buffer(now_ts, EQ_ROOM+1, room_equipt[i].id, RoomDisconnectTemp, str_val);
 			      }
 		      }
@@ -484,7 +511,8 @@ void * alarm_checking(void * arg ) {
 				        room_equipt[i].alarmState[0]=RoomLoTemp;  
 				
                 memset(str_val,0,sizeof(str_val));
-			          sprintf(str_val,"%d.%d", *room_equipt[i].temp/100, (*room_equipt[i].temp%100)/10);
+			          //sprintf(str_val,"%d.%d", *room_equipt[i].temp/100, (*room_equipt[i].temp%100)/10);
+			          sprintf(str_val,"%d", *room_equipt[i].temp);
                 insert_new_alarm_to_buffer(now_ts, EQ_ROOM+1, room_equipt[i].id, RoomLoTemp, str_val);
 			        }
 		        }
@@ -497,7 +525,8 @@ void * alarm_checking(void * arg ) {
 				        room_equipt[i].alarmState[0]=RoomHiTemp;  
 				
                 memset(str_val,0,sizeof(str_val));
-			          sprintf(str_val,"%d.%d", *room_equipt[i].temp/100, (*room_equipt[i].temp%100)/10);
+			          //sprintf(str_val,"%d.%d", *room_equipt[i].temp/100, (*room_equipt[i].temp%100)/10);
+			          sprintf(str_val,"%d", *room_equipt[i].temp);
                 insert_new_alarm_to_buffer(now_ts, EQ_ROOM+1, room_equipt[i].id, RoomHiTemp, str_val);
 			        }
 		        }
@@ -509,7 +538,8 @@ void * alarm_checking(void * arg ) {
 			        if(room_equipt[i].alarmState[0]==RoomNormTemp) continue;
 			          room_equipt[i].alarmState[0]=RoomNormTemp;
                 memset(str_val,0,sizeof(str_val));
-			          sprintf(str_val,"%d.%d", *room_equipt[i].temp/100, (*room_equipt[i].temp%100)/10);
+			          //sprintf(str_val,"%d.%d", *room_equipt[i].temp/100, (*room_equipt[i].temp%100)/10);
+			          sprintf(str_val,"%d", *room_equipt[i].temp);
                 insert_new_alarm_to_buffer(now_ts, EQ_ROOM+1, room_equipt[i].id, RoomNormTemp, str_val);
 			      }
 		      }
@@ -525,6 +555,7 @@ void * alarm_checking(void * arg ) {
 			        room_equipt[i].alarmState[1]=RoomDisconnectedHumid;
 			                
               memset(str_val,0,sizeof(str_val));
+							sprintf(str_val,"0");
               insert_new_alarm_to_buffer(now_ts, EQ_ROOM+1, room_equipt[i].id, RoomDisconnectedHumid, str_val);
 			      }
 		      }
@@ -542,7 +573,8 @@ void * alarm_checking(void * arg ) {
 				        room_equipt[i].alarmState[1]=RoomHiHumid;  
 				
                 memset(str_val,0,sizeof(str_val));
-			          sprintf(str_val,"%d.%d", *room_equipt[i].humidity/100, (*room_equipt[i].humidity%100)/10);
+			          //sprintf(str_val,"%d.%d", *room_equipt[i].humidity/100, (*room_equipt[i].humidity%100)/10);
+			          sprintf(str_val,"%d", *room_equipt[i].humidity);
                 insert_new_alarm_to_buffer(now_ts, EQ_ROOM+1, room_equipt[i].id, RoomHiHumid, str_val);
 			        }
 		        }
@@ -554,7 +586,8 @@ void * alarm_checking(void * arg ) {
 			        if(room_equipt[i].alarmState[1]==RoomNormHumid) continue;
 			        room_equipt[i].alarmState[1]=RoomNormHumid;
               memset(str_val,0,sizeof(str_val));
-			        sprintf(str_val,"%d.%d", *room_equipt[i].humidity/100, (*room_equipt[i].humidity%100)/10);
+			        //sprintf(str_val,"%d.%d", *room_equipt[i].humidity/100, (*room_equipt[i].humidity%100)/10);
+			        sprintf(str_val,"%d", *room_equipt[i].humidity);
               insert_new_alarm_to_buffer(now_ts, EQ_ROOM+1, room_equipt[i].id, RoomNormHumid, str_val);
 			      }
 		      }
@@ -579,6 +612,7 @@ void * alarm_checking(void * arg ) {
 			        lamp_equipt[i].alarmState[1]=LampContDisconnected;
 			                
               memset(str_val,0,sizeof(str_val));
+							sprintf(str_val,"0");
               insert_new_alarm_to_buffer(now_ts, EQ_LAMP+1, lamp_equipt[i].id, LampContDisconnected, str_val);
 				      continue;
 			      }
@@ -621,6 +655,7 @@ void * alarm_checking(void * arg ) {
 			        lamp_equipt[i].alarmState[0]=LampComDisconnected;
 			                
               memset(str_val,0,sizeof(str_val));
+							sprintf(str_val,"0");
               insert_new_alarm_to_buffer(now_ts, EQ_LAMP+1, lamp_equipt[i].id, LampComDisconnected, str_val);
 				      continue;
 			      }
@@ -639,7 +674,8 @@ void * alarm_checking(void * arg ) {
 				        lamp_equipt[i].alarmState[0]=LampOffAbnormal;  
 				
                 memset(str_val,0,sizeof(str_val));
-			          sprintf(str_val,"%d,%d.%d", *lamp_equipt[i].lampOn,*lamp_equipt[i].current/1000,(*lamp_equipt[i].current%1000)/10);
+			          //sprintf(str_val,"%d,%d.%d", *lamp_equipt[i].lampOn,*lamp_equipt[i].current/1000,(*lamp_equipt[i].current%1000)/10);
+			        	sprintf(str_val,"%d", *main_power_equipt[i].current);
                 insert_new_alarm_to_buffer(now_ts, EQ_LAMP+1, lamp_equipt[i].id, LampOffAbnormal, str_val);
 			        }
 		        }
@@ -652,7 +688,8 @@ void * alarm_checking(void * arg ) {
 				        lamp_equipt[i].alarmState[0]=LampOnAbnormal;  
 				
                 memset(str_val,0,sizeof(str_val));
-			          sprintf(str_val,"%d,%d.%d", *lamp_equipt[i].lampOn,*lamp_equipt[i].current/1000,(*lamp_equipt[i].current%1000)/10);
+			          //sprintf(str_val,"%d,%d.%d", *lamp_equipt[i].lampOn,*lamp_equipt[i].current/1000,(*lamp_equipt[i].current%1000)/10);
+			        	sprintf(str_val,"%d", *main_power_equipt[i].current);
                 insert_new_alarm_to_buffer(now_ts, EQ_LAMP+1, lamp_equipt[i].id, LampOnAbnormal, str_val);
 			        }
 		        }
@@ -664,7 +701,8 @@ void * alarm_checking(void * arg ) {
 			        if(lamp_equipt[i].alarmState[0]==LampNormal) continue;
 			        lamp_equipt[i].alarmState[0]=LampNormal;
               memset(str_val,0,sizeof(str_val));
-			        sprintf(str_val,"%d,%d.%d", *lamp_equipt[i].lampOn,*lamp_equipt[i].current/1000,(*lamp_equipt[i].current%1000)/10);
+			        //sprintf(str_val,"%d,%d.%d", *lamp_equipt[i].lampOn,*lamp_equipt[i].current/1000,(*lamp_equipt[i].current%1000)/10);
+			        sprintf(str_val,"%d", *main_power_equipt[i].current);
               insert_new_alarm_to_buffer(now_ts, EQ_ROOM+1, lamp_equipt[i].id, LampNormal, str_val);
 			      }
 		      }
