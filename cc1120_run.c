@@ -24,16 +24,16 @@
 #include <syslog.h>
 
 #include "cc112x_easy_link_reg_config.h"
+#include "equipment_alarm.h"
+#include "kwh_params.h"
+
 #include "mac_address.c"
 
-#define STATUS_CLEARED 0
-#define STATUS_UPDATED 1
-
-#include "kwh_params.c"
-#include "crc16.c"
-#include "res_sensor.c"
-#include "paring.c"
-//#include "read_int.c"
+#include "cc1120.h"
+#include "crc16.h"
+#include "app.h"
+#include "res_sensor.h"
+#include "paring.h"
 	
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 	
@@ -46,108 +46,17 @@
 #define CC1120_MOSI 12
 #define CC1120_MISO 13
 #define CC1120_SCLK 14
-		
-#define VCDAC_START_OFFSET 2
-#define FS_VCO2_INDEX 0
-#define FS_VCO4_INDEX 1
-#define FS_CHP_INDEX 2
-	
-#define SENSOR_TONLY    10010
-#define SENSOR_BUSDUCT  10020
-#define SENSOR_DINONLY  10030
-#define VALUE_INVALID   10040
 
-#define TH_NODES_MAX 20
-
-uint8_t Change_freq_ir[] = { 0x0A, 0x06, 0x01, 0x00, 0x42, 0x3D, 0x15, 0x02, 0x00, 0x01, 0x01};
-uint8_t ir_command_save[8][100];
-uint8_t io_command[] = { 12, 0x11, 0x00, 0x00, 0x2D, 0xE6, 0x17, 0x05, 0x01, 0x01, 0x02, 0x01, 0x02};
-
-typedef enum _CC1120_COMM_CMD {
-	COMM_JOINT = 1,
-	COMM_SCAN,
-	COMM_UNJOINT,
-	COMM_INFO,
-	COMM_SYNC,
-	COMM_ADD,
-	COMM_QUERY,
-
-	COMM_JOINT_RPL = 0x81,
-	COMM_SCAN_RPL,
-	COMM_UNJOINT_RPL,
-	COMM_INFO_RPL,
-	COMM_SYNC_RPL,
-	COMM_ADD_RPL,
-	COMM_QUERY_RPL,
-
-	COMM_SEND_IR = 0x11,
-	COMM_VALUES_GET,
-	COMM_ADE_GET,
-	COMM_ADE_SET,
-	COMM_UTILS_SET,
-	
-	COMM_GW_TO_TH = 0x41,
-	
-	COMM_SEND_IR_RPL = 0x91,
-	COMM_VALUES_RPL,
-	COMM_ADE_GET_RPL,
-	COMM_ADE_SET_RPL,
-	COMM_UTILS_RPL,
-	
-	COMM_TH_TO_GW = 0xC1,
-	
-} CC1120_COMM_CMD;
-
-
-
-const char th_type_str[4][7]={
+static const char th_type_str[4][7]={
   "T-Only\0",
   "T-BDuc\0",
   "D-Only\0",
   "T-Humi\0"
 };
-
-typedef struct {
-	uint8_t id;
-	uint8_t status;
-	uint8_t type;
-	uint8_t loop_h;
-	uint8_t loop_t1;
-	uint8_t loop_t2;
-	uint8_t loop_t3;
-	uint16_t past_h[3];
-	uint16_t past_t1[3];
-	uint16_t past_t2[3];
-	uint16_t past_t3[3];
-	uint16_t median_h;
-	uint16_t median_t1;
-	uint16_t median_t2;
-	uint16_t median_t3;
-	uint8_t din1;
-	uint8_t din2;
-	uint8_t batt;
-	uint8_t tx_rssi;
-	uint32_t tx_counter;
-	time_t ts;  // time stamp
-	uint16_t ir_id;
-	uint8_t th_set;
-	int start_operation;
-	int end_operation;
-  char* ac_type;
-}TH_NODE_T;
-
-typedef struct {
-	uint16_t id;
-	int start_operation;
-	int end_operation;
-	int channel;
-	int type;
-}IO_NODE;
-
-typedef struct {
-	int start_hour;
-	int close_hour;
-}STORE;
+		
+uint8_t Change_freq_ir[] = { 0x0A, 0x06, 0x01, 0x00, 0x42, 0x3D, 0x15, 0x02, 0x00, 0x01, 0x01};
+uint8_t ir_command_save[TH_NODES_MAX][100];
+uint8_t io_command[] = { 12, 0x11, 0x00, 0x00, 0x2D, 0xE6, 0x17, 0x05, 0x01, 0x01, 0x02, 0x01, 0x02};
 
 STORE Pondok_Pinang;
 uint8_t t_wakeup_interval = 3;
@@ -173,6 +82,7 @@ char* AC_TYPE[TH_NODES_MAX] = { "Panasonic","Panasonic","Panasonic","Panasonic",
 
 IO_NODE io_nodes[16];
 TH_NODE_T th_nodes[TH_NODES_MAX];
+
 uint32_t cc1120_KWH_ID;
 int io_flags = STATUS_CLEARED;
 int cc1120_TH_Listed = 6;
@@ -208,9 +118,9 @@ char* location_wattT = "http://35.160.141.229:3000/api/TWatts";
 char* gateway_trap_id = "EM24010101";
 FILE *f;
 
-void cc1120_service(void);
-void res_service(void);
-void poll_kwh_service(void);
+void * cc1120_service(void *arg);
+void * res_service(void *arg);
+void * poll_kwh_service(void *arg);
 
 uint8_t tbuff_kwh_poll[256];
 
@@ -801,7 +711,7 @@ void cc112xpwrConfig(uint8_t pwrTx) {
  *
  */
 uint8_t wait_exp_val(uint16_t addr, uint8_t exp_val) {
-	uint8_t temp_byte;
+	uint8_t temp_byte = 0;
 	do {
 		cc112xSpiReadReg(addr, &temp_byte, 1);
 	} while (temp_byte != exp_val);
@@ -1409,7 +1319,7 @@ void cc112x_run(void)
 }
 
 
-void res_service( void)
+void * res_service( void *arg )
 {
   int i;
 	
@@ -1456,7 +1366,7 @@ void res_service( void)
   
 }
 
-void poll_kwh_service( void)
+void * poll_kwh_service( void *arg )
 {
 //  int i;
   struct timespec spec;
@@ -1584,7 +1494,7 @@ void poll_kwh_service( void)
   
 }
 
-void cc1120_service( void)
+void * cc1120_service( void *arg )
 {
   freq_main = 1;
   //freq_main = 0;
@@ -1601,6 +1511,7 @@ void cc1120_service( void)
 	get_ac_config("localhost","root","satunol10","EMS","ac", gateway_ID);
 	get_th_config("localhost","root","satunol10","EMS","temperature", gateway_ID);
 	get_lamp_config("localhost","root","satunol10","EMS","lamp", gateway_ID);
+	
 	printf(" gateway %d\n", gateway_ID);
   kwh_ID = 0x67C9;
   //mac_address_gateway = read_ints();
@@ -1651,9 +1562,13 @@ void cc1120_service( void)
 		}
 	}
 	printf("total th id %d\n", TOTAL_TH_ID);
-  pinMode(CC1120_MOSI, SPI_PIN);
-  pinMode(CC1120_MISO, SPI_PIN);
-  pinMode(CC1120_SCLK, SPI_PIN);
+//  pinMode(CC1120_MOSI, SPI_PIN);
+//  pinMode(CC1120_MISO, SPI_PIN);
+//  pinMode(CC1120_SCLK, SPI_PIN);
+
+  clear_equipment_alarm();
+  get_main_power_cfg("localhost","root","satunol10","EMS","main_power", gateway_ID);
+	get_ac_cfg("localhost","root","satunol10","EMS","ac", gateway_ID);
   pinMode(CC1120_SSEL, OUTPUT) ;  
   pinMode(CC1120_RST, OUTPUT) ;
   
@@ -1709,7 +1624,9 @@ void cc1120_service( void)
 				if ( current_time < th_nodes[i].start_operation || current_time > th_nodes[i].end_operation)
 				{
 					th_nodes[i].th_set = 31;
-				}	
+				}	else {
+					th_nodes[i].th_set = ir_config[i].default_temp;
+				}
 				printf("suhu real %d hour %d\n\n",th_nodes[i].th_set, current_time);
       	get_ir_command("localhost","root","satunol10","paring","ir_command", th_nodes[loop_th_id].ac_type, th_nodes[i].th_set);
       	for(i=0;i<=68;i++)
@@ -1769,17 +1686,23 @@ void cc1120_service( void)
 
 int main(int argc, char *argv[]) {
   int ret = 0;
-  
-  pthread_t thread_cc1120, thread_res, thread_poll_kwh;	// thread pointers
+
+  pthread_t thread_cc1120, thread_res, thread_poll_kwh; // thread pointers
+	pthread_t thread_alarm_check, thread_alarm_send;	
   
   /* Create independent threads each of which will execute function */
   pthread_create( &thread_cc1120, NULL, cc1120_service, NULL);
   pthread_create( &thread_res, NULL, res_service, NULL);
   pthread_create( &thread_poll_kwh, NULL, poll_kwh_service, NULL);
+  pthread_create( &thread_alarm_check, NULL, alarm_checking, NULL);
+	pthread_create( &thread_alarm_send, NULL, alarm_sending, NULL);
+  
 
   pthread_join( thread_cc1120, NULL);
   pthread_join( thread_res, NULL);
   pthread_join( thread_poll_kwh, NULL);
+  pthread_join( thread_alarm_check, NULL);
+  pthread_join( thread_alarm_send, NULL);
 
   //int datalog = 0;
   while (1)

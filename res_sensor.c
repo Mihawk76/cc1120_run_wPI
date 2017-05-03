@@ -1,5 +1,12 @@
-#include <stdio.h>
+#include <inttypes.h>
+#include <stdio.h>   
+#include <stdlib.h>    
+#include <stdint.h>  
+#include <string.h>  
+#include <time.h>
 #include <curl/curl.h>
+#include "res_sensor.h"
+#include "kwh_params.h"
 
 char scoreData[10000];
 char temp[1000];	
@@ -14,21 +21,22 @@ int test (int kwh[])
 	}
 	return 0;
 }
+
 int res_R_I (char* location, int32_t CurrentR[6], int nilai ,int device, int gateway)
 {
 	int Channel = 0;
 	snprintf(scoreData, sizeof scoreData, "jsonR={\"Data\":[{");
 	for(Channel=0;Channel<6;Channel++)
 	{
-		snprintf(temp, sizeof scoreData, "\"CurrentR\":%d", 
+		snprintf(temp, sizeof temp, "\"CurrentR\":%d", 
 		CurrentR[Channel]);
 		strcat(scoreData, temp);
 		if(Channel<5){
-		snprintf(temp, sizeof scoreData, ",");
+		snprintf(temp, sizeof temp, ",");
 		strcat(scoreData, temp);
 		}
 	}
-	snprintf(temp, sizeof scoreData, "}]}&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
+	snprintf(temp, sizeof temp, "}]}&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
 	strcat(scoreData, temp);
 	printf("%s\n", scoreData);
 	//printf("location %s\n", location);	
@@ -53,15 +61,15 @@ int res_S_I (char* location, int32_t CurrentS[6], int nilai ,int device, int gat
 	snprintf(scoreData, sizeof scoreData, "jsonS={\"Data\":[{");
 	for(Channel=0;Channel<6;Channel++)
 	{
-		snprintf(temp, sizeof scoreData, "\"CurrentS\":%d", 
+		snprintf(temp, sizeof temp, "\"CurrentS\":%d", 
 		CurrentS[Channel]);
 		strcat(scoreData, temp);
 		if(Channel<5){
-		snprintf(temp, sizeof scoreData, ",");
+		snprintf(temp, sizeof temp, ",");
 		strcat(scoreData, temp);
 		}
 	}
-	snprintf(temp, sizeof scoreData, "}]}&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
+	snprintf(temp, sizeof temp, "}]}&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
 	strcat(scoreData, temp);
 	printf("%s\n", scoreData);
 	//printf("location %s\n", location);	
@@ -86,15 +94,15 @@ int res_T_I (char* location, int32_t CurrentT[6], int nilai ,int device, int gat
 	snprintf(scoreData, sizeof scoreData, "jsonT={\"Data\":[{");
 	for(Channel=0;Channel<6;Channel++)
 	{
-		snprintf(temp, sizeof scoreData, "\"CurrentT\":%d", 
+		snprintf(temp, sizeof temp, "\"CurrentT\":%d", 
 		CurrentT[Channel]);
 		strcat(scoreData, temp);
 		if(Channel<5){
-		snprintf(temp, sizeof scoreData, ",");
+		snprintf(temp, sizeof temp, ",");
 		strcat(scoreData, temp);
 		}
 	}
-	snprintf(temp, sizeof scoreData, "}]}&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
+	snprintf(temp, sizeof temp, "}]}&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
 	strcat(scoreData, temp);
 	printf("%s\n", scoreData);
 	//printf("location %s\n", location);	
@@ -119,11 +127,11 @@ int res_R_I_V_PF (char* location,	int32_t VoltR[6], int32_t CurrentR[6], int32_t
 	snprintf(scoreData, sizeof scoreData, "data=");
 	for(Channel=0;Channel<6;Channel++)
 	{
-		snprintf(temp, sizeof scoreData, "VoltR%d=%d CurrentR%d=%d PowerFactorR%d=%d\n", 
+		snprintf(temp, sizeof temp, "VoltR%d=%d CurrentR%d=%d PowerFactorR%d=%d\n", 
 		Channel, VoltR[Channel], Channel, CurrentR[Channel], Channel, PowerFactorR[Channel]);
 		strcat(scoreData, temp);
 	}
-	snprintf(temp, sizeof scoreData, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
+	snprintf(temp, sizeof temp, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
 	strcat(scoreData, temp);
 	//printf("%s\n", scoreData);
 	//printf("location %s\n", location);	
@@ -148,11 +156,11 @@ int res_S_I_V_PF (char* location,	int32_t VoltS[6], int32_t CurrentS[6], int32_t
 	snprintf(scoreData, sizeof scoreData, "data=");
 	for(Channel=0;Channel<6;Channel++)
 	{
-		snprintf(temp, sizeof scoreData, "VoltS%d=%d CurrentS%d=%d PowerFactorS%d=%d\n", 
+		snprintf(temp, sizeof temp, "VoltS%d=%d CurrentS%d=%d PowerFactorS%d=%d\n", 
 		Channel, VoltS[Channel], Channel, CurrentS[Channel], Channel, PowerFactorS[Channel]);
 		strcat(scoreData, temp);
 	}
-	snprintf(temp, sizeof scoreData, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
+	snprintf(temp, sizeof temp, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
 	strcat(scoreData, temp);
 	//printf("%s\n", scoreData);
 	//printf("location %s\n", location);	
@@ -177,11 +185,11 @@ int res_T_I_V_PF (char* location,	int32_t VoltT[6], int32_t CurrentT[6], int32_t
 	snprintf(scoreData, sizeof scoreData, "data=");
 	for(Channel=0;Channel<6;Channel++)
 	{
-		snprintf(temp, sizeof scoreData, "VoltT%d=%d CurrentT%d=%d PowerFactorT%d=%d\n", 
+		snprintf(temp, sizeof temp, "VoltT%d=%d CurrentT%d=%d PowerFactorT%d=%d\n", 
 		Channel, VoltT[Channel], Channel, CurrentT[Channel], Channel, PowerFactorT[Channel]);
 		strcat(scoreData, temp);
 	}
-	snprintf(temp, sizeof scoreData, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
+	snprintf(temp, sizeof temp, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
 	strcat(scoreData, temp);
 	//printf("%s\n", scoreData);
 	//printf("location %s\n", location);	
@@ -206,11 +214,11 @@ int res_R_Watt_Var (char* location,	int32_t WattR[6], int32_t VarR[6], int nilai
 	snprintf(scoreData, sizeof scoreData, "data=");
 	for(Channel=0;Channel<6;Channel++)
 	{
-		snprintf(temp, sizeof scoreData, "WattR%d=%d VarR%d=%d\n", 
+		snprintf(temp, sizeof temp, "WattR%d=%d VarR%d=%d\n", 
 		Channel, WattR[Channel], Channel, VarR[Channel]);
 		strcat(scoreData, temp);
 	}
-	snprintf(temp, sizeof scoreData, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
+	snprintf(temp, sizeof temp, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
 	strcat(scoreData, temp);
 	//printf("%s\n", scoreData);
 	//printf("location %s\n", location);	
@@ -235,11 +243,11 @@ int res_S_Watt_Var (char* location,	int32_t WattS[6], int32_t VarS[6], int nilai
 	snprintf(scoreData, sizeof scoreData, "data=");
 	for(Channel=0;Channel<6;Channel++)
 	{
-		snprintf(temp, sizeof scoreData, "WattS%d=%d VarS%d=%d\n", 
+		snprintf(temp, sizeof temp, "WattS%d=%d VarS%d=%d\n", 
 		Channel, WattS[Channel], Channel, VarS[Channel]);
 		strcat(scoreData, temp);
 	}
-	snprintf(temp, sizeof scoreData, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
+	snprintf(temp, sizeof temp, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
 	strcat(scoreData, temp);
 	//printf("%s\n", scoreData);
 	//printf("location %s\n", location);	
@@ -264,11 +272,11 @@ int res_T_Watt_Var (char* location,	int32_t WattT[6], int32_t VarT[6], int nilai
 	snprintf(scoreData, sizeof scoreData, "data=");
 	for(Channel=0;Channel<6;Channel++)
 	{
-		snprintf(temp, sizeof scoreData, "WattT%d=%d VarT%d=%d\n", 
+		snprintf(temp, sizeof temp, "WattT%d=%d VarT%d=%d\n", 
 		Channel, WattT[Channel], Channel, VarT[Channel]);
 		strcat(scoreData, temp);
 	}
-	snprintf(temp, sizeof scoreData, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
+	snprintf(temp, sizeof temp, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
 	strcat(scoreData, temp);
 	//printf("%s\n", scoreData);
 	//printf("location %s\n", location);	
@@ -293,15 +301,15 @@ int res_R_WattPrd_WattHour (char* location,	int32_t WattPrdR[6], int32_t WattHou
 	snprintf(scoreData, sizeof scoreData, "[");
 	for(Channel=0;Channel<6;Channel++)
 	{
-		snprintf(temp, sizeof scoreData, "{\"Kwh_id\":%d,\"Gateway_id\":%d,\"WattPrdR\":%d,\"WattHourR\":%d,\"Channel\":%d,\"id\":0}", 
+		snprintf(temp, sizeof temp, "{\"Kwh_id\":%d,\"Gateway_id\":%d,\"WattPrdR\":%d,\"WattHourR\":%d,\"Channel\":%d,\"id\":0}", 
 		device, gateway, WattPrdR[Channel], WattHourR[Channel], Channel);
 		strcat(scoreData, temp);
 		if(Channel<5){
-		snprintf(temp, sizeof scoreData, ",");
+		snprintf(temp, sizeof temp, ",");
 		strcat(scoreData, temp);
 		}
 	}
-	snprintf(temp, sizeof scoreData, "]");
+	snprintf(temp, sizeof temp, "]");
 	strcat(scoreData, temp);
 	printf("%s\n", scoreData);
 	//printf("location %s\n", location);	
@@ -331,15 +339,15 @@ int res_S_WattPrd_WattHour (char* location,	int32_t WattPrdS[6], int32_t WattHou
 	snprintf(scoreData, sizeof scoreData, "[");
 	for(Channel=0;Channel<6;Channel++)
 	{
-		snprintf(temp, sizeof scoreData, "{\"Kwh_id\":%d,\"Gateway_id\":%d,\"WattPrdS\":%d,\"WattHourS\":%d,\"Channel\":%d,\"id\":0}", 
+		snprintf(temp, sizeof temp, "{\"Kwh_id\":%d,\"Gateway_id\":%d,\"WattPrdS\":%d,\"WattHourS\":%d,\"Channel\":%d,\"id\":0}", 
 		device, gateway, WattPrdS[Channel], WattHourS[Channel], Channel);
 		strcat(scoreData, temp);
 		if(Channel<5){
-		snprintf(temp, sizeof scoreData, ",");
+		snprintf(temp, sizeof temp, ",");
 		strcat(scoreData, temp);
 		}
 	}
-	snprintf(temp, sizeof scoreData, "]");
+	snprintf(temp, sizeof temp, "]");
 	strcat(scoreData, temp);
 	printf("%s\n", scoreData);
 	//printf("location %s\n", location);	
@@ -369,15 +377,15 @@ int res_T_WattPrd_WattHour (char* location,	int32_t WattPrdT[6], int32_t WattHou
 	snprintf(scoreData, sizeof scoreData, "[");
 	for(Channel=0;Channel<6;Channel++)
 	{
-		snprintf(temp, sizeof scoreData, "{\"Kwh_id\":%d,\"Gateway_id\":%d,\"WattPrdT\":%d,\"WattHourT\":%d,\"Channel\":%d,\"id\":0}", 
+		snprintf(temp, sizeof temp, "{\"Kwh_id\":%d,\"Gateway_id\":%d,\"WattPrdT\":%d,\"WattHourT\":%d,\"Channel\":%d,\"id\":0}", 
 		device, gateway, WattPrdT[Channel], WattHourT[Channel], Channel);
 		strcat(scoreData, temp);
 		if(Channel<5){
-		snprintf(temp, sizeof scoreData, ",");
+		snprintf(temp, sizeof temp, ",");
 		strcat(scoreData, temp);
 		}
 	}
-	snprintf(temp, sizeof scoreData, "]");
+	snprintf(temp, sizeof temp, "]");
 	strcat(scoreData, temp);
 	printf("%s\n", scoreData);
 	//printf("location %s\n", location);	
@@ -407,11 +415,11 @@ int res_R_VarPrd_VarHour (char* location,	int32_t VarPrdR[6], int32_t VarHourR[6
 	snprintf(scoreData, sizeof scoreData, "data=");
 	for(Channel=0;Channel<6;Channel++)
 	{
-		snprintf(temp, sizeof scoreData, "VarPrdR%d=%d VarHourR%d=%d\n", 
+		snprintf(temp, sizeof temp, "VarPrdR%d=%d VarHourR%d=%d\n", 
 		Channel, VarPrdR[Channel], Channel, VarHourR[Channel]);
 		strcat(scoreData, temp);
 	}
-	snprintf(temp, sizeof scoreData, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
+	snprintf(temp, sizeof temp, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
 	strcat(scoreData, temp);
 	//printf("%s\n", scoreData);
 	//printf("location %s\n", location);	
@@ -436,11 +444,11 @@ int res_S_VarPrd_VarHour (char* location,	int32_t VarPrdS[6], int32_t VarHourS[6
 	snprintf(scoreData, sizeof scoreData, "data=");
 	for(Channel=0;Channel<6;Channel++)
 	{
-		snprintf(temp, sizeof scoreData, "VarPrdS%d=%d VarHourS%d=%d\n", 
+		snprintf(temp, sizeof temp, "VarPrdS%d=%d VarHourS%d=%d\n", 
 		Channel, VarPrdS[Channel], Channel, VarHourS[Channel]);
 		strcat(scoreData, temp);
 	}
-	snprintf(temp, sizeof scoreData, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
+	snprintf(temp, sizeof temp, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
 	strcat(scoreData, temp);
 	//printf("%s\n", scoreData);
 	//printf("location %s\n", location);	
@@ -465,11 +473,11 @@ int res_T_VarPrd_VarHour (char* location,	int32_t VarPrdT[6], int32_t VarHourT[6
 	snprintf(scoreData, sizeof scoreData, "data=");
 	for(Channel=0;Channel<6;Channel++)
 	{
-		snprintf(temp, sizeof scoreData, "VarPrdT%d=%d VarHourT%d=%d\n", 
+		snprintf(temp, sizeof temp, "VarPrdT%d=%d VarHourT%d=%d\n", 
 		Channel, VarPrdT[Channel], Channel, VarHourT[Channel]);
 		strcat(scoreData, temp);
 	}
-	snprintf(temp, sizeof scoreData, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
+	snprintf(temp, sizeof temp, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
 	strcat(scoreData, temp);
 	//printf("%s\n", scoreData);
 	//printf("location %s\n", location);	
@@ -499,13 +507,13 @@ int res_kwh_array (char* location,int32_t KwhR[18],int32_t KwhS[18],int32_t KwhT
 		snprintf(scoreData, sizeof scoreData, "data=");
 		for(Channel=0;Channel<18;Channel++)
 		{
-			snprintf(temp, sizeof scoreData, "KwhR%d=%d KwhS%d=%d KwhT%d=%d VoltR%d=%d VoltS%d=%d VoltT%d=%d CurrentR%d=%d CurrentS%d=%d CurrentT%d=%d\n",
+			snprintf(temp, sizeof temp, "KwhR%d=%d KwhS%d=%d KwhT%d=%d VoltR%d=%d VoltS%d=%d VoltT%d=%d CurrentR%d=%d CurrentS%d=%d CurrentT%d=%d\n",
 			Channel, KwhR[Channel], Channel, KwhS[Channel], Channel, KwhT[Channel], 
 			Channel, VoltR[Channel], Channel, VoltS[Channel], Channel, VoltT[Channel], 
 			Channel, CurrentR[Channel], Channel,CurrentS[Channel], Channel, CurrentT[Channel]);
 			strcat(scoreData, temp);
 		}
-		snprintf(temp, sizeof scoreData, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
+		snprintf(temp, sizeof temp, "&device=%d&nilai=%d&Channel=%d&gateway=%d", device, nilai, Channel, gateway);
 		strcat(scoreData, temp);
 		//printf("%s\n", scoreData);
 		//printf("location %s\n", location);	
@@ -907,7 +915,7 @@ int trap_th (char* location, int uID, char* gateway_ID, uint16_t th_ID, uint16_t
   printf("rssi %d\n", rssi); 
   snprintf(scoreData, sizeof scoreData, "18.0.3.0:%s;18.%d.1.0:%d;18.%d.10.0:%d;18.%d.12.0:%d",
           gateway_ID, uID, th_ID, uID, dIn1, uID, dIn2 ); 
-  snprintf(temp, sizeof scoreData,  ";18.%d.40.0:%d;18.%d.41.0:%d;18.%d.42.0:%d;18.%d.43.0:%d"
+  snprintf(temp, sizeof temp,  ";18.%d.40.0:%d;18.%d.41.0:%d;18.%d.42.0:%d;18.%d.43.0:%d"
           , uID, th1, uID, th2, uID, th3, uID, rssi);
   strcat(scoreData, temp); 
   printf("scoreData %s\n", scoreData);

@@ -1,57 +1,25 @@
-//#define _GNU_SOURCE 1
+#define _GNU_SOURCE 1
 #include <stdio.h>
 #include <my_global.h>
 #include <mysql.h>
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-//#include "paring.h"
+#include <inttypes.h>
+#include "paring.h"
 
-//char*id_getway[100];
 int total_pairing;
 int pairing_id[1000];
 int mysql_id;
 struct tm start_operation;
 struct tm end_operation;
-typedef struct{
-	uint16_t th_id;
-}TH_CONFIG;
-typedef struct{
-	uint16_t io_id;
-}IO_CONFIG;
-typedef struct{
-	uint16_t kwh_id;
-}KWH_CONFIG;
-typedef struct{
-	int suhu;
-	int no_byte;
-	int value_byte;
-}IR_COMMAND;
-typedef struct{
-	uint16_t ir_id;
-	int default_temp;
-}IR_CONFIG;
-typedef struct{
-	uint16_t io_id;
-	char* brand;
-	struct tm start_operation;
-	struct tm end_operation;
-	int channel;
-	int type;
-}LAMP_CONFIG;
-typedef struct{
-	char* brand;
-	uint16_t kwh_id;
-	struct tm start_operation;
-	struct tm end_operation;
-}AC_CONFIG;
 
-TH_CONFIG th_config[10];
+TH_CONFIG th_config[20];
 IO_CONFIG io_config[10];
 IR_COMMAND ir_command[1000];
-IR_CONFIG ir_config[10];
+IR_CONFIG ir_config[20];
 LAMP_CONFIG lamp_config[16];
-AC_CONFIG ac_config[10];
+AC_CONFIG ac_config[20];
 KWH_CONFIG kwh_config[10];
 
 void finish_with_error(MYSQL *con)
@@ -208,7 +176,7 @@ void get_lamp_config(char* server, char* user ,char* password ,char* dbname,char
       finish_with_error(con);
   }    
 	char select[100];
- sprintf(select,"select io_id, start_operation, end_operation, phasa, channel from %s where id_location=%d", nm_table, gateway_id); 
+ sprintf(select,"select io_id, start_operation, end_operation, phasa, ochannel from %s where id_location=%d", nm_table, gateway_id); 
  if (mysql_query(con,select)) 
  { 
       finish_with_error(con);
@@ -240,9 +208,9 @@ void get_lamp_config(char* server, char* user ,char* password ,char* dbname,char
 			lamp_config[a].end_operation.tm_min,lamp_config[a].end_operation.tm_sec);
 			a++;
   		//printf("\n"); 
-			if (ir_command[a].suhu == 30){
-				break;
-			}
+			// if (ir_command[a].suhu == 30){
+				// break;
+			// }
     }
 	}
 	mysql_close(con);
@@ -294,9 +262,9 @@ void get_ac_config(char* server, char* user ,char* password ,char* dbname,char* 
 			ac_config[a].end_operation.tm_min,ac_config[a].end_operation.tm_sec);
 			a++;
   		//printf("\n"); 
-			if (ir_command[a].suhu == 30){
-				break;
-			}
+			// if (ir_command[a].suhu == 30){
+				// break;
+			// }
     }
 	}
 	mysql_close(con);
@@ -350,9 +318,9 @@ void get_ir_config(char* server, char* user ,char* password ,char* dbname,char* 
 			printf("%02X %d\n", ir_config[a].ir_id, ir_config[a].default_temp);
 			a++;
   		//printf("\n"); 
-			if (ir_command[a].suhu == 30){
-				break;
-			}
+			// if (ir_command[a].suhu == 30){
+				// break;
+			// }
     }
 	}
 	mysql_close(con);

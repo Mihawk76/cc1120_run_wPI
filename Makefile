@@ -35,17 +35,20 @@ MYSQL_LIBS := $(shell mysql_config --libs --cflags)
 
 ###############################################################################
 
-SRC	=	cc1120_run.c
+SRC	=	cc1120_run.c \
+        equipment_alarm.c \
+		kwh_params.c \
+		crc16.c res_sensor.c paring.c
 
 OBJ	=	$(SRC:.c=.o)
 
 BINS	=	$(SRC:.c=)
 
-all:	$(BINS)
+#all:	$(BINS)
 
-cc1120_run: cc1120_run.o
+cc1120_run: cc1120_run.o equipment_alarm.o kwh_params.o crc16.o res_sensor.o paring.o
 	@echo [link]
-	@$(CC) -o $@ cc1120_run.o $(LDFLAGS) $(LDLIBS) $(MYSQL_LIBS)
+	@$(CC) -o $@ cc1120_run.o equipment_alarm.o kwh_params.o crc16.o res_sensor.o paring.o $(LDFLAGS) $(LDLIBS) $(MYSQL_LIBS)
 	
 .c.o:
 	@echo [CC] $<
