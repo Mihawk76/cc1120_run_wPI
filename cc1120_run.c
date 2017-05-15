@@ -3,7 +3,7 @@
 	*
 	* Copyright (c) 2007  MontaVista Software, Inc.
 	* Copyright (c) 2007  Anton Vorontsov <avorontsov@ru.mvista.com>
-	*a
+	*
 	* This program is free software; you can redistribute it and/or modify
 	* it under the terms of the GNU General Public License as published by
 	* the Free Software Foundation; either version 2 of the License.
@@ -26,8 +26,6 @@
 #include "cc112x_easy_link_reg_config.h"
 #include "equipment_alarm.h"
 #include "kwh_params.h"
-
-#include "mac_address.c"
 
 #include "cc1120.h"
 #include "crc16.h"
@@ -55,7 +53,6 @@ static const char th_type_str[4][7]={
 };
 		
 uint8_t Change_freq_ir[] = { 0x0A, 0x06, 0x01, 0x00, 0x42, 0x3D, 0x15, 0x02, 0x00, 0x01, 0x01};
-uint8_t ir_command_save[TH_NODES_MAX][100];
 uint8_t io_command[] = { 12, 0x11, 0x00, 0x00, 0x2D, 0xE6, 0x17, 0x05, 0x01, 0x01, 0x02, 0x01, 0x02};
 
 STORE Pondok_Pinang;
@@ -66,37 +63,18 @@ uint8_t ds_wakeup_interval = 3;
 uint8_t txBuffer[256];
 uint8_t rxBuffer[256];
 uint16_t packetCounter = 0;
-int selector = 0;
-uint8_t scan_key = 0x00;
-uint8_t add_type = 0x02; //add type as new node
-uint8_t index_node = 0x00; //temp index node 
-uint8_t wakeup_hold = 0x05; //wake up hold in 100ms
-uint16_t cc1120_TH_ID;
+
 int TOTAL_TH_ID;
-uint16_t cc1120_TH_ID_Selected[TH_NODES_MAX] = { 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-uint16_t cc1120_IR_ID_Selected[TH_NODES_MAX] = { 0x3D42, 0x3D42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-uint16_t din_array[16];
-uint16_t dout_array[16];
-uint8_t cc1120_TH_SET[TH_NODES_MAX] = { 29, 29, 29, 29, 29, 29, 29, 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-char* AC_TYPE[TH_NODES_MAX] = { "Panasonic","Panasonic","Panasonic","Panasonic","Panasonic","Panasonic","Panasonic","Panasonic"};
 
-IO_NODE io_nodes[16];
 TH_NODE_T th_nodes[TH_NODES_MAX];
+IO_NODE io_nodes[IO_NODES_MAX];
+IR_CONFIG ir_config[IR_NODES_MAX];
 
-uint32_t cc1120_KWH_ID;
-int io_flags = STATUS_CLEARED;
-int cc1120_TH_Listed = 6;
-uint8_t cc1120_TH_Node;
 int flag_ir = 0;
 uint16_t gateway_ID;
 uint16_t kwh_ID;
-uint16_t mac_address_gateway;
 int freq_main;
 uint8_t remChannel;
-int kwh_loop = 0;
-//int infrared_loop = 15;//7 
-int infrared_loop = 4;
-int loop_th_id = 0;
 uint8_t pktCmdx;
 int16_t rssi = 0;
 
@@ -120,11 +98,9 @@ FILE *f;
 
 void * cc1120_service(void *arg);
 void * res_service(void *arg);
-void * poll_kwh_service(void *arg);
+void * device_service(void *arg);
 
-uint8_t tbuff_kwh_poll[256];
-
-#define ADE_NODE_TYPE 0x14	
+	
 /*******************************************************************************
  * @fn          trxReadWriteBurstSingle
  *
@@ -804,7 +780,7 @@ uint8_t send_packet(uint8_t * sendBuffer) {
 	uint8_t len,i;
 	len = *sendBuffer;
 	if (len == 0) return 0;
-	
+/* 	
 	cc112xSpiReadReg(CC112X_MARCSTATE, &temp_byte, 1);
 	if (temp_byte != 0x6d) 
 		return 0;
@@ -814,9 +790,9 @@ uint8_t send_packet(uint8_t * sendBuffer) {
 		len =  0; // if RSSI present from another 
 		return 0;
 	}
-	
-    printf("SendPacket: ");
-    for (i=1;i<len;i++) {
+	 */
+  printf("SendPacket: ");
+  for (i=1;i<len;i++) {
 	  printf("0x%02X ",sendBuffer[i]);
 	}
 	printf("0x%02X\r\n", sendBuffer[i]);
@@ -871,7 +847,9 @@ int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
     uint16_t temp_16;
     uint32_t temp_32;
     uint8_t pktCmd;
-    uint8_t srcAddr;
+    uint8_t thAddr;
+		uint16_t srcAddr;
+		uint16_t dstAddr;
 	
     struct timespec spec;
     long   ms; // Milliseconds
@@ -885,6 +863,11 @@ int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
     uint8_t rssiRx;
 	
     pktCmd = *bufferin;
+		
+	  memcpy((uint8_t *)&srcAddr,bufferin+1,2); // get source address
+		memcpy((uint8_t *)&dstAddr,bufferin+3,2); // get destination address
+		temp_8 = *(uint8_t *)(bufferin+5);				// get node type
+		
     i = 0;
 
     switch (pktCmd) {
@@ -909,9 +892,9 @@ int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
 				}
 
 
-				srcAddr = bufferin[1]; // get destination address	
+				thAddr = bufferin[1]; // get destination address	
 		
-				i = srcAddr-1;
+				i = thAddr-1;
 				if (i>=TH_NODES_MAX) break; //overleap Source address
 		
 				//Get Tx Counter of TH 	
@@ -1023,11 +1006,11 @@ int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
 				th_nodes[i].loop_t3++;
 				if (th_nodes[i].loop_t3>=3) th_nodes[i].loop_t3 = 0;
 
-				if ( th_nodes[i].id != srcAddr ) {
-					printf(" UnReg %s ID:%02d", th_type_str[th_nodes[i].type], srcAddr);
+				if ( th_nodes[i].id != thAddr ) {
+					printf(" UnReg %s ID:%02d", th_type_str[th_nodes[i].type], thAddr);
 				}
 				else { 
-					printf(" Reg   %s ID:%02d", th_type_str[th_nodes[i].type], srcAddr);
+					printf(" Reg   %s ID:%02d", th_type_str[th_nodes[i].type], thAddr);
 					th_nodes[i].status = STATUS_UPDATED;
 				}
 
@@ -1080,13 +1063,13 @@ int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
 					next_stamp += (interval_between_node*TH_NODES_MAX); 
 
 				bufferout[1] = COMM_GW_TO_TH;
-				bufferout[2] = srcAddr;	
+				bufferout[2] = thAddr;	
 				bufferout[3] = remChannel; 
 				memset(bufferout+5,0,2);
 				memcpy(bufferout+5, (uint8_t*) &next_stamp, 2);
 				memset(bufferout+7,0,3);
 				memcpy(bufferout+7, (uint8_t*) &current_stamp, 3);
-				//	printf("ID: %d Stamp :%d, NextWakeup: %d\r\n",srcAddr,current_stamp, next_stamp);
+				//	printf("ID: %d Stamp :%d, NextWakeup: %d\r\n",thAddr,current_stamp, next_stamp);
 
 
 		
@@ -1097,54 +1080,98 @@ int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
 				}
 				bufferout[0] =  10;
 				replyDly = 10000;
-				
-				syslog(LOG_INFO, "TH ID: %04X TH_ID_Selected:%04X\n", srcAddr, cc1120_TH_ID_Selected[i]);
+				openlog("cc1120Log", LOG_PID|LOG_CONS, LOG_USER);
+				syslog(LOG_INFO, "TH ID: %04X TH_ID_Selected:%04X\n", thAddr, th_nodes[i].id);
 
 				syslog(LOG_INFO, "Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
 						 th_nodes[i].median_h, th_nodes[i].median_t1, th_nodes[i].median_t2, th_nodes[i].median_t3, th_nodes[i].din1, th_nodes[i].din2, rssiRx);
 				printf("Gateway Id %d\n", gateway_ID);
 				syslog(LOG_INFO, "Gateway Id %d\n", gateway_ID);
+				closelog();
 				break;
 			
 	    case COMM_VALUES_RPL:
-		  temp_32 = 0;
-		  temp_16 = crc16((uint8_t *) bufferin, 0xffff, len-2);
-		  memcpy((uint8_t *) &temp_32, (uint8_t *) (bufferin+(len-2)), 2);
-		  //printf("\r\nMasuk %04X:%04X %s\r\n", temp_16, temp_32, (temp_32==temp_16)?"CS OK":"CS ERROR");
-		  if (temp_32!=temp_16) break;
-		  get_params_value((uint8_t *) &bufferin[7], bufferin[6], len);
-		  pktCmdx = bufferin[6];
-		  pktCmdx++;
-		  if(pktCmdx>12) pktCmdx = 0;
-		  //printf("\r\nMasuk %d\r\n", pktCmdx);
-	      break;
+			  if (dstAddr!=gateway_ID) break;
+				if (srcAddr!=kwh_ID) break;
+				temp_32 = 0;
+				temp_16 = crc16((uint8_t *) bufferin, 0xffff, len-2);
+				memcpy((uint8_t *) &temp_32, (uint8_t *) (bufferin+(len-2)), 2);
+				//printf("\r\nMasuk %04X:%04X %s\r\n", temp_16, temp_32, (temp_32==temp_16)?"CS OK":"CS ERROR");
+				if (temp_32!=temp_16) break;
+				get_params_value((uint8_t *) &bufferin[7], bufferin[6], len);
+				pktCmdx = bufferin[6];
+				pktCmdx++;
+				if(pktCmdx>12) pktCmdx = 0;
+				//printf("\r\nMasuk %d\r\n", pktCmdx);
+				break;
+			
+			int x;
 			
 			case COMM_SEND_IR_RPL:
-			if (bufferin[5] == 0x17)
-			{
-				io_flags = STATUS_UPDATED;
-				int i;
-				for (i=0;i<12;i++)
-				{
-					printf("%02X ",bufferin[i]);
-				}
+			  if (dstAddr!=gateway_ID) break;
+			  if (bufferin[5] == WiIO824) { // node type WiIO824
+					
+					for (x=0;x<IO_NODES_MAX;x++) {
+						if (srcAddr==io_nodes[x].io_id) break;
+					}
+					if (x >= IO_NODES_MAX) break;
+					
+					clock_gettime(CLOCK_REALTIME, &spec);
+					printf("DATA_IO::");
+				  for (i=0;i<len;i++)
+			 	  {
+					  printf("%02X ",bufferin[i]);
+				  }
 					printf("\n");
-				printf("IO data get\n");
-				uint16_t din = *(uint16_t*)&bufferin[8];
-				uint8_t jumlah_din = bufferin[6];
-				uint16_t dout = *(uint16_t*)&bufferin[10];
-				uint8_t jumlah_dout = bufferin[7];
-				printf("\ndin %04X dout %04X bufferin %02X %02X out %02X %02X\n",din, dout, bufferin[8],bufferin[9],bufferin[10],bufferin[11]);
-				for(i=0;i<jumlah_din;i++){
-					din_array[i] = (din >> i) & 0x0001;
-					printf("din%d %02x ",i,din_array[i]); 
+
+		      printf("IO %d data get\n",x);
+				  uint16_t din = *(uint16_t*)&bufferin[8];
+				  io_nodes[x].inputNum = (bufferin[6]&0x3f);  // get input number & clear input elapsed time flag;
+				  uint16_t dout = *(uint16_t*)&bufferin[10];
+				  io_nodes[x].outputNum = (bufferin[7]&0x3f); // get input number & clear output elapsed time flag;
+				  printf("\n[IO%02d]:din %04X dout %04X bufferin %02X %02X out %02X %02X\n",x,din, dout, bufferin[8],bufferin[9],bufferin[10],bufferin[11]);
+					printf("[IO%02d]:INPUT: %d, OUTPUT: %d\r\n", x, io_nodes[x].inputNum, io_nodes[x].outputNum);
+					int z = 12;
+					
+					if ((bufferin[6]&0xC0)==0x80) {
+						printf("[IO%02d]:",x);
+				    for(i=0;i<io_nodes[x].inputNum;i++){
+						  io_nodes[x].input[i] = (din >> i) & 0x01;
+						
+						  memcpy((uint8_t*)&io_nodes[x].input_timeCount[i],(uint8_t*)&bufferin[z+(i*3)],3);
+						  io_nodes[x].input_timeCount[i] &= 0x00ffffff;
+					  
+					    printf("din%d %06x ",i+1,io_nodes[x].input_timeCount[i]); 
+				    }
+						printf("\r\n");
+					}
+ 					z =(i*3)+12;
+					if ((bufferin[7]&0xC0)==0x80) {
+						printf("[IO%02d]:",x);
+						for(i=0;i<io_nodes[x].outputNum;i++){
+							io_nodes[x].outputGet[i] = (dout >> i) & 0x01;
+							memcpy((uint8_t*)&io_nodes[x].output_timeCount[i],(uint8_t*)&bufferin[z+(i*3)],3);
+							io_nodes[x].output_timeCount[i] &= 0x00ffffff;
+							printf("dout%d %06x ",i+1,io_nodes[x].output_timeCount[i]); 
+						}
+						printf("\r\n");
+					} 
+				  
+					io_nodes[x].ts = spec.tv_sec;
+					io_nodes[x].updated = STATUS_UPDATED;
+					break;
+			  }
+				else if (bufferin[5] == WiIR) { // node type WiIR
+					for (x=0;x<(sizeof(ir_config)/sizeof(IR_CONFIG));x++) {
+						if (srcAddr==ir_config[x].ir_id) break;
+					}
+					if (x >= (sizeof(ir_config)/sizeof(IR_CONFIG))) break;
+
+				  clock_gettime(CLOCK_REALTIME, &spec);
+				  ir_config[x].ts = spec.tv_sec;
 				}
-				for(i=0;i<jumlah_dout;i++){
-					dout_array[i] = (dout >> i) & 0x0001;
-					printf("dout%d %02x ",i,dout_array[i]); 
-				}
-				printf("\n");
-			}
+				
+				
 			//io or infrareda
 	}
 		
@@ -1180,45 +1207,7 @@ void cc112x_run(void)
 	time_t t;
 	time (&t);
 	struct tm * timeinfo = localtime (&t);
-	openlog("cc1120Log", LOG_PID|LOG_CONS, LOG_USER);
-	//scanning kwh and then adding them
-	/*if ( kwh_loop <= 10){
-		printf("Sending KWH data\n");
-		syslog(LOG_INFO, "Sending KWH data\n");
-		txBuffer[0] = 15; //length packet data
-		txBuffer[1] = 0x02; //command code 
-		*(uint16_t*)&txBuffer[2] =  gateway_ID; //(2 byte)
-		*(uint16_t*)&txBuffer[4] = 0x0000; //(2 byte) id harusnya cuman 4 
-		txBuffer[6] = 0xFF; 
-		txBuffer[7] = 0xFF; //rssi
-		txBuffer[8] = 0xFF; //sensor number
-		txBuffer[9] = 0xFF; //radio channel
-		txBuffer[10] = 0x14; //node type = ADE
-		txBuffer[11] = 0x07;//in sec wakeup (2 byte)
-		txBuffer[12] = 0x61;//in sec next wakeup (2 byte)
-		txBuffer[13] = 0x28;
-		txBuffer[14] = 0x1B;
-		txBuffer[15] = 0x01;
-		printf ("txbuffer ");
-		syslog(LOG_INFO, "txbuffer ");
-		for (i=0;i<=15;i++) {
-			printf("%02X ", txBuffer[i]);
-			//syslog(LOG_INFO, "%02X ", txBuffer[i]);
-		}
-		kwh_loop++;
-		sleep(1);
-	}*/
-		// Infinite loop
-	
-	//fprintf(f,"Before spi read reg\n");
-	/*	fprintf(f, "Before spi read reg %04d-%02d-%02d %02d:%02d:%02d\n", 
-		timeinfo->tm_year+1900,
-		timeinfo->tm_mon+1,
-		timeinfo->tm_mday,
-		timeinfo->tm_hour,
-		timeinfo->tm_min,
-		timeinfo->tm_sec
-		);*/
+		
 	cc112xSpiReadReg(CC112X_MARC_STATUS1, &temp_byte, 1);
 	if (( temp_byte == 0x07)||( temp_byte == 0x08)){
 		// Flush TX FIFO
@@ -1294,17 +1283,28 @@ void cc112x_run(void)
 		//fprintf(f,"After the whole data is processed\n");
 	}
 	else if( temp_byte == 0) {
-					//os_dly_wait (1);
+		//os_dly_wait (1);
 		//if(replyDly) replyDly--;
 		//if (replyDly>0) return;
+		
+	  cc112xSpiReadReg(CC112X_MARCSTATE, &temp_byte, 1);
+	  if (temp_byte != 0x6d) return; // received on going
+	
+	  cc112xSpiReadReg(CC112X_RSSI0, &temp_byte, 1);
+	  if (temp_byte & 0x04) return;// if RSSI present from another radio
+		  
 		if (txBuffer[0]==0) {
-			if (tbuff_kwh_poll[0]==0) return;
-			memcpy(txBuffer, tbuff_kwh_poll, tbuff_kwh_poll[0]+1);
-			tbuff_kwh_poll[0] = 0;
+			// get from high priority buffer
+			txBuffer[0]=get_from_buffer(&hi_priority_tx,&txBuffer[1]);
+		}
+		
+		if (txBuffer[0]==0) {
+			// get from low priority buffer
+			txBuffer[0]=get_from_buffer(&lo_priority_tx,&txBuffer[1]);
 		}
 			
  		send_packet(txBuffer);
-		//fprintf(f,"After send packet buffer\n");
+		
 		return;
 	}
 	
@@ -1313,10 +1313,26 @@ void cc112x_run(void)
 	wait_exp_val(CC112X_MARCSTATE, 0x41);
 		
 			
-    // Set radio back in RX
-    trxSpiCmdStrobe(CC112X_SRX);
-		closelog();
+  // Set radio back in RX
+  trxSpiCmdStrobe(CC112X_SRX);
+		
 }
+
+
+void * cc1120_service( void *arg )
+{
+
+  flush_buffer(&hi_priority_tx);
+	flush_buffer(&lo_priority_tx);
+	
+  while(1) {
+	
+	  /* communication handler */
+	  cc112x_run();
+
+  }
+}
+
 
 
 void * res_service( void *arg )
@@ -1341,8 +1357,9 @@ void * res_service( void *arg )
 	   //trap_th(location, Oid, gateway_trap_id, cc1120_TH_ID, dIn1, dIn2, humidity, median_temp , temp2, temp3, rssi);
 	   //printf("Humidity : %d Temp 1 : %d Temp2 : %d Temp 3 : %d Din1 : %d Din2 : %d rssi : %d\n",
        //humidity, median_temp, temp2, temp3, dIn1, dIn2, rssi);
-	}
-	for (i=0;i<13;i++) {
+	  }
+		
+	  for (i=0;i<13;i++) {
 	  	if (phase_flags[i]== STATUS_CLEARED) continue;
 		//	if(i > 1 && i < 6){
 			if(i<=6){
@@ -1353,206 +1370,224 @@ void * res_service( void *arg )
 			}
 	  	res_val_kwh (location, kwh_ID, gateway_ID, i);
 		//}
-		if(i==0){
-			printf("data kwh\n");
-		}
-	   phase_flags[i]= STATUS_CLEARED;
-	}
-		if(io_flags==STATUS_CLEARED) continue;
-		printf("res_io activated \n");
-		res_io(location_io, din_array, dout_array, io_nodes[0].id, gateway_ID, 6);
-		io_flags = STATUS_CLEARED;
+		  if(i==0){
+			  printf("data kwh\n");
+		  }
+	    phase_flags[i]= STATUS_CLEARED;
+	  }
+	
+	  for (i=0;i<IO_NODES_MAX;i++) {
+	    if (io_nodes[i].updated== STATUS_CLEARED) continue;
+	  
+		  printf("res_io[%d] activated \n",i);
+		  res_io(location_io, io_nodes[i].input, io_nodes[i].outputGet, io_nodes[i].io_id, gateway_ID, io_nodes[i].outputNum);
+		  io_nodes[i].updated= STATUS_CLEARED;
+	  }
   }
-  
 }
 
-void * poll_kwh_service( void *arg )
+#define IR_REPEAT_MAX 3
+
+void * device_service( void *arg )
 {
-//  int i;
   struct timespec spec;
-	//Pondok_Pinang.start_hour = 11;
-	//Pondok_Pinang.close_hour = 20;	
-	int hour;
-	int min;
-	int sec;
-	int loop_io = 0;
-	int loop_io_total = 1;
-//  long   ms; // Milliseconds	
+	time_t irSendLast, ioSendLast, kwhSendLast;
+	uint8_t irSendRepeat;
+	uint8_t irCount;
+	uint8_t ioCount;
+
+	uint8_t device_count = 0;
+	uint8_t temp_buf[128];
+
+	clock_gettime(CLOCK_REALTIME, &spec);
+	
+	irSendLast = spec.tv_sec;
+	ioSendLast = spec.tv_sec;
+	kwhSendLast = spec.tv_sec;
+	irSendRepeat = 0;
+	irCount = 0;
+	ioCount = 0;
+	
   
   while(1) {
 	  
-	clock_gettime(CLOCK_REALTIME, &spec);
-	time_t t = time(NULL);
-	struct tm *tm_struct = localtime(&t);
-	hour = tm_struct->tm_hour;
-	hour = 10;
-	min = tm_struct->tm_min;
-	sec = tm_struct->tm_sec;
-	int current_time = (hour*60)+min;
-	// send data every 5 minutes
-	if ( min % 5 == 0 && sec == 0 && loop_th_id >= TOTAL_TH_ID)
-	{
-		loop_th_id = 0;
-	}
-	if ( sec % 2 == 0)
-	{
-		loop_io = 0;
-		//printf("loop io reset %d", loop_io);
-	}
-	//printf("tim %d:%d\n", hour, min);
-//	current_stamp = spec.tv_sec;
+	  clock_gettime(CLOCK_REALTIME, &spec);
+	  // t = time(NULL);
+	  // tm_struct = *localtime(&t);
 
-//	th_nodes[i].ts  = spec.tv_sec;
-//	ms = round(spec.tv_nsec / 1.0e6); // Convert nanoseconds to milliseconds
-//	current_stamp = (th_nodes[i].ts * 100) + (ms/10); //convert to 10* ms
+	  // min = tm_struct.tm_min;
+	  // sec = tm_struct.tm_sec;
 
-
-	
-	if ((spec.tv_sec%(t_wakeup_interval*60))<(6*20)) continue;
-	if (tbuff_kwh_poll[0]) continue;
-// add here if want to add ir kontrollerA
-	int i =0;
-	//printf("size %d\n", sizeof Change_freq_ir);
-	
-	if (infrared_loop > 0 && loop_th_id < TOTAL_TH_ID  && flag_ir==1)
-	{
-		//add kontrol infrared
-		/*for(i=0;i<(sizeof Change_freq_ir);i++)
-    {
-      tbuff_kwh_poll[i] = Change_freq_ir[i];
-    }*/
-		/*int suhu_real = th_nodes[loop_th_id].th_set;
-		if ( hour < Pondok_Pinang.start_hour || hour > Pondok_Pinang.close_hour)
-		{
-			suhu_real = 31;
-		}*/
-		//int suhu_code =  suhu_real- 16;
-	  //printf("suhu code %d\n", suhu_code);	
-		printf("IO COMMAND \n\n");
-		for(i=0;i<=68;i++)
-    {
-      tbuff_kwh_poll[i] = ir_command_save[loop_th_id][i];
-      //txBuffer[i] = Panasonic_temp[15][i];
-      //printf("%02X ", txBuffer[i]);
-    }
-		*(uint16_t*)&tbuff_kwh_poll[4] =  th_nodes[loop_th_id].ir_id;
-			infrared_loop--;
-			if (infrared_loop == 0){
-				infrared_loop = 4;
-				loop_th_id++;
-			}
-			printf("infrared %d loop_th_id %d\n", infrared_loop, loop_th_id);
-	}
-	if (loop_io <= loop_io_total && loop_th_id >= (TOTAL_TH_ID))
-	{
-		// put here from io cc1120
-		printf("masuk data io \n\n");
-		for(i=0;i<(sizeof io_command);i++)
-		{
-      tbuff_kwh_poll[i] = io_command[i];
+	  if ((spec.tv_sec%(t_wakeup_interval*60))<(6*20)) {
+			sleep(1);
+			continue;
 		}
-			loop_io++;
-		*(uint16_t*)&tbuff_kwh_poll[4] =  io_nodes[loop_io].id;
-		printf("io id %02X loop io %d\n", io_nodes[loop_io].id, loop_io);
-		for(i=0;i<5;i++)
-		{
-			if(current_time<io_nodes[i].start_operation||current_time>=io_nodes[i].end_operation)
-			{
-				tbuff_kwh_poll[i+8] = 0x00;
-			}	
-			if(current_time>io_nodes[i].start_operation||current_time<=io_nodes[i].end_operation)
-			{
-				tbuff_kwh_poll[i+8] = 0x01;
-			}	
-		}
-	}
-	if (loop_io > loop_io_total && loop_th_id >= (TOTAL_TH_ID))
-	{
-		//if ((sec % 2) == 0){
-			printf("masuk data kwh \n\n");
-			tbuff_kwh_poll[1] = COMM_VALUES_GET;
-			memcpy((uint8_t *)&tbuff_kwh_poll[2], (uint8_t *)&gateway_ID, 2);
-			memcpy((uint8_t *)&tbuff_kwh_poll[4], (uint8_t *)&kwh_ID, 2);
-			tbuff_kwh_poll[6] = ADE_NODE_TYPE;
-			tbuff_kwh_poll[7] = pktCmdx;
-			tbuff_kwh_poll[0] = 7;
-			selector = 0;
-		//}
-		/*if ((sec % 2) != 0){
-			for(i=0;i<(sizeof io_command);i++)
-			{
-      	tbuff_kwh_poll[i] = io_command[i];
-				printf("masuk io command \n\n\n");
-			}
-			selector++;
-		}	*/
-		//printf("\r\nKeluar: %d\r\n", pktCmdx);
-	}
-	sleep(1);
+	
+	  switch (device_count++) {
+		  case DEV_TH:
+			  break;
+			
+		  case DEV_KWH:
+			
+			  if((spec.tv_sec - kwhSendLast)<2) {
+					break;
+				}
+				
+				
+				kwhSendLast = spec.tv_sec;
+			  printf("masuk data kwh %02d:%02d\r\n",((uint)kwhSendLast%3600)/60, ((uint)kwhSendLast%3600)%60);
+			  temp_buf[1] = COMM_VALUES_GET;
+			  memcpy((uint8_t *)&temp_buf[2], (uint8_t *)&gateway_ID, 2);
+			  memcpy((uint8_t *)&temp_buf[4], (uint8_t *)&kwh_ID, 2);
+			  temp_buf[6] = WiADE18Ch;
+			  temp_buf[7] = pktCmdx;
+			  temp_buf[0] = 7;
+			  put_to_buffer (&lo_priority_tx, &temp_buf[1], temp_buf[0], 0);
+		    break;
+			
+		  case DEV_IO:
+			  if((spec.tv_sec - ioSendLast)<5) {
+					break;
+				} 
+				
+				ioSendLast = spec.tv_sec;
+				while (io_nodes[ioCount].io_id==0) {
+					ioCount++;
+					if (ioCount>IO_NODES_MAX) ioCount=0;
+				}
+				
+			  printf("masuk data io %02d:%02d\r\n",((uint)kwhSendLast%3600)/60, ((uint)kwhSendLast%3600)%60);
+		
+			  memcpy(&temp_buf[1],&io_command[1],(sizeof io_command)-1);
+		
+			  *(uint16_t*)&temp_buf[2] =  gateway_ID;
+		
+			  *(uint16_t*)&temp_buf[4] =  io_nodes[ioCount].io_id;
+		
+			  printf("io id %02X loop io %d\n", io_nodes[ioCount].io_id, ioCount);
+		
+			  printf("[IO_SEND]:%04X: %d %d %d %d %d %d\r\n", io_nodes[ioCount].io_id, 
+				  io_nodes[ioCount].outputSet[0],
+				  io_nodes[ioCount].outputSet[1],
+				  io_nodes[ioCount].outputSet[2],
+				  io_nodes[ioCount].outputSet[3],
+				  io_nodes[ioCount].outputSet[4],
+				  io_nodes[ioCount].outputSet[5]
+			  );
+		
+			  memcpy(&temp_buf[8],io_nodes[ioCount].outputSet,io_nodes[ioCount].outputNum);
+		
+			  temp_buf[7] = 0x80 + io_nodes[ioCount].outputNum; // get input time; 
+			  temp_buf[0] = 7 + io_nodes[ioCount].outputNum;
+				put_to_buffer (&lo_priority_tx, &temp_buf[1], temp_buf[0], 0);
+				
+				ioCount++;
+			  if (ioCount>IO_NODES_MAX) ioCount=0;
+		    break;
+			
+		  case DEV_IR:
+			  if ((spec.tv_sec-irSendLast)<3){
+					break;
+				}
+				irSendLast = spec.tv_sec;
+				printf("masuk data IR? %02d:%02d\r\n",((uint)kwhSendLast%3600)/60, ((uint)kwhSendLast%3600)%60);
+			
+			  if(((spec.tv_sec/60)%5)!=0) {
+					// send every 5 minutes
+					irCount = 0;
+					irSendRepeat = 0;
+					break;
+				}
+				
+				printf("masuk data IR2? \r\n");
+				
+				if (irSendRepeat>=IR_REPEAT_MAX) {
+					irSendRepeat = 0;
+					irCount++;
+					while((ir_config[irCount].ir_id==0)&&(irCount<IR_NODES_MAX)) {
+					  irCount++;
+				  }
+					if (irCount>=IR_NODES_MAX) break;
+				}
+
+        printf("masuk data IR \r\n");
+				
+      	get_ir_command("localhost","root","satunol10","paring","ir_command", 
+				  ir_config[irCount].ac_type, 
+					ir_config[irCount].set_temp, 
+					temp_buf);
+					
+				if (temp_buf[0]==0) break;
+		    *(uint16_t*)&temp_buf[4] =  ir_config[irCount].ir_id;
+				*(uint16_t*)&temp_buf[2] =  gateway_ID;
+				put_to_buffer (&lo_priority_tx, &temp_buf[1], temp_buf[0], 0);
+		    break;
+			
+		  default:
+		    device_count = DEV_TH;
+			  break;
+	  }
+	
+	  sleep(1);
 
   }
   
 }
 
-void * cc1120_service( void *arg )
-{
-  freq_main = 1;
-  //freq_main = 0;
-  pktCmdx = 0;
-  //freq_th = 23;
-  remChannel = freq_main; 
+/*******************************************************************************
+********************************************************************************/
+
+int main(int argc, char *argv[]) {
   int i;
-  
-  //freq_main = 0;
+  struct timespec spec;
+	
+	pthread_t thread_cc1120, thread_res, thread_device; // thread pointers
+	pthread_t thread_alarm_check, thread_alarm_send;	
+
+  int ret = 0;	
+
+  freq_main = 0;
+  pktCmdx = 0;
+  remChannel = freq_main; 
+	
   gateway_ID = 0;
 	get_id("localhost","root","satunol10","paring","main");
 	gateway_ID = mysql_id;
+	
+	clock_gettime(CLOCK_REALTIME, &spec);
+	
+	for(i=0; i<TH_NODES_MAX; i++) {
+		th_nodes[i].id = 0;
+	  th_nodes[i].status = STATUS_CLEARED;
+	  th_nodes[i].loop_h = 0xff;
+	  th_nodes[i].loop_t1 = 0xff;
+	  th_nodes[i].loop_t2 = 0xff;
+	  th_nodes[i].loop_t3 = 0xff;
+  }
+	
+	for(i=0; i<IR_NODES_MAX; i++) {
+		ir_config[i].ir_id = 0;
+		ir_config[i].ts = spec.tv_sec;
+  }
+	
+	for(i=0; i<IO_NODES_MAX; i++) {
+		io_nodes[i].io_id = 0;
+		io_nodes[i].ts = spec.tv_sec;
+  }
+
+	for (i=0;i<(sizeof(phase_ts)/sizeof(time_t));i++) {
+    phase_ts[i] = spec.tv_sec;
+	}
+	
+	
 	get_ir_config("localhost","root","satunol10","EMS","infrared", gateway_ID);
-	get_ac_config("localhost","root","satunol10","EMS","ac", gateway_ID);
+	get_kwh_config("localhost","root","satunol10","EMS","kwh", gateway_ID);
 	get_th_config("localhost","root","satunol10","EMS","temperature", gateway_ID);
-	get_lamp_config("localhost","root","satunol10","EMS","lamp", gateway_ID);
+	get_io_config("localhost","root","satunol10","EMS","io", gateway_ID);
 	
 	printf(" gateway %d\n", gateway_ID);
-  kwh_ID = 0x67C9;
-  //mac_address_gateway = read_ints();
-  //setup gpio pin to spi function
-  wiringPiSetup();
+
   
-  for(i=0; i<TH_NODES_MAX; i++) {
-	//th_nodes[i].id = cc1120_TH_ID_Selected[i];
-	th_nodes[i].id = th_config[i].th_id;
-	//th_nodes[i].ir_id = cc1120_IR_ID_Selected[i];
-	th_nodes[i].ir_id = ir_config[i].ir_id;
-	//th_nodes[i].th_set = cc1120_TH_SET[i];
-	th_nodes[i].th_set = ir_config[i].default_temp;
-	//th_nodes[i].ac_type = AC_TYPE[i];
-	th_nodes[i].ac_type = ac_config[i].brand;
-	th_nodes[i].start_operation = (ac_config[i].start_operation.tm_hour*60+ac_config[i].start_operation.tm_min);
-	th_nodes[i].end_operation = (ac_config[i].end_operation.tm_hour*60+ac_config[i].end_operation.tm_min);
-	th_nodes[i].status = STATUS_CLEARED;
-	th_nodes[i].loop_h = 0xff;
-	th_nodes[i].loop_t1 = 0xff;
-	th_nodes[i].loop_t2 = 0xff;
-	th_nodes[i].loop_t3 = 0xff;
-  }
-	for (i=0;i<5;i++)
- 	{
-		io_nodes[i].id = lamp_config[i].io_id;
-		io_nodes[lamp_config[i].channel].start_operation = ((lamp_config[i].start_operation.tm_hour*60)
-		+lamp_config[i].start_operation.tm_min);
-		printf("i %d node %d start opera %d hour sql %d\n"
-		, i, lamp_config[i].channel, io_nodes[lamp_config[i].channel].start_operation, (lamp_config[i].start_operation.tm_hour));
-		io_nodes[lamp_config[i].channel].end_operation = ((lamp_config[i].end_operation.tm_hour*60)
-		+lamp_config[i].end_operation.tm_min);
-	} 
-		//io_nodes[lamp_config[0].channel].start_operation = ((lamp_config[0].start_operation.tm_hour*60)
-		//+lamp_config[0].start_operation.tm_min);
-	for (i=0;i<16;i++)
-	{
-		printf("i %d io_nodes %d hour %d\n",i,io_nodes[i]
-		.start_operation,lamp_config[lamp_config[i].channel].start_operation.tm_hour
-		); 
-	}
 	for (i=0;i<TH_NODES_MAX;i++)
 	{
 		if (th_nodes[i].id!= (i+1))
@@ -1561,146 +1596,44 @@ void * cc1120_service( void *arg )
 			break;
 		}
 	}
+
 	printf("total th id %d\n", TOTAL_TH_ID);
-//  pinMode(CC1120_MOSI, SPI_PIN);
-//  pinMode(CC1120_MISO, SPI_PIN);
-//  pinMode(CC1120_SCLK, SPI_PIN);
+	
+	Pondok_Pinang.start_hour = ac_equipt[0].start_operation;
+	Pondok_Pinang.close_hour = ac_equipt[0].end_operation;	
 
   clear_equipment_alarm();
   get_main_power_cfg("localhost","root","satunol10","EMS","main_power", gateway_ID);
 	get_ac_cfg("localhost","root","satunol10","EMS","ac", gateway_ID);
+	get_lamp_cfg("localhost","root","satunol10","EMS","lamp", gateway_ID);
+	get_door_cfg("localhost","root","satunol10","EMS","door", gateway_ID);
+	get_room_cfg("localhost","root","satunol10","EMS","temperature", gateway_ID);
+
+	wiringPiSetup();
+//  pinMode(CC1120_MOSI, SPI_PIN);
+//  pinMode(CC1120_MISO, SPI_PIN);
+//  pinMode(CC1120_SCLK, SPI_PIN);
   pinMode(CC1120_SSEL, OUTPUT) ;  
   pinMode(CC1120_RST, OUTPUT) ;
   
-  //getchar();
   wiringPiSPISetup(0, 5000000); //32*1000*1000);  
   digitalWrite(CC1120_SSEL,  HIGH) ;
 
   cc112x_hw_rst();
-  //cc112x_init(23,0);// freq 410 Mhz + (1 Mhz * freq_main)
   cc112x_init(freq_main,0);// freq 410 Mhz + (1 Mhz * freq_main)
   memset(&txBuffer[0],0,sizeof(txBuffer));
-  struct timespec spec;
-	//Pondok_Pinang.start_hour = 11;
-	//Pondok_Pinang.close_hour = 20;	
-	Pondok_Pinang.start_hour = ac_config[0].start_operation.tm_hour;
-	Pondok_Pinang.close_hour = ac_config[0].end_operation.tm_hour;	
-	int hour;
-	int min;
-	int sec;
-	int flag_reset = 0;
-//  long   ms; // Milliseconds	
-  
-	  
 	
-	
-  while(1) {
-		clock_gettime(CLOCK_REALTIME, &spec);
-		time_t t = time(NULL);
-		struct tm *tm_struct = localtime(&t);
-		hour = tm_struct->tm_hour;
-		//hour = 3;
-		min = tm_struct->tm_min;
-		sec = tm_struct->tm_sec;
-		int current_time = (hour*60+min);
-		// send data every 5 minutes
-		if ( min % 5 == 0 && sec == 0 && flag_reset == 1)
-		{
-			flag_ir=0;
-			printf("masuk sini\n");
-			sleep(1);
-			//printf ("min is %d\n", min);
-		}
-		if ( min % 5 == 0 && sec == 5 && flag_reset == 0)
-		{
-			flag_reset  = 1;
-		}	
-  	if(flag_ir==0){
-    for(loop_th_id=0;loop_th_id<TOTAL_TH_ID;loop_th_id++)
-    {
-			//int suhu_real = th_nodes[loop_th_id].th_set;
-			for (i=0;i<TH_NODES_MAX;i++)
-			{
-				if ( current_time < th_nodes[i].start_operation || current_time > th_nodes[i].end_operation)
-				{
-					th_nodes[i].th_set = 31;
-				}	else {
-					th_nodes[i].th_set = ir_config[i].default_temp;
-				}
-				printf("suhu real %d hour %d\n\n",th_nodes[i].th_set, current_time);
-      	get_ir_command("localhost","root","satunol10","paring","ir_command", th_nodes[loop_th_id].ac_type, th_nodes[i].th_set);
-      	for(i=0;i<=68;i++)
-      	{
-        	ir_command_save[loop_th_id][i] = ir_command[i].value_byte;
-      	}
-			}
-    }
-		flag_ir++;
-  }
- 	/*f = fopen("/home/data.log", "a");
-	if (f == NULL)
-	{
-    	printf("Error opening file!\n");
-    	exit(1);
-	}*/
-	
-	/* print some text */
-	/*const char *text = "Why the result are diffrent";
-	fprintf(f, "Some text: %s %d \n", text, datalog);*/
-	
-	/* communication handler */
-	cc112x_run();
-	//datalog++;
-	//fclose(f);
-  }
-  
-  /*int repeat;
-	for(repeat=0;repeat<=100;repeat++)
-	{
-  // init cc112x radio
-  cc112x_init(repeat,0);// freq 410 Mhz + (1 Mhz * repeat)
-
-  printf("Run CC1120..\r\n");
-  //getchar();
-
-  // settup base frequency
-    
-	memcpy(&txBuffer[1],DUMMY_BUF,10);
-	txBuffer[0]=10;
-	int comm = 0;
-	while(comm<6) {
-				
-		cc112x_run();
-		comm++;
-		sleep (60);
-	}
-	int frekuensi = (410 + repeat);
-	printf("No File found frek = %d\n", frekuensi);  	
-	}*/
-
-}
-
-
-/*******************************************************************************
-********************************************************************************/
-
-int main(int argc, char *argv[]) {
-  int ret = 0;
-
-  pthread_t thread_cc1120, thread_res, thread_poll_kwh; // thread pointers
-	pthread_t thread_alarm_check, thread_alarm_send;	
-  
   /* Create independent threads each of which will execute function */
   pthread_create( &thread_cc1120, NULL, cc1120_service, NULL);
+  pthread_create( &thread_device, NULL, device_service, NULL);
   pthread_create( &thread_res, NULL, res_service, NULL);
-  pthread_create( &thread_poll_kwh, NULL, poll_kwh_service, NULL);
   pthread_create( &thread_alarm_check, NULL, alarm_checking, NULL);
 	pthread_create( &thread_alarm_send, NULL, alarm_sending, NULL);
   
 
   pthread_join( thread_cc1120, NULL);
   pthread_join( thread_res, NULL);
-  pthread_join( thread_poll_kwh, NULL);
+  pthread_join( thread_device, NULL);
   pthread_join( thread_alarm_check, NULL);
   pthread_join( thread_alarm_send, NULL);
 

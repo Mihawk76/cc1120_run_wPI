@@ -5,12 +5,10 @@
 #include <stdint.h>  
 #include <string.h>  
 #include <time.h>
+#include "app.h"
 #include "kwh_params.h"
 
 ADE7816_STRUCT phases[3];
-// #define phase_R phases[0]
-// #define phase_S phases[1]
-// #define phase_T phases[2]
 time_t  phase_ts[14];
 uint8_t phase_flags[14];
 

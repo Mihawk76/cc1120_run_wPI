@@ -114,13 +114,6 @@ typedef struct {
    uint16_t coilTempTimeOut;
    time_t   * coilTempTimeStamp;
    time_t   coilTempTimeStampOld;
-   char     envTempId[16];
-   uint16_t * envTemp;
-   float    envTempMin;
-   float    envlTempMax;
-   uint16_t envTempTimeOut;
-   time_t   * envTempTimeStamp;
-   time_t   envTempTimeStampOld;
    float    deltaTempMin;
    float    deltaTempMax;
    char     currentId[16];
@@ -132,8 +125,13 @@ typedef struct {
    time_t   currentTimeStampOld;    // last update timestamp
    char     iRId[16];
    uint16_t iRTimeOut;
+	 uint8_t  * set_temp;
+	 uint8_t  * default_temp;
    time_t   * iRTimeStamp;          // last update timestamp
    time_t   iRTimeStampOld;         // last update timestamp
+	 uint32_t start_operation;
+	 uint32_t end_operation;
+
 }EQ_AC_T;
 
 
@@ -171,8 +169,8 @@ typedef struct {
    char     doorOpenId[16];
    char     doorOpenLogic;
    uint8_t  * doorOpen;
-   uint16_t * doorOpenTime;
-   uint16_t doorOpenTimeMax;
+   uint32_t * doorOpenTime;
+   uint32_t doorOpenTimeMax;
    uint32_t doorOpenTimeOut;
    time_t   * doorOpenTimeStamp;
    time_t   doorOpenTimeStampOld;
@@ -210,8 +208,10 @@ typedef struct {
    uint16_t alarmState[2];
    char     currentId[16];
    int32_t  * current;
+	 time_t   pumpOnTimeStamp;
    float    currentMin;
    float    currentMax;
+	 uint16_t pumpOnTimeMax;             // in minute
    uint16_t currentTimeOut;
    time_t   * currentTimeStamp;        // last update timestamp
    time_t   currentTimeStampOld;
@@ -220,24 +220,25 @@ typedef struct {
 
 typedef struct {
    uint16_t id;
-   char     label[16];
-   char     position[32];
+ 	 char*    brand;
    char     alarmEnable;
    uint16_t alarmLastSend[2];
    uint16_t alarmState[2];
-   char     currentId[16];
+	 uint16_t io_id;
    int32_t  * current;
    float    currentMin;
    float    currentMax;
    uint16_t currentTimeOut;
    time_t   * currentTimeStamp;        // last update timestamp
    time_t   currentTimeStampOld;
-   char     lampOnId[16];
-   char     lampOnLogic;
-   char     * lampOn;
+   uint8_t  lampOnLogic;
+   uint8_t  * lampOn;
+	 uint8_t  lampOnLast;
    uint16_t lampOnTimeOut;
    time_t   * lampOnTimeStamp;        // last update timestamp
    time_t   lampOnTimeStampOld;
+	 uint32_t start_operation;
+	 uint32_t end_operation;
  //  char     lampOnTimer[16][8];
 }EQ_LAMP_T;
 
@@ -253,11 +254,21 @@ typedef struct {
 #define ALARM_BUFFER_SIZE 128
 #define ALARM_BUFFER_MASK (ALARM_BUFFER_SIZE-1)
 
+extern EQ_MAINPOWER_T main_power_equipt[3];
+extern EQ_AC_T        ac_equipt[5];
+extern EQ_CHILLER_T   chiller_equipt[6];
+extern EQ_DOOR_T      door_equipt[5];
+extern EQ_ROOM_T      room_equipt[2];
+extern EQ_PUMP_T      pump_equipt[2];
+extern EQ_LAMP_T      lamp_equipt[10];
+
 void * alarm_sending(void * arg);
-void load_equipment_config (void);
 void clear_equipment_alarm (void);
 void * alarm_checking(void * arg );
 void get_main_power_cfg(char* server, char* user ,char* password ,char* dbname,char* nm_table,uint16_t gateway_id);
 void get_ac_cfg(char* server, char* user ,char* password ,char* dbname,char* nm_table,uint16_t gateway_id);
+void get_door_cfg(char* server, char* user ,char* password ,char* dbname,char* nm_table,uint16_t gateway_id);
+void get_lamp_cfg(char* server, char* user ,char* password ,char* dbname,char* nm_table,uint16_t gateway_id);
+void get_room_cfg(char* server, char* user ,char* password ,char* dbname,char* nm_table,uint16_t gateway_id);
 
 #endif

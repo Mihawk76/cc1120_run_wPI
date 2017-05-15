@@ -31,7 +31,7 @@ int  res_kwh_2 (char* location,uint16_t* VoltR,uint16_t VoltS,uint16_t VoltT,uin
 int  res_kwh (char* location,uint16_t VoltR,uint16_t VoltS,uint16_t VoltT,uint16_t CurrentR,
 								uint16_t CurrentS,uint16_t CurrentT, int nilai,int device, int Channel);
 int  res_th (char* location,uint16_t Th1,uint16_t Th2,uint16_t Th3,uint16_t Humidity, int nilai,int device, int gateway);
-int  res_io (char* location,uint16_t din_array[16],uint16_t dout_array[16], uint16_t io_id, int gateway, int total_channel);
+int  res_io (char* location,uint8_t * din_array,uint8_t * dout_array, uint16_t io_id, int gateway, int total_channel);
 int  res_val_kwh (char* location,  int id, int gateway, int kwh_index);
 int trap_th (char* location, int uID, char* gateway_ID, uint16_t th_ID, uint16_t dIn1, uint16_t dIn2
             , uint16_t hummidity, uint16_t th1, uint16_t th2, uint16_t th3, int16_t rssi

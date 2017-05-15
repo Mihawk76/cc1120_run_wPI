@@ -1,9 +1,6 @@
 #ifndef __KWH_PARAMS_H__
 #define __KWH_PARAMS_H__
 
-#define STATUS_CLEARED 0
-#define STATUS_UPDATED 1
-
 typedef struct{
 	int32_t vrms;
 	int32_t irmsa;

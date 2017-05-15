@@ -622,7 +622,7 @@ int  res_th (char* location,uint16_t Th1,uint16_t Th2,uint16_t Th3,uint16_t Humi
 		  curl_global_cleanup();
 	return 0;
 }
-int  res_io (char* location,uint16_t din_array[16],uint16_t dout_array[16], uint16_t io_id, int gateway, int total_channel)
+int  res_io (char* location,uint8_t * din_array,uint8_t * dout_array, uint16_t io_id, int gateway, int total_channel)
 
 {
 		//snprintf(scoreData, sizeof scoreData, "Th1=%d&Th2=%d&Th3=%d&Humidity=%d&device=%d&nilai=%d&gateway=%d",
