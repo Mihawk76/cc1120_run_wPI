@@ -1511,7 +1511,9 @@ void * device_service( void *arg )
 				}
 
         printf("masuk data IR \r\n");
-				
+        printf("data ir ac type %s temp %d\r\n",
+				  ir_config[irCount].ac_type, 
+					ir_config[irCount].set_temp);
       	get_ir_command("localhost","root","satunol10","paring","ir_command", 
 				  ir_config[irCount].ac_type, 
 					ir_config[irCount].set_temp, 
