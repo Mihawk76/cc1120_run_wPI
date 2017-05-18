@@ -191,7 +191,7 @@ void get_ir_config(char* server, char* user ,char* password ,char* dbname,char* 
       finish_with_error(con);
   }    
 	char select[100];
- sprintf(select,"select ir_name, set_default from  %s where id_location=%d", nm_table, gateway_id); 
+ sprintf(select,"select id_ir, set_default from  %s where id_location=%d", nm_table, gateway_id); 
  if (mysql_query(con,select)) 
  { 
       finish_with_error(con);

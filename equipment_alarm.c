@@ -365,7 +365,7 @@ void * alarm_checking(void * arg ) {
 			              
               memset(str_val,0,sizeof(str_val));
 			        //sprintf(str_val,"%d.%d", *ac_equipt[i].current/1000, (*ac_equipt[i].current%1000)/10);
-			        sprintf(str_val,"%d", *main_power_equipt[i].current);
+							sprintf(str_val,"%d", temporary_uint/100);	
               insert_new_alarm_to_buffer(now_ts, EQ_AC+1, ac_equipt[i].id, AcCoilNormTemp, str_val);
 			      }
 		      }
@@ -402,8 +402,8 @@ void * alarm_checking(void * arg ) {
 			                
               memset(str_val,0,sizeof(str_val));
 			        //sprintf(str_val,"%d.%d", *ac_equipt[i].current/1000, (*ac_equipt[i].current%1000)/10);
-			        sprintf(str_val,"%d", *main_power_equipt[i].current);
-              insert_new_alarm_to_buffer(now_ts, EQ_AC+1, ac_equipt[i].id, AcHiCurrent, str_val);
+              sprintf(str_val,"%d", *ac_equipt[i].current);
+							insert_new_alarm_to_buffer(now_ts, EQ_AC+1, ac_equipt[i].id, AcHiCurrent, str_val);
 			      }
 		      }
 			
@@ -416,7 +416,7 @@ void * alarm_checking(void * arg ) {
 			              
               memset(str_val,0,sizeof(str_val));
 			        //sprintf(str_val,"%d.%d", *ac_equipt[i].current/1000, (*ac_equipt[i].current%1000)/10);
-			        sprintf(str_val,"%d", *main_power_equipt[i].current);
+							sprintf(str_val,"%d", *ac_equipt[i].current);
               insert_new_alarm_to_buffer(now_ts, EQ_AC+1, ac_equipt[i].id, AcNormCurrent, str_val);
 			      }
 		      }
@@ -686,7 +686,7 @@ void * alarm_checking(void * arg ) {
 			              
               memset(str_val,0,sizeof(str_val));
 			        //sprintf(str_val,"%d.%d", *pump_equipt[i].current/1000, (*pump_equipt[i].current%1000)/10);
-			        sprintf(str_val,"%d", *main_power_equipt[i].current);
+							sprintf(str_val,"%d", *pump_equipt[i].current);
               insert_new_alarm_to_buffer(now_ts, EQ_PUMP+1, pump_equipt[i].id, PumpNormal, str_val);
 			      }
 		      }
@@ -760,7 +760,7 @@ void * alarm_checking(void * arg ) {
 				
                 memset(str_val,0,sizeof(str_val));
 	              //sprintf(str_val,"%d,%d.%d", *lamp_equipt[i].lampOn,*lamp_equipt[i].current/1000,(*lamp_equipt[i].current%1000)/10);
-	        	    sprintf(str_val,"%d", *main_power_equipt[i].current);
+								sprintf(str_val,"%d", *lamp_equipt[i].current);
                 insert_new_alarm_to_buffer(now_ts, EQ_LAMP+1, lamp_equipt[i].id, LampOffAbnormal, str_val);
 			        }
 		        }
@@ -774,7 +774,7 @@ void * alarm_checking(void * arg ) {
 				
                 memset(str_val,0,sizeof(str_val));
 			          //sprintf(str_val,"%d,%d.%d", *lamp_equipt[i].lampOn,*lamp_equipt[i].current/1000,(*lamp_equipt[i].current%1000)/10);
-			      	  sprintf(str_val,"%d", *main_power_equipt[i].current);
+								sprintf(str_val,"%d", *lamp_equipt[i].current);
                 insert_new_alarm_to_buffer(now_ts, EQ_LAMP+1, lamp_equipt[i].id, LampOnAbnormal, str_val);
 			        }
 		        }
@@ -800,7 +800,7 @@ void * alarm_checking(void * arg ) {
 			        lamp_equipt[i].alarmState[0]=LampNormal;
               memset(str_val,0,sizeof(str_val));
 			        //sprintf(str_val,"%d,%d.%d", *lamp_equipt[i].lampOn,*lamp_equipt[i].current/1000,(*lamp_equipt[i].current%1000)/10);
-			        sprintf(str_val,"%d", *main_power_equipt[i].current);
+							sprintf(str_val,"%d", *lamp_equipt[i].current);
               insert_new_alarm_to_buffer(now_ts, EQ_LAMP+1, lamp_equipt[i].id, LampNormal, str_val);
 			      }
 						
@@ -1163,7 +1163,7 @@ void get_ac_cfg(char* server, char* user ,char* password ,char* dbname,char* nm_
 
     ac_equipt[a].coilTempTimeOut = atoi(row[23]?row[23]:"600");
     ac_equipt[a].currentTimeOut = atoi(row[24]?row[24]:"300");
-	  ac_equipt[a].iRTimeOut      = atoi(row[24]?row[24]:"300");
+	  ac_equipt[a].iRTimeOut      = atoi(row[25]?row[25]:"300");
 		
 		strptime((row[17]?row[17]:"NULL"),"%H:%M",&operation_hour);
 		ac_equipt[a].start_operation = (operation_hour.tm_hour * 60) +  operation_hour.tm_min;

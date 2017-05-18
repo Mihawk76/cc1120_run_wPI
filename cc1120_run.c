@@ -1548,7 +1548,7 @@ int main(int argc, char *argv[]) {
 
   int ret = 0;	
 
-  freq_main = 0;
+  freq_main = 1;
   pktCmdx = 0;
   remChannel = freq_main; 
 	
