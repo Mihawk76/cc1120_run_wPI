@@ -1582,9 +1582,9 @@ int main(int argc, char *argv[]) {
 	}
 	
 	
-	get_ir_config("localhost","root","satunol10","EMS","infrared", gateway_ID);
-	get_kwh_config("localhost","root","satunol10","EMS","kwh", gateway_ID);
-	get_th_config("localhost","root","satunol10","EMS","temperature", gateway_ID);
+	get_ir_config("localhost","root","satunol10","EMS","infrared", gateway_ID);//udah table clear
+	get_kwh_config("localhost","root","satunol10","EMS","kwh", gateway_ID);//udah table clear
+	get_th_config("localhost","root","satunol10","EMS","temperature", gateway_ID);//udah table clear
 	get_io_config("localhost","root","satunol10","EMS","io", gateway_ID);
 	
 	printf(" gateway %d\n", gateway_ID);
@@ -1605,11 +1605,11 @@ int main(int argc, char *argv[]) {
 	Pondok_Pinang.close_hour = ac_equipt[0].end_operation;	
 
   clear_equipment_alarm();
-  get_main_power_cfg("localhost","root","satunol10","EMS","main_power", gateway_ID);
-	get_ac_cfg("localhost","root","satunol10","EMS","ac", gateway_ID);
-	get_lamp_cfg("localhost","root","satunol10","EMS","lamp", gateway_ID);
-	get_door_cfg("localhost","root","satunol10","EMS","door", gateway_ID);
-	get_room_cfg("localhost","root","satunol10","EMS","temperature", gateway_ID);
+  get_main_power_cfg("localhost","root","satunol10","EMS","main_power", gateway_ID);//udah table clear
+	get_ac_cfg("localhost","root","satunol10","EMS","ac", gateway_ID);//udah  table clear
+	get_lamp_cfg("localhost","root","satunol10","EMS","lamp", gateway_ID);//udah table clear
+	get_door_cfg("localhost","root","satunol10","EMS","door", gateway_ID);// udah table clear
+	get_room_cfg("localhost","root","satunol10","EMS","temperature", gateway_ID);//udah table clear
 
 	wiringPiSetup();
 //  pinMode(CC1120_MOSI, SPI_PIN);
