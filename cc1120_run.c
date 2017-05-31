@@ -1137,21 +1137,24 @@ int processPacket(uint8_t *bufferin, uint8_t *bufferout, uint8_t len) {
 						printf("[IO%02d]:",x);
 				    for(i=0;i<io_nodes[x].inputNum;i++){
 						  io_nodes[x].input[i] = (din >> i) & 0x01;
+							io_nodes[x].outputGet[i] = (dout >> i) & 0x01;
 						
 						  memcpy((uint8_t*)&io_nodes[x].input_timeCount[i],(uint8_t*)&bufferin[z+(i*3)],3);
 						  io_nodes[x].input_timeCount[i] &= 0x00ffffff;
-					  
+							printf("dout %d %d\n", i, io_nodes[x].outputGet[i]);
 					    printf("din%d %06x ",i+1,io_nodes[x].input_timeCount[i]); 
 				    }
 						printf("\r\n");
 					}
  					z =(i*3)+12;
-					if ((bufferin[7]&0xC0)==0x80) {
+					if ((bufferin[6]&0xC0)==0xC0) {
 						printf("[IO%02d]:",x);
 						for(i=0;i<io_nodes[x].outputNum;i++){
+						  io_nodes[x].input[i] = (din >> i) & 0x01;
 							io_nodes[x].outputGet[i] = (dout >> i) & 0x01;
 							memcpy((uint8_t*)&io_nodes[x].output_timeCount[i],(uint8_t*)&bufferin[z+(i*3)],3);
 							io_nodes[x].output_timeCount[i] &= 0x00ffffff;
+							printf("dout %d %d\n", i, io_nodes[x].outputGet[i]);
 							printf("dout%d %06x ",i+1,io_nodes[x].output_timeCount[i]); 
 						}
 						printf("\r\n");

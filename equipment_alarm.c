@@ -1308,15 +1308,16 @@ void get_lamp_cfg(char* server, char* user ,char* password ,char* dbname,char* n
     lamp_equipt[a].lampOnLogic = 1;			
 	
 	  lamp_equipt[a].id = atoi(row[0]?row[0]:"0");
-		phase   = get_num_of_phase(row[2]?row[2]:"0");
-		channel = atoi(row[3]?row[3]:"0");
+		phase   = get_num_of_phase(row[1]?row[1]:"0");
+		channel = atoi(row[2]?row[2]:"0");
 		
 	  lamp_equipt[a].current = &phases[phase].irmsa+channel;
 	  lamp_equipt[a].currentTimeStamp = &phase_ts[1+channel];
 		lamp_equipt[a].currentTimeOut = 300;
 
 	  if (lamp_equipt[a].io_id != 0) {
-		  ochannel = atoi(row[6]?row[6]:"0"); // please check maximal channel later !!!
+		  //ochannel = atoi(row[6]?row[6]:"0"); // please check maximal channel later !!!
+		  ochannel = atoi(row[2]?row[2]:"0"); // please check maximal channel later !!!
 		  lamp_equipt[a].lampOn = &io_nodes[ui16].outputSet[ochannel];
 		  lamp_equipt[a].lampOnTimeStamp = &io_nodes[ui16].ts;
 		}
