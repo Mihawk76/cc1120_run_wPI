@@ -1491,6 +1491,7 @@ void * device_service( void *arg )
 				}
 				irSendLast = spec.tv_sec;
 				printf("masuk data IR? %02d:%02d\r\n",((uint)kwhSendLast%3600)/60, ((uint)kwhSendLast%3600)%60);
+				irSendRepeat++;
 			
 			  if(((spec.tv_sec/60)%5)!=0) {
 					// send every 5 minutes
